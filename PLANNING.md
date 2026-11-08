@@ -53,8 +53,9 @@ Asignación: **A = ________** · **B = ________**
 
 ## Cómo trabajamos con Git
 
-- Cada uno trabaja en ramas `feat/<tarea>` (por ejemplo `feat/simulador` o `feat/motor-alertas`) y hace PR a `main`.
-- **El otro revisa cada PR antes del merge.** Así los dos conocemos todo el sistema para la defensa.
+- **Una rama por persona:** `edge` (A) y `backend` (B). Cada uno trabaja siempre en la suya.
+- **Cada noche**, PR de tu rama a `main`. **El otro la revisa antes del merge.** Así los dos conocemos todo el sistema para la defensa.
+- **Cada mañana**, `git pull origin main` en tu rama para traer lo del otro.
 - **Solo A hace commits de `node-red/flows.json`.** Es un único fichero y dos personas editándolo a la vez acaban en conflicto. Si B necesita un cambio en un flujo, se lo pide a A.
 - Las credenciales no se suben al repo. Van en `.env`, y en git solo está `.env.example`.
 
@@ -64,9 +65,9 @@ Asignación: **A = ________** · **B = ________**
 Trabajo-IoT/
 ├── PLANNING.md             # este documento
 ├── README.md               # cómo arrancar todo, paso a paso
-├── docker-compose.yml      # mosquitto + mongo (api y node-red al final)
+├── docker-compose.yml      # mongo (api y node-red al final)
 ├── .env.example  .gitignore
-├── mosquitto/              # mosquitto.conf, acl, passwd (A)
+├── mosquitto/              # mosquitto.conf, acl, passwd del Mosquitto nativo (A)
 ├── node-red/               # userDir de Node-RED: package.json, settings.js, flows.json (A)
 ├── api/                    # Express (B)
 │   ├── server.js  servers/{http-server,websocket}.js  mqtt/publisher.js
@@ -145,7 +146,7 @@ Cada alerta tiene la forma `{id, jugadorId, codigo, severidad, valor, umbral, ts
 | Día | Persona A | Persona B |
 |---|---|---|
 | **Dom 8** | Repartir los papeles A/B | — |
-| **Lun 9** | **Juntos (unas 2 h):** cerrar los contratos, README, `.gitignore` y comprobar las herramientas de los dos (Node, Node-RED, Mosquitto, Docker). **Después, A:** `mosquitto.conf` con `allow_anonymous false`, passwd y ACL; `node-red/` como userDir con `@flowfuse/node-red-dashboard` y `credentialSecret` por variable de entorno | **Después, B:** esqueleto de Express con la estructura de clase, `docker-compose` con mongo y mosquitto, `/health`, conexión con Mongoose |
+| **Lun 9** | **Juntos (unas 2 h):** cerrar los contratos, README, `.gitignore` y comprobar las herramientas de los dos (Node, Node-RED, Mosquitto, Docker). **Después, A:** `mosquitto.conf` para el Mosquitto nativo (no va en Docker) con `allow_anonymous false`, passwd y ACL; `node-red/` como userDir con `@flowfuse/node-red-dashboard` y `credentialSecret` por variable de entorno | **Después, B:** esqueleto de Express con la estructura de clase, `docker-compose` con mongo, `/health`, conexión con Mongoose |
 | **Mar 10** | Simulador v1: máquina de estados por jugador (parado, andando, trote, carrera, sprint); posición en un campo de 105×68 m; distancia; aceleración y giro; FC con retraso respecto al esfuerzo. Publica por MQTT | Modelos (Jugador, Lectura resumida cada 10 s, Evento, Alerta, Pauta, Sesión), seed de los 11 jugadores, `POST /api/telemetria`, CRUD de jugadores |
 | **Mié 11** | Simulador v2: temperatura interna (sube con la carga y el calor), plantillas con línea base y LWT. Pasarela: suscripción `salud/+/+/+`, validación, unión por segundo, POST y watchdog | Servicio de métricas (zonas, carrera de alta intensidad, sprints, aceleraciones y desaceleraciones, %FCmáx). Motor de alertas con las 9 reglas, que publica en MQTT y guarda en Mongo |
 | **Jue 12** | **Hito 1: el núcleo funciona de extremo a extremo** (simulador → MQTT → pasarela → API → alerta → dashboard). Dashboard 2.0: semáforo por jugador, indicadores, lista de alertas con confirmación (POST) y formulario de pauta | Servidor WebSocket, endpoints de pauta, umbrales y sesiones, `openapi.yaml` con Swagger UI en `/api-docs` |
@@ -194,7 +195,7 @@ Cada alerta tiene la forma `{id, jugadorId, codigo, severidad, valor, umbral, ts
 
 ## Cómo comprobamos que funciona (en cada hito)
 
-- `docker compose up -d`, luego `node-red -u node-red` y `npm start` en `api/`.
+- Mosquitto nativo en marcha con la configuración de `mosquitto/`, `docker compose up -d` (MongoDB), luego `node-red -u node-red` y `npm start` en `api/`.
 - `mosquitto_sub -h localhost -u <user> -P <pass> -t 'salud/#' -v` muestra la telemetría. Sin credenciales, la conexión se rechaza.
 - `curl` y Postman sobre GET/POST de jugadores, pauta y alertas. `/api-docs` carga.
 - Lanzar el escenario "golpe de calor jugador 8" desde el dashboard: en menos de 10 s aparece `CALOR_AMBAR` en el Dashboard 2.0 y en la web, y queda guardada en Mongo.
