@@ -141,12 +141,96 @@ Cada alerta tiene la forma `{id, jugadorId, codigo, severidad, valor, umbral, ts
 - **ACWR:** la franja 0,8–1,3 se cita mucho, pero está discutida.
 - **Temperatura interna:** los valores de 38–40 °C son temperatura interna. En la realidad se miden con una cápsula ingerible o se estiman a partir de la FC (algoritmo ECTemp, Buller 2013).
 
+## Mosquitto nativo: cómo conectarse (lo monta A)
+
+Usamos el Mosquitto instalado en Windows, no uno en Docker. Esta configuración está probada con Mosquitto 2.1.2.
+
+### 1. Comprobar la instalación
+
+- Los ejecutables (`mosquitto`, `mosquitto_pub`, `mosquitto_sub`, `mosquitto_passwd`) están en `C:\Program Files\mosquitto`. Si la consola no los encuentra, añade esa carpeta al PATH.
+- El instalador lo deja como **servicio de Windows** `mosquitto`, con arranque automático.
+- Ese servicio usa `C:\Program Files\mosquitto\mosquitto.conf`, que viene todo comentado. Por eso, sin tocar nada, solo escucha en `127.0.0.1:1883` y **acepta conexiones anónimas**.
+
+### 2. Configuración del proyecto (carpeta `mosquitto/`)
+
+`mosquitto/mosquitto.conf`:
+
+```
+listener 1883
+allow_anonymous false
+password_file mosquitto/passwd
+acl_file mosquitto/acl
+```
+
+- `listener 1883` sin dirección escucha en todas las interfaces. Hace falta para que el sábado la API y Node-RED, ya dentro de Docker, lleguen al broker por `host.docker.internal:1883`.
+- Las rutas son **relativas a la carpeta desde la que se lanza Mosquitto**. Lánzalo siempre desde la raíz del repo.
+
+`mosquitto/acl`:
+
+```
+# Node-RED: simulador, pasarela y dashboard
+user nodered
+topic readwrite salud/#
+
+# API: solo publica alertas
+user api
+topic write salud/+/alertas
+```
+
+`mosquitto/passwd` se genera con `mosquitto_passwd`. Solo guarda hashes, así que se puede subir. Ojo: `-c` crea el fichero de cero y borra lo que hubiera.
+
+```
+mosquitto_passwd -c -b mosquitto/passwd nodered <contraseña-nodered>
+mosquitto_passwd -b mosquitto/passwd api <contraseña-api>
+```
+
+Las contraseñas en claro **no se suben**: nos las pasamos por privado y cada uno las pone en su `.env` (`MQTT_USER` y `MQTT_PASS` para la API).
+
+### 3. Arrancarlo con nuestra configuración
+
+El servicio no lee nuestra configuración. Mientras trabajamos en el proyecto, se para y Mosquitto se lanza a mano desde la raíz del repo:
+
+```
+net stop mosquitto
+mosquitto -c mosquitto/mosquitto.conf -v
+```
+
+- `net stop` y `net start` necesitan una consola **como administrador**.
+- `-v` muestra cada conexión y cada mensaje. Va bien para depurar y para el vídeo.
+- Si Windows pregunta por el firewall al arrancarlo, permite el acceso en redes privadas. Lo necesitará Docker el sábado.
+- Al terminar la sesión de trabajo, `net start mosquitto` deja el servicio como estaba.
+
+### 4. Quién se conecta y cómo
+
+| Cliente | Dónde corre | Broker | Usuario |
+|---|---|---|---|
+| Node-RED (simulador, pasarela, dashboard) | Nativo | `localhost:1883` | `nodered`, en el nodo de configuración *mqtt-broker* (pestaña *Security*) |
+| API Express | Nativa hasta el sábado | `MQTT_URL=mqtt://localhost:1883` | `api` |
+| API y Node-RED en Docker | Contenedores, desde el sábado | `host.docker.internal:1883` | Los mismos |
+
+### 5. Probar que funciona
+
+En una consola, escuchar todo lo del proyecto:
+
+```
+mosquitto_sub -h localhost -u nodered -P <contraseña-nodered> -t "salud/#" -v
+```
+
+En otra, publicar con usuario (tiene que aparecer en la primera) y sin usuario (tiene que fallar):
+
+```
+mosquitto_pub -h localhost -u nodered -P <contraseña-nodered> -t salud/eq1/J08/fc -m 150
+mosquitto_pub -h localhost -t salud/prueba -m hola
+```
+
+La segunda tiene que responder `Connection Refused: not authorised`.
+
 ## Calendario
 
 | Día | Persona A | Persona B |
 |---|---|---|
 | **Dom 8** | Repartir los papeles A/B | — |
-| **Lun 9** | **Juntos (unas 2 h):** cerrar los contratos, README, `.gitignore` y comprobar las herramientas de los dos (Node, Node-RED, Mosquitto, Docker). **Después, A:** `mosquitto.conf` para el Mosquitto nativo (no va en Docker) con `allow_anonymous false`, passwd y ACL; `node-red/` como userDir con `@flowfuse/node-red-dashboard` y `credentialSecret` por variable de entorno | **Después, B:** esqueleto de Express con la estructura de clase, `docker-compose` con mongo, `/health`, conexión con Mongoose |
+| **Lun 9** | **Juntos (unas 2 h):** cerrar los contratos, README, `.gitignore` y comprobar las herramientas de los dos (Node, Node-RED, Mosquitto, Docker). **Después, A:** configuración del Mosquitto nativo en `mosquitto/` (conf, passwd y ACL, siguiendo la sección «Mosquitto nativo») y pasarle a B la contraseña del usuario `api`; `node-red/` como userDir con `@flowfuse/node-red-dashboard` y `credentialSecret` por variable de entorno | **Después, B:** esqueleto de Express con la estructura de clase, `docker-compose` con mongo, `/health`, conexión con Mongoose |
 | **Mar 10** | Simulador v1: máquina de estados por jugador (parado, andando, trote, carrera, sprint); posición en un campo de 105×68 m; distancia; aceleración y giro; FC con retraso respecto al esfuerzo. Publica por MQTT | Modelos (Jugador, Lectura resumida cada 10 s, Evento, Alerta, Pauta, Sesión), seed de los 11 jugadores, `POST /api/telemetria`, CRUD de jugadores |
 | **Mié 11** | Simulador v2: temperatura interna (sube con la carga y el calor), plantillas con línea base y LWT. Pasarela: suscripción `salud/+/+/+`, validación, unión por segundo, POST y watchdog | Servicio de métricas (zonas, carrera de alta intensidad, sprints, aceleraciones y desaceleraciones, %FCmáx). Motor de alertas con las 9 reglas, que publica en MQTT y guarda en Mongo |
 | **Jue 12** | **Hito 1: el núcleo funciona de extremo a extremo** (simulador → MQTT → pasarela → API → alerta → dashboard). Dashboard 2.0: semáforo por jugador, indicadores, lista de alertas con confirmación (POST) y formulario de pauta | Servidor WebSocket, endpoints de pauta, umbrales y sesiones, `openapi.yaml` con Swagger UI en `/api-docs` |
