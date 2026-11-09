@@ -1,6 +1,12 @@
 # Contrato de la API REST
 
-> **BORRADOR (Persona B).** Se revisa y se cierra con A el lunes 9. Cualquier cambio posterior se acuerda entre los dos y se apunta aquí.
+> **Versión 1.0, cerrada el lunes 9 de noviembre.** Cualquier cambio posterior se acuerda entre los dos y se apunta en el registro de cambios del final.
+>
+> **Acuerdos con la pasarela de A:**
+> - un lote por segundo con la forma `{equipo, ts, lecturas:[...]}`;
+> - si el watchdog lleva 5 s sin datos de un jugador, su lectura va como `{jugadorId, ts, estado:"sin_senal"}` dentro del mismo lote;
+> - las acciones de alta intensidad (`imu.acelAltas` y `imu.decelAltas`) llegan ya contadas desde el simulador;
+> - la pasarela manda la clave en la cabecera `x-api-key`.
 
 ## Generalidades
 
@@ -174,3 +180,9 @@ En el mismo puerto que la API (`ws://localhost:3000`). Solo envía, del servidor
 | `telemetria` | `{ "tipo": "telemetria", "ts": "…", "jugadores": [ { "jugadorId", "x", "y", "vel", "fc", "temp", "semaforo" } ] }` | 1 Hz |
 | `alerta` | `{ "tipo": "alerta", "alerta": { … } }` | Al momento |
 | `alerta_confirmada` | `{ "tipo": "alerta_confirmada", "alertaId": "…" }` | Al momento |
+
+## Registro de cambios
+
+| Fecha | Cambio |
+|---|---|
+| Lun 9 nov | Versión 1.0 cerrada con A |

@@ -1,6 +1,6 @@
 # Contrato de alertas
 
-> **BORRADOR (Persona B).** Se revisa y se cierra con A el lunes 9. Los umbrales son **valores por defecto**: se ajustan con el simulador y se pueden cambiar por jugador con `PUT /api/jugadores/:id/umbrales`.
+> **Versión 1.0, cerrada el lunes 9 de noviembre.** La API publica las alertas en MQTT con el usuario `api`, que en la ACL de A solo puede escribir en `salud/+/alertas`. Los umbrales son **valores por defecto**: se ajustan con el simulador y se pueden cambiar por jugador con `PUT /api/jugadores/:id/umbrales`.
 
 ## Forma de una alerta
 
