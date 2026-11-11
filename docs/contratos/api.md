@@ -22,6 +22,8 @@
   - `401` falta la clave o no es válida
   - `403` la clave no tiene permiso para esa operación
   - `404` no existe
+  - `409` ya existe (id o dorsal repetido)
+  - `503` MongoDB no está disponible
 
 ## Telemetría (pasarela → API)
 
@@ -65,6 +67,10 @@ Un lote por segundo con la última lectura de cada jugador. Clave: `API_KEY_PASA
 
 **Respuesta `202`:** `{"recibidas": 11}`
 
+- Si alguna lectura es de un jugador que no está dado de alta, se descarta y la respuesta lo indica: `{"recibidas": 10, "ignoradas": ["J12"]}`.
+- Si el lote no cumple el formato, se rechaza entero con `400`, indicando la lectura y el campo: `{"error": "lecturas[3]: fc debe ser un número"}`.
+- Los campos que no están en esta tabla se ignoran.
+
 ## Jugadores y perfil médico
 
 ### `GET /api/jugadores`
@@ -97,17 +103,22 @@ Cambia solo los umbrales indicados. Los nombres están en `alertas.md`.
 ```json
 {
   "jugadorId": "J08", "ts": "2026-11-12T18:30:05.000Z",
+  "estado": "ok",
   "semaforo": "ambar",
   "ultimo": { "x": 52.3, "y": 30.1, "vel": 28.7, "fc": 181, "pctFcMax": 93, "temp": 38.1, "asimetria": 16 },
   "alertasActivas": [ { "id": "…", "codigo": "FC_ALTA", "severidad": "aviso" } ]
 }
 ```
+`estado` es `ok` o `sin_senal`. Si el jugador todavía no ha mandado datos, `ts`, `estado` y `ultimo` valen `null`.
 
 ### `GET /api/jugadores/:id/historico?desde=&hasta=`
 Resúmenes de 10 s entre dos fechas. Por defecto, los últimos 15 minutos.
 ```json
-[ { "ts": "…", "velMedia": 12.4, "velMax": 27.9, "distancia": 34, "fcMedia": 172, "fcMax": 181, "temp": 38.1, "asimetria": 15, "acelAltas": 1, "decelAltas": 2, "x": 52.3, "y": 30.1 } ]
+[ { "ts": "…", "muestras": 10, "velMedia": 12.4, "velMax": 27.9, "distancia": 34, "distAltaInt": 12, "fcMedia": 172, "fcMax": 181, "temp": 38.1, "asimetria": 15, "sprints": 1, "acelAltas": 1, "decelAltas": 2, "x": 52.3, "y": 30.1, "sesionId": null } ]
 ```
+- `ts` es el inicio de la ventana de 10 s.
+- `distancia` y `distAltaInt` son los metros recorridos en la ventana; los segundos son los que pasan de 19,8 km/h.
+- `temp` es la última temperatura recibida en la ventana, y `asimetria` la media de `|izq − der|`. Pueden ser `null`.
 
 ### `GET /api/jugadores/:id/acwr`
 ```json
@@ -136,7 +147,9 @@ Los dos filtros son opcionales. Ordenadas de más reciente a más antigua. El fo
 ```json
 { "por": "Dra. Pérez", "nota": "Retirado a la banda, hidratación" }
 ```
-**`200`** con la alerta en estado `confirmada`.
+**`200`** con la alerta en estado `confirmada`, con `confirmadaPor`, `confirmadaEn` y `nota`. Si ya estaba confirmada, **`409`**.
+
+Al confirmarla se envía `{"tipo": "alerta_confirmada"}` por WebSocket y el semáforo del jugador se recalcula.
 
 ## Sesiones
 
@@ -167,7 +180,7 @@ Devuelve un `Bundle` (`type: searchset`) con `Observation` FHIR R4 de categoría
 
 ### `GET /health`
 ```json
-{ "status": "ok", "mongo": "connected", "uptime": 123 }
+{ "status": "ok", "mongo": "connected", "mqtt": "connected", "uptime": 123 }
 ```
 
 ## WebSocket
@@ -177,7 +190,7 @@ En el mismo puerto que la API (`ws://localhost:3000`). Solo envía, del servidor
 | `tipo` | Contenido | Frecuencia |
 |---|---|---|
 | `bienvenida` | `{ "tipo": "bienvenida", "ts": "…" }` | Al conectar |
-| `telemetria` | `{ "tipo": "telemetria", "ts": "…", "jugadores": [ { "jugadorId", "x", "y", "vel", "fc", "temp", "semaforo" } ] }` | 1 Hz |
+| `telemetria` | `{ "tipo": "telemetria", "ts": "…", "jugadores": [ { "jugadorId", "estado", "x", "y", "vel", "fc", "temp", "semaforo" } ] }` | 1 Hz |
 | `alerta` | `{ "tipo": "alerta", "alerta": { … } }` | Al momento |
 | `alerta_confirmada` | `{ "tipo": "alerta_confirmada", "alertaId": "…" }` | Al momento |
 
@@ -186,3 +199,5 @@ En el mismo puerto que la API (`ws://localhost:3000`). Solo envía, del servidor
 | Fecha | Cambio |
 |---|---|
 | Lun 9 nov | Versión 1.0 cerrada con A |
+| Mar 10 nov | Errores `409` y `503`. `POST /api/telemetria` puede devolver `ignoradas`. `GET /estado` incluye `estado`. El histórico añade `muestras`, `distAltaInt` y `sesionId`. En el WebSocket, cada jugador de `telemetria` lleva también `estado`. Nada de esto cambia lo que manda la pasarela |
+| Mié 11 nov | `/health` incluye `mqtt`. Confirmar una alerta ya confirmada devuelve `409`. El histórico añade `sprints`. Al crear una pauta, el jugador pasa a `enReadaptacion: true` |

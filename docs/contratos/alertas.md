@@ -16,7 +16,8 @@
   "ts": "2026-11-12T18:30:05.000Z",
   "estado": "activa",
   "confirmadaPor": null,
-  "confirmadaEn": null
+  "confirmadaEn": null,
+  "nota": null
 }
 ```
 
@@ -37,6 +38,8 @@
 
 - No se repite el mismo código para el mismo jugador mientras haya una alerta igual **activa**.
 - Después de confirmarla hay **60 s** de espera antes de poder lanzarla de nuevo.
+- Las alertas no se cierran solas: siguen activas, y el semáforo en ámbar o rojo, hasta que el médico las confirma.
+- La API evalúa las reglas con cada lectura (1 Hz).
 
 ## Reglas
 
