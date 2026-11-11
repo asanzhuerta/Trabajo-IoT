@@ -1,7 +1,7 @@
 # Node-RED: simulador, pasarela y dashboard
 user nodered
-topic readwrite salud/#
+topic readwrite sensors/#
 
 # API: solo publica alertas
 user api
-topic write salud/+/alertas
+topic write sensors/+/alertas
