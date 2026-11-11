@@ -1,0 +1,81 @@
+{
+	"sensors": 
+	{
+		"gps": 
+		{
+			"speed": 
+			{
+				"unit": "km/h",
+				"value": 0
+			},
+			"distancecovered": 
+			{
+				"unit": "m",
+				"value": 0
+			},
+			"position": 
+			{
+				"X": 
+				{
+					"unit": "m",
+					"value": 0
+				},
+				"Y": 
+				{
+					"unit": "m",
+					"value": 0
+				}
+			}
+		},
+		"accelerometer": 
+		{
+			"acceleration": 
+			{
+				"unit": "m/s2",
+				"value": 0
+			},
+			"desacceleration": 
+			{
+				"unit": "m/s2",
+				"value": 0
+			}
+		},
+		"giroscope":
+		{
+			"changeinposition":
+			{
+				"unit": "degrees",
+				"value": 0
+			}
+		},
+		"pulsemeter": 
+		{
+			"pulse": 
+			{
+				"unit": "bpm",
+				"value": 0
+			}
+		},
+		"temperature": 
+		{
+			"temperature": 
+			{
+				"unit": "C",
+				"value": 0
+			}
+		},
+		"pressuresensor": 
+		{
+			"pressureleftfoot": 
+			{
+				"unit": "%",
+				"value": 0
+			},
+			"pressurerightfoot": 
+			{
+				"unit": "%",
+				"value": 0
+			}
+		}
+	}
+}
