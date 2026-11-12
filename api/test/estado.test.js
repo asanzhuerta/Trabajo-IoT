@@ -64,27 +64,35 @@ test('el estado guarda los sensores en el formato de A y conserva temperatura y 
     assert.deepEqual(e.sensors.termometer, { temperature: { unit: 'C', value: 38.2 } });
     assert.equal(e.sensors.pressuresensor.pressureleftfoot.value, 44);
     assert.equal(e.derivados.pctFcMax, 92);
-    assert.equal(e.derivados.asimetria, 12);
+    assert.equal(e.derivados.asimetria, null);   // con una sola lectura de las plantillas todavía no se calcula
     assert.equal(e.derivados.zonaFc, 'Z5');
     assert.equal(e.historial.length, 2);
 });
 
 test('asimetría: las pisadas que alternan de pie se compensan', function () {
     // Como el simulador de A: la carga pasa de un pie al otro (35/65, 65/35…) aunque el jugador esté bien
-    for (let s = 0; s < 10; s++) {
+    for (let s = 0; s < 20; s++) {
         estado.procesar(lectura(s, { izq: s % 2 === 0 ? 35 : 65 }), PERFIL);
     }
     assert.equal(estado.obtener('p8').derivados.asimetria, 0);
-    const r = estado.procesar(lectura(10, { izq: 50 }), PERFIL).resumen;
+    const r = estado.procesar(lectura(20, { izq: 50 }), PERFIL).resumen;
     assert.equal(r.asimetria, 0);
 });
 
 test('asimetría: un desequilibrio mantenido sí se detecta', function () {
     // Carga siempre más el pie derecho: 40/60 y 45/55 → media de izq − der = −15
-    for (let s = 0; s < 10; s++) {
+    for (let s = 0; s < 20; s++) {
         estado.procesar(lectura(s, { izq: s % 2 === 0 ? 40 : 45 }), PERFIL);
     }
     assert.equal(estado.obtener('p8').derivados.asimetria, 15);
+});
+
+test('asimetría: con menos de 20 lecturas de las plantillas todavía no se calcula', function () {
+    // Al arrancar, una sola pisada (25/75) no puede dar ASIMETRIA
+    for (let s = 0; s < 19; s++) estado.procesar(lectura(s, { izq: 25 }), PERFIL);
+    assert.equal(estado.obtener('p8').derivados.asimetria, null);
+    estado.procesar(lectura(19, { izq: 25 }), PERFIL);
+    assert.equal(estado.obtener('p8').derivados.asimetria, 50);
 });
 
 test('asimetría: solo cuentan las plantillas del último minuto', function () {

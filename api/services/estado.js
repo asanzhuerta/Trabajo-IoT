@@ -18,6 +18,9 @@ const HISTORIAL_SEG = 180;
 // al moverse de lado carga un pie varios segundos seguidos (medido: 10 s pasa del umbral el 23 % del
 // tiempo, 60 s nunca). Un desequilibrio por lesión, en cambio, se mantiene durante minutos.
 const VENTANA_ASIMETRIA_MS = 60000;
+// Y hacen falta suficientes lecturas: con una o dos, la "media" es una sola pisada (al arrancar el simulador
+// de A saltaba ASIMETRIA en 10 de 11 jugadores en el segundo 0). 20 son 20 s con A y unos 40 s con el fake-gateway.
+const MIN_LECTURAS_ASIMETRIA = 20;
 const GRACIA_MS = 5000;   // margen antes de cerrar una ventana a la que ya no llegan lecturas
 
 const jugadores = new Map();
@@ -102,7 +105,9 @@ function procesar(lectura, perfil) {
     const dif = sensores.diferenciaPies(s);
     if (dif !== null) e.pies.push({ ts: t, dif: dif });
     while (e.pies.length && e.pies[0].ts <= t - VENTANA_ASIMETRIA_MS) e.pies.shift();
-    const asimetria = sensores.asimetriaMedia(e.pies.map(function (p) { return p.dif; }));
+    const asimetria = e.pies.length < MIN_LECTURAS_ASIMETRIA
+        ? null
+        : sensores.asimetriaMedia(e.pies.map(function (p) { return p.dif; }));
 
     const pctFcMax = Math.round(sensores.pulso(s) / perfil.fcMax * 100);
     e.derivados = {
