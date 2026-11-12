@@ -11,6 +11,8 @@ Simulador (Node-RED) ──MQTT──► Mosquitto ──MQTT──► Pasarela 
                                                                                    └──WebSocket──► web y dashboard
 ```
 
+> **Para arrancarlo todo de golpe**, haz doble clic en `arrancar-todo.cmd`: se abre una ventana de Windows Terminal con una pestaña por pieza, cada una con su historial de comandos.
+>
 > **Para probar lo que hay hasta ahora** (lo de A y lo de B juntos), sigue [TUTORIAL_DEV.md](TUTORIAL_DEV.md) en la rama `dev`.
 
 ## Requisitos

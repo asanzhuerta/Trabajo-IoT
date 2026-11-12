@@ -8,6 +8,24 @@ Simulador (Node-RED, A) ──MQTT──► Mosquitto ──► Pasarela (Node-R
                                       └──────── alertas: sensors/eq1/alertas ◄─────┘
 ```
 
+## Atajo: todo de golpe
+
+Con el `.env` preparado (paso 2), haz **doble clic en `arrancar-todo.cmd`**, o desde PowerShell en la raíz del repo:
+
+```powershell
+.rrancar-todo.ps1
+```
+
+Se abre una ventana de Windows Terminal con una pestaña de color por cada pieza: **Docker / MongoDB**, **Mosquitto**, **Subscriber**, **API**, **Node-RED** y **Mirar p1**. Hace lo mismo que los pasos 3 a 7.
+
+- `.rrancar-todo.ps1 -Limpiar` vacía antes la base de datos, y `-Jugador p8` vigila a p8 en lugar de a p1.
+- Si el servicio de Windows de Mosquitto está arrancado, lo para (pide permiso de administrador una vez).
+- **Cada pestaña tiene su propio historial**, en `~/.smarthealth/historial/<pestaña>.txt`. Cuando pares lo que se esté ejecutando (`Ctrl+C`), pulsa **↑** y te saldrán los comandos de esa parte: en la de la API, `npm run dev`, `npm test`, el seed y el fake-gateway; en la de Subscriber, las suscripciones a `#`, a las alertas y a `p1`… Lo que escribas se añade a ese historial. Para volver al historial inicial, borra la carpeta.
+- Todas las pestañas cargan el `.env`, así que puedes usar `$env:NODERED_MQTT_PASS` y similares en los comandos.
+- Para pararlo todo, cierra la ventana. Si quieres, deja el servicio como estaba con `net start mosquitto` (como administrador).
+
+Al cerrar, la pasarela puede llegar a avisar de que el jugador se ha quedado sin señal antes de pararse ella. Es normal: confirma o borra esa alerta, o arranca la próxima vez con `-Limpiar`.
+
 ## 0. Requisitos
 
 | Herramienta | Versión |
