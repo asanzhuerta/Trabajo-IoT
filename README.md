@@ -11,6 +11,8 @@ Simulador (Node-RED) ──MQTT──► Mosquitto ──MQTT──► Pasarela 
                                                                                    └──WebSocket──► web y dashboard
 ```
 
+> **Para probar lo que hay hasta ahora** (lo de A y lo de B juntos), sigue [TUTORIAL_DEV.md](TUTORIAL_DEV.md) en la rama `dev`.
+
 ## Requisitos
 
 | Herramienta | Versión probada |
