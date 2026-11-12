@@ -69,6 +69,36 @@ test('el estado guarda los sensores en el formato de A y conserva temperatura y 
     assert.equal(e.historial.length, 2);
 });
 
+test('asimetría: las pisadas que alternan de pie se compensan', function () {
+    // Como el simulador de A: la carga pasa de un pie al otro (35/65, 65/35…) aunque el jugador esté bien
+    for (let s = 0; s < 10; s++) {
+        estado.procesar(lectura(s, { izq: s % 2 === 0 ? 35 : 65 }), PERFIL);
+    }
+    assert.equal(estado.obtener('p8').derivados.asimetria, 0);
+    const r = estado.procesar(lectura(10, { izq: 50 }), PERFIL).resumen;
+    assert.equal(r.asimetria, 0);
+});
+
+test('asimetría: un desequilibrio mantenido sí se detecta', function () {
+    // Carga siempre más el pie derecho: 40/60 y 45/55 → media de izq − der = −15
+    for (let s = 0; s < 10; s++) {
+        estado.procesar(lectura(s, { izq: s % 2 === 0 ? 40 : 45 }), PERFIL);
+    }
+    assert.equal(estado.obtener('p8').derivados.asimetria, 15);
+});
+
+test('asimetría: solo cuentan las plantillas del último minuto', function () {
+    for (let s = 0; s < 5; s++) estado.procesar(lectura(s, { izq: 30 }), PERFIL);   // 40 puntos
+    for (let s = 5; s < 66; s++) estado.procesar(lectura(s, { izq: 48 }), PERFIL);  // 4 puntos
+    assert.equal(estado.obtener('p8').derivados.asimetria, 4);
+});
+
+test('asimetría: cargar un pie unos segundos (moverse de lado) no basta', function () {
+    // 8 s cargando el derecho (30/70) dentro de un minuto equilibrado: la media se queda en 40 × 8 / 60 ≈ 5
+    for (let s = 0; s < 60; s++) estado.procesar(lectura(s, { izq: s >= 20 && s < 28 ? 30 : 50 }), PERFIL);
+    assert.ok(estado.obtener('p8').derivados.asimetria < 6);
+});
+
 test('sin_senal cambia el estado pero no suma muestras', function () {
     estado.procesar(lectura(0), PERFIL);
     estado.procesar({ jugadorId: 'p8', ts: new Date(T0 + 1000), estado: 'sin_senal' }, PERFIL);

@@ -21,7 +21,7 @@ function nuevaVentana(inicio) {
         distancia: 0, distAltaInt: 0,
         sumFc: 0, fcMax: 0,
         temp: null,
-        sumAsim: 0, nAsim: 0,
+        difPies: [],
         sprints: 0,
         acelAltas: 0, decelAltas: 0,
         x: null, y: null
@@ -35,7 +35,7 @@ function acumular(v, s, extra) {
     const vel = sensores.velocidad(s);
     const pulso = sensores.pulso(s);
     const temp = sensores.temperatura(s);
-    const asimetria = sensores.asimetria(s);
+    const difPies = sensores.diferenciaPies(s);
     v.muestras++;
     v.sumVel += vel;
     v.velMax = Math.max(v.velMax, vel);
@@ -44,10 +44,7 @@ function acumular(v, s, extra) {
     v.sumFc += pulso;
     v.fcMax = Math.max(v.fcMax, pulso);
     if (temp !== null) v.temp = temp;
-    if (asimetria !== null) {
-        v.sumAsim += asimetria;
-        v.nAsim++;
-    }
+    if (difPies !== null) v.difPies.push(difPies);
     if (extra.sprint) v.sprints++;
     v.acelAltas += extra.acelAltas || 0;
     v.decelAltas += extra.decelAltas || 0;
@@ -75,7 +72,7 @@ function cerrar(v, jugadorId, sesionId) {
         fcMedia: Math.round(v.sumFc / v.muestras),
         fcMax: v.fcMax,
         temp: v.temp,
-        asimetria: v.nAsim ? r1(v.sumAsim / v.nAsim) : null,
+        asimetria: sensores.asimetriaMedia(v.difPies),   // |media de izq − der| en la ventana
         sprints: v.sprints,
         acelAltas: v.acelAltas,
         decelAltas: v.decelAltas,

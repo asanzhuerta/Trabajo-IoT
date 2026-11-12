@@ -53,7 +53,7 @@
 | `RECUPERACION_LENTA` | Tras un esfuerzo (velocidad de >19,8 a <7 km/h), la FC baja ≤ `recuperacionLpm` en los 60 s siguientes | `recuperacionLpm` = 12 | aviso |
 | `INCIDENTE` | Impacto ≥ `impactoG`, seguido de velocidad < 1 km/h durante `inmovilSeg`, con FC anómala (<50 lpm o >95 % FCmáx) o sin señal | `impactoG` = 4 g, `inmovilSeg` = 10 s | critica |
 | `SOBRECARGA` | Acciones de alta intensidad (`acelAltas` + `decelAltas`) acumuladas en la sesión > `sobrecargaAcciones` | `sobrecargaAcciones` = 120 | aviso |
-| `ASIMETRIA` | \|izq − der\| − `asimetriaBase` del jugador > `asimetriaUmbral` | `asimetriaUmbral` = 10 puntos | aviso |
+| `ASIMETRIA` | \|media de (izq − der) en 60 s\| − `asimetriaBase` del jugador > `asimetriaUmbral` | `asimetriaUmbral` = 10 puntos | aviso |
 | `PAUTA_EXCEDIDA` | Con pauta activa: velocidad > `velMax`, o distancia en alta intensidad de la sesión > `cargaMax`, o asimetría > `asimetriaMax` | Los fija la pauta del médico | aviso |
 | `SIN_SENAL` | Llega una lectura con `estado: "sin_senal"` (watchdog de la pasarela, 5 s) | — | aviso |
 

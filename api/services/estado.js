@@ -14,6 +14,10 @@ const sensores = require('./sensores');
 const { semaforo } = require('./semaforo');
 
 const HISTORIAL_SEG = 180;
+// La asimetría es la media de las plantillas del último minuto. Con el simulador de A, 10 s no bastan:
+// al moverse de lado carga un pie varios segundos seguidos (medido: 10 s pasa del umbral el 23 % del
+// tiempo, 60 s nunca). Un desequilibrio por lesión, en cambio, se mantiene durante minutos.
+const VENTANA_ASIMETRIA_MS = 60000;
 const GRACIA_MS = 5000;   // margen antes de cerrar una ventana a la que ya no llegan lecturas
 
 const jugadores = new Map();
@@ -33,6 +37,7 @@ function nuevo(jugadorId) {
         historial: [],
         ventana: null,
         ultimaDist: null,
+        pies: [],              // diferencias izq − der del último minuto, para la asimetría
         sesion: sesionVacia(),
         alertas: new Map(),        // código → severidad de las alertas activas
         confirmadas: new Map()     // código → momento (ms) en que se confirmó la última
@@ -92,10 +97,17 @@ function procesar(lectura, perfil) {
 
     // Los sensores que no vienen en esta lectura (temperatura, plantillas…) conservan su último valor
     e.sensors = { ...(e.sensors || {}), ...s };
+
+    // Asimetría: media de las plantillas del último minuto (ver sensores.asimetriaMedia)
+    const dif = sensores.diferenciaPies(s);
+    if (dif !== null) e.pies.push({ ts: t, dif: dif });
+    while (e.pies.length && e.pies[0].ts <= t - VENTANA_ASIMETRIA_MS) e.pies.shift();
+    const asimetria = sensores.asimetriaMedia(e.pies.map(function (p) { return p.dif; }));
+
     const pctFcMax = Math.round(sensores.pulso(s) / perfil.fcMax * 100);
     e.derivados = {
         pctFcMax: pctFcMax,
-        asimetria: sensores.asimetria(e.sensors),
+        asimetria: asimetria,
         zonaVelocidad: metricas.zonaVelocidad(vel),
         zonaFc: metricas.zonaFc(pctFcMax)
     };
