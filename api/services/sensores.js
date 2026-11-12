@@ -26,12 +26,22 @@ const sensores = {
     pieIzquierdo: function (s) { return valor(s && s.pressuresensor && s.pressuresensor.pressureleftfoot); },   // %
     pieDerecho: function (s) { return valor(s && s.pressuresensor && s.pressuresensor.pressurerightfoot); },    // %
 
-    // |izq − der| en puntos, o null si no hay plantillas
-    asimetria: function (s) {
+    // izq − der en puntos, CON signo (positivo si carga más el pie izquierdo), o null si no hay plantillas
+    diferenciaPies: function (s) {
         const izq = sensores.pieIzquierdo(s);
         const der = sensores.pieDerecho(s);
-        return izq === null || der === null ? null : r1(Math.abs(izq - der));
+        return izq === null || der === null ? null : izq - der;
     }
+};
+
+// Asimetría de carga entre pies a partir de varias lecturas: |media de (izq − der)|.
+// En cada pisada la carga pasa de un pie al otro, así que una lectura suelta puede marcar 20 o 30 puntos
+// aunque el jugador esté bien. Con la media con signo esas alternancias se compensan y queda
+// solo el desequilibrio que se mantiene, que es el que interesa (lesión, compensación…).
+sensores.asimetriaMedia = function (diferencias) {
+    if (diferencias.length === 0) return null;
+    const suma = diferencias.reduce(function (a, b) { return a + b; }, 0);
+    return r1(Math.abs(suma / diferencias.length));
 };
 
 module.exports = sensores;

@@ -136,6 +136,7 @@ Cambia solo los umbrales indicados. Los nombres están en `alertas.md`.
 - `estado` es `ok` o `sin_senal`.
 - `sensors` son los últimos valores en el formato del simulador de A. La temperatura y las plantillas conservan el último valor recibido.
 - `derivados` es lo que calcula la API: `zonaVelocidad` puede ser `andar`, `trote`, `carrera`, `alta` o `sprint`, y `zonaFc` va de `Z1` a `Z5`.
+- `derivados.asimetria` es `|media de (izq − der)|` de las plantillas del **último minuto**. En cada pisada la carga pasa de un pie al otro; con la media con signo esas alternancias se compensan y solo queda el desequilibrio que se mantiene.
 - Si el jugador todavía no ha mandado datos, `ts`, `estado`, `sensors` y `derivados` valen `null`.
 
 ### `GET /api/jugadores/:id/historico?desde=&hasta=`
@@ -145,7 +146,7 @@ Resúmenes de 10 s entre dos fechas. Por defecto, los últimos 15 minutos.
 ```
 - `ts` es el inicio de la ventana de 10 s.
 - `distancia` y `distAltaInt` son los metros recorridos en la ventana; los segundos son los que pasan de 19,8 km/h.
-- `temp` es la última temperatura recibida en la ventana, y `asimetria` la media de `|pressureleftfoot − pressurerightfoot|`. Pueden ser `null`.
+- `temp` es la última temperatura recibida en la ventana, y `asimetria` es `|media de (pressureleftfoot − pressurerightfoot)|` en la ventana. Pueden ser `null`.
 - Los resúmenes no son lecturas de un sensor, sino datos que calcula la API (medias, máximos, metros…), así que tienen sus propios campos.
 
 ### `GET /api/jugadores/:id/acwr`
@@ -229,4 +230,5 @@ En el mismo puerto que la API (`ws://localhost:3000`). Solo envía, del servidor
 | Lun 9 nov | Versión 1.0 cerrada con A |
 | Mar 10 nov | Errores `409` y `503`. `POST /api/telemetria` puede devolver `ignoradas`. `GET /estado` incluye `estado`. El histórico añade `muestras`, `distAltaInt` y `sesionId`. En el WebSocket, cada jugador de `telemetria` lleva también `estado`. Nada de esto cambia lo que manda la pasarela |
 | Mié 11 nov | `/health` incluye `mqtt`. Confirmar una alerta ya confirmada devuelve `409`. El histórico añade `sprints`. Al crear una pauta, el jugador pasa a `enReadaptacion: true` |
+| Jue 12 nov (tarde) | La asimetría pasa a ser la media con signo (en `derivados`, del último minuto; en el histórico, de la ventana de 10 s), no la de una sola lectura, para no confundir las pisadas o los desplazamientos laterales con un desequilibrio |
 | Jue 12 nov | **Versión 2.0, adaptada al simulador de A.** Las lecturas llevan `sensors` con el formato de los topics `p1/sensors/<sensor>` (`{unit, value}`). Los ids pasan a `p1`…`p11`. `equipo` es opcional. La API cuenta las acciones de alta intensidad. `impact` y `giroscope` son opcionales. Las alertas se publican en `sensors/<equipo>/alertas`. La API guarda los sensores en este formato, sin traducirlos: `GET /estado` y el WebSocket devuelven `sensors` (formato de A) y `derivados` en lugar de `ultimo` |
