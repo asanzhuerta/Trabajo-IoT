@@ -1,18 +1,18 @@
 # Contrato de la API REST
 
-> **Versión 1.0, cerrada el lunes 9 de noviembre.** Cualquier cambio posterior se acuerda entre los dos y se apunta en el registro de cambios del final.
+> **Versión 2.0 (jueves 12 de noviembre).** Adaptada al formato del simulador de A. Cualquier cambio posterior se acuerda entre los dos y se apunta en el registro de cambios del final.
 >
 > **Acuerdos con la pasarela de A:**
-> - un lote por segundo con la forma `{equipo, ts, lecturas:[...]}`;
+> - un lote por segundo con la forma `{ts, lecturas:[...]}`;
+> - cada lectura lleva los sensores del jugador **tal y como los publica el simulador por MQTT** (`p1/sensors/gps`…, con `{unit, value}`), agrupados en `sensors`, igual que en `valores.json`. La pasarela solo tiene que juntar los mensajes de cada jugador;
 > - si el watchdog lleva 5 s sin datos de un jugador, su lectura va como `{jugadorId, ts, estado:"sin_senal"}` dentro del mismo lote;
-> - las acciones de alta intensidad (`imu.acelAltas` y `imu.decelAltas`) llegan ya contadas desde el simulador;
 > - la pasarela manda la clave en la cabecera `x-api-key`.
 
 ## Generalidades
 
 - **URL base:** `http://localhost:3000`
 - **Formato:** JSON en peticiones y respuestas (`Content-Type: application/json`). Las fechas van en ISO 8601 UTC (`2026-11-12T18:30:05.000Z`).
-- **Identificadores de jugador:** seudónimos (`J01` … `J11`). Nunca se usan nombres.
+- **Identificadores de jugador:** seudónimos `p1` … `p11`, los mismos que el simulador usa en los topics (`p1/sensors/...`). Nunca se usan nombres.
 - **Autenticación:** cabecera `x-api-key`.
   - `API_KEY_PASARELA`: solo para `POST /api/telemetria` y `POST /api/clima` (la usa Node-RED).
   - `API_KEY_MEDICO`: para todo lo que escribe datos clínicos (jugadores, umbrales, pautas, confirmar alertas, sesiones).
@@ -33,42 +33,65 @@ Un lote por segundo con la última lectura de cada jugador. Clave: `API_KEY_PASA
 
 ```json
 {
-  "equipo": "eq1",
   "ts": "2026-11-12T18:30:05.000Z",
   "lecturas": [
     {
-      "jugadorId": "J08",
+      "jugadorId": "p8",
       "ts": "2026-11-12T18:30:05.000Z",
       "estado": "ok",
-      "gps":  { "x": 52.3, "y": 30.1, "vel": 28.7, "dist": 7842 },
-      "imu":  { "acelMax": 3.7, "decelMax": -4.1, "giro": 72, "impacto": 1.2, "acelAltas": 1, "decelAltas": 0 },
-      "fc": 181,
-      "temp": 38.1,
-      "plantillas": { "izq": 42, "der": 58 }
+      "sensors": {
+        "gps": {
+          "speed": { "unit": "km/h", "value": 28.7 },
+          "distancecovered": { "unit": "m", "value": 7842 },
+          "position": { "X": { "unit": "m", "value": 52.3 }, "Y": { "unit": "m", "value": 30.1 } }
+        },
+        "accelerometer": {
+          "acceleration": { "unit": "m/s2", "value": 3.7 },
+          "desacceleration": { "unit": "m/s2", "value": 0 },
+          "impact": { "unit": "g", "value": 1.2 }
+        },
+        "giroscope": { "changeinposition": { "unit": "degrees", "value": -72 } },
+        "pulsemeter": { "pulse": { "unit": "bpm", "value": 181 } },
+        "termometer": { "temperature": { "unit": "C", "value": 38.1 } },
+        "pressuresensor": {
+          "pressureleftfoot": { "unit": "%", "value": 42 },
+          "pressurerightfoot": { "unit": "%", "value": 58 }
+        }
+      }
     },
-    { "jugadorId": "J10", "ts": "2026-11-12T18:30:05.000Z", "estado": "sin_senal" }
+    { "jugadorId": "p10", "ts": "2026-11-12T18:30:05.000Z", "estado": "sin_senal" }
   ]
 }
 ```
 
+Cada bloque de `sensors` es el payload que el simulador publica en `<jugadorId>/sensors/<sensor>`. **La pasarela no tiene que traducir nada:** el resto del topic, después de `sensors/`, es la ruta dentro de `sensors`. Por ejemplo:
+- `p1/sensors/gps` con `{speed, distancecovered, position}` va a `sensors.gps`;
+- `p1/sensors/termometer/temperature` con `{unit, value}` va a `sensors.termometer.temperature`.
+
+La API guarda y usa los sensores en este mismo formato, sin convertirlos a otro.
+
 | Campo | Unidad | Notas |
 |---|---|---|
 | `estado` | `ok` \| `sin_senal` | `sin_senal` lo pone el watchdog de la pasarela (5 s sin datos). En ese caso no van más campos |
-| `gps.x`, `gps.y` | m | Posición en el campo, de 0 a 105 y de 0 a 68 |
-| `gps.vel` | km/h | Velocidad instantánea |
-| `gps.dist` | m | Distancia acumulada en la sesión |
-| `imu.acelMax`, `imu.decelMax` | m/s² | Pico del último segundo (`decelMax` es negativo) |
-| `imu.giro` | grados | Ángulo del cambio de dirección del último segundo (0 si no hubo) |
-| `imu.impacto` | g | Pico de impacto del último segundo |
-| `imu.acelAltas`, `imu.decelAltas` | nº | Acciones de alta intensidad (±3 m/s² mantenidas 0,5 s) detectadas **por el wearable** en el último segundo. A 1 Hz la API no puede medir 0,5 s, así que se cuentan en el dispositivo |
-| `fc` | lpm | Frecuencia cardiaca |
-| `temp` | °C | Temperatura interna. **Opcional**: solo llega cada 10 s |
-| `plantillas.izq`, `plantillas.der` | % | Reparto de carga entre los pies (suman 100). **Opcional**: llega cada 2 s |
+| `gps.position.X`, `gps.position.Y` | m | Posición en el campo, de 0 a 105 y de 0 a 68 |
+| `gps.speed` | km/h | Velocidad |
+| `gps.distancecovered` | m | Distancia acumulada en la sesión |
+| `accelerometer.acceleration`, `accelerometer.desacceleration` | m/s² | Cambio de velocidad en el último segundo. Las dos en positivo |
+| `accelerometer.impact` | g | Pico de impacto del último segundo. **Opcional**, pero sin él no salta la alerta `INCIDENTE` |
+| `giroscope.changeinposition` | grados | Giro del último segundo, con signo. **Opcional** (si no viene, 0) |
+| `pulsemeter.pulse` | lpm | Frecuencia cardiaca |
+| `termometer.temperature` | °C | Temperatura interna. **Opcional** |
+| `pressuresensor.pressureleftfoot`, `pressurerightfoot` | % | Reparto de carga entre los pies (suman 100). **Opcional** |
+
+- `gps`, `accelerometer` y `pulsemeter` son obligatorios en cada lectura con `estado: "ok"`.
+- `unit` puede omitirse; si viene, tiene que ser la de la tabla (así se detecta, por ejemplo, una velocidad en m/s).
+- `equipo` en el lote es opcional; si viene, tiene que ser el del `.env` (`eq1`).
+- Las **acciones de alta intensidad** las cuenta la API: una lectura con `acceleration` o `desacceleration` de 3 m/s² o más es una aceleración o desaceleración alta. A 1 Hz, ese valor es un cambio de velocidad mantenido durante todo el segundo, así que cumple el criterio de ±3 m/s² durante 0,5 s.
 
 **Respuesta `202`:** `{"recibidas": 11}`
 
-- Si alguna lectura es de un jugador que no está dado de alta, se descarta y la respuesta lo indica: `{"recibidas": 10, "ignoradas": ["J12"]}`.
-- Si el lote no cumple el formato, se rechaza entero con `400`, indicando la lectura y el campo: `{"error": "lecturas[3]: fc debe ser un número"}`.
+- Si alguna lectura es de un jugador que no está dado de alta, se descarta y la respuesta lo indica: `{"recibidas": 10, "ignoradas": ["p12"]}`.
+- Si el lote no cumple el formato, se rechaza entero con `400`, indicando la lectura y el campo: `{"error": "lecturas[3]: sensors.pulsemeter.pulse.value debe ser un número"}`.
 - Los campos que no están en esta tabla se ignoran.
 
 ## Jugadores y perfil médico
@@ -79,7 +102,7 @@ Lista de jugadores con su perfil.
 ### `GET /api/jugadores/:id`
 ```json
 {
-  "id": "J08", "dorsal": 8, "posicion": "MC",
+  "id": "p8", "dorsal": 10, "posicion": "MC",
   "fcMax": 195, "tempBasal": 37.0, "asimetriaBase": 4,
   "umbrales": { "tempAmbar": 39, "tempRoja": 40, "fcAltaPct": 92 },
   "enReadaptacion": false
@@ -102,14 +125,18 @@ Cambia solo los umbrales indicados. Los nombres están en `alertas.md`.
 Último estado en vivo y semáforo.
 ```json
 {
-  "jugadorId": "J08", "ts": "2026-11-12T18:30:05.000Z",
+  "jugadorId": "p8", "ts": "2026-11-12T18:30:05.000Z",
   "estado": "ok",
   "semaforo": "ambar",
-  "ultimo": { "x": 52.3, "y": 30.1, "vel": 28.7, "fc": 181, "pctFcMax": 93, "temp": 38.1, "asimetria": 16 },
+  "sensors": { "gps": { … }, "accelerometer": { … }, "giroscope": { … }, "pulsemeter": { "pulse": { "unit": "bpm", "value": 181 } }, "termometer": { … }, "pressuresensor": { … } },
+  "derivados": { "pctFcMax": 93, "asimetria": 16, "zonaVelocidad": "sprint", "zonaFc": "Z5" },
   "alertasActivas": [ { "id": "…", "codigo": "FC_ALTA", "severidad": "aviso" } ]
 }
 ```
-`estado` es `ok` o `sin_senal`. Si el jugador todavía no ha mandado datos, `ts`, `estado` y `ultimo` valen `null`.
+- `estado` es `ok` o `sin_senal`.
+- `sensors` son los últimos valores en el formato del simulador de A. La temperatura y las plantillas conservan el último valor recibido.
+- `derivados` es lo que calcula la API: `zonaVelocidad` puede ser `andar`, `trote`, `carrera`, `alta` o `sprint`, y `zonaFc` va de `Z1` a `Z5`.
+- Si el jugador todavía no ha mandado datos, `ts`, `estado`, `sensors` y `derivados` valen `null`.
 
 ### `GET /api/jugadores/:id/historico?desde=&hasta=`
 Resúmenes de 10 s entre dos fechas. Por defecto, los últimos 15 minutos.
@@ -118,11 +145,12 @@ Resúmenes de 10 s entre dos fechas. Por defecto, los últimos 15 minutos.
 ```
 - `ts` es el inicio de la ventana de 10 s.
 - `distancia` y `distAltaInt` son los metros recorridos en la ventana; los segundos son los que pasan de 19,8 km/h.
-- `temp` es la última temperatura recibida en la ventana, y `asimetria` la media de `|izq − der|`. Pueden ser `null`.
+- `temp` es la última temperatura recibida en la ventana, y `asimetria` la media de `|pressureleftfoot − pressurerightfoot|`. Pueden ser `null`.
+- Los resúmenes no son lecturas de un sensor, sino datos que calcula la API (medias, máximos, metros…), así que tienen sus propios campos.
 
 ### `GET /api/jugadores/:id/acwr`
 ```json
-{ "jugadorId": "J08", "cargaAguda": 4200, "cargaCronica": 3800, "ratio": 1.11, "franja": "optima" }
+{ "jugadorId": "p8", "cargaAguda": 4200, "cargaCronica": 3800, "ratio": 1.11, "franja": "optima" }
 ```
 `franja` puede ser `baja` (<0,8), `optima` (0,8–1,3) o `alta` (>1,3).
 
@@ -140,7 +168,7 @@ Crea una pauta y sustituye a la anterior.
 
 ## Alertas
 
-### `GET /api/alertas?estado=activa&jugadorId=J08`
+### `GET /api/alertas?estado=activa&jugadorId=p8`
 Los dos filtros son opcionales. Ordenadas de más reciente a más antigua. El formato de cada alerta está en `alertas.md`.
 
 ### `POST /api/alertas/:id/confirmar` (médico)
@@ -171,7 +199,7 @@ Al confirmarla se envía `{"tipo": "alerta_confirmada"}` por WebSocket y el sem�
 
 ## FHIR
 
-### `GET /fhir/Observation?patient=J08&code=8867-4`
+### `GET /fhir/Observation?patient=p8&code=8867-4`
 Devuelve un `Bundle` (`type: searchset`) con `Observation` FHIR R4 de categoría `vital-signs`:
 - frecuencia cardiaca: LOINC `8867-4`, unidad UCUM `/min`;
 - temperatura corporal: LOINC `8310-5`, unidad UCUM `Cel`.
@@ -190,7 +218,7 @@ En el mismo puerto que la API (`ws://localhost:3000`). Solo envía, del servidor
 | `tipo` | Contenido | Frecuencia |
 |---|---|---|
 | `bienvenida` | `{ "tipo": "bienvenida", "ts": "…" }` | Al conectar |
-| `telemetria` | `{ "tipo": "telemetria", "ts": "…", "jugadores": [ { "jugadorId", "estado", "x", "y", "vel", "fc", "temp", "semaforo" } ] }` | 1 Hz |
+| `telemetria` | `{ "tipo": "telemetria", "ts": "…", "jugadores": [ { "jugadorId", "ts", "estado", "semaforo", "sensors", "derivados" } ] }`, con `sensors` en el formato de A | 1 Hz |
 | `alerta` | `{ "tipo": "alerta", "alerta": { … } }` | Al momento |
 | `alerta_confirmada` | `{ "tipo": "alerta_confirmada", "alertaId": "…" }` | Al momento |
 
@@ -201,3 +229,4 @@ En el mismo puerto que la API (`ws://localhost:3000`). Solo envía, del servidor
 | Lun 9 nov | Versión 1.0 cerrada con A |
 | Mar 10 nov | Errores `409` y `503`. `POST /api/telemetria` puede devolver `ignoradas`. `GET /estado` incluye `estado`. El histórico añade `muestras`, `distAltaInt` y `sesionId`. En el WebSocket, cada jugador de `telemetria` lleva también `estado`. Nada de esto cambia lo que manda la pasarela |
 | Mié 11 nov | `/health` incluye `mqtt`. Confirmar una alerta ya confirmada devuelve `409`. El histórico añade `sprints`. Al crear una pauta, el jugador pasa a `enReadaptacion: true` |
+| Jue 12 nov | **Versión 2.0, adaptada al simulador de A.** Las lecturas llevan `sensors` con el formato de los topics `p1/sensors/<sensor>` (`{unit, value}`). Los ids pasan a `p1`…`p11`. `equipo` es opcional. La API cuenta las acciones de alta intensidad. `impact` y `giroscope` son opcionales. Las alertas se publican en `sensors/<equipo>/alertas`. La API guarda los sensores en este formato, sin traducirlos: `GET /estado` y el WebSocket devuelven `sensors` (formato de A) y `derivados` en lugar de `ultimo` |

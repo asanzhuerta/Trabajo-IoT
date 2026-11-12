@@ -1,13 +1,13 @@
 # Contrato de alertas
 
-> **Versión 1.0, cerrada el lunes 9 de noviembre.** La API publica las alertas en MQTT con el usuario `api`, que en la ACL de A solo puede escribir en `salud/+/alertas`. Los umbrales son **valores por defecto**: se ajustan con el simulador y se pueden cambiar por jugador con `PUT /api/jugadores/:id/umbrales`.
+> **Versión 2.0 (jueves 12 de noviembre).** La API publica las alertas en MQTT con el usuario `api`, que en la ACL de A solo puede escribir en `sensors/+/alertas`. Los umbrales son **valores por defecto**: se ajustan con el simulador y se pueden cambiar por jugador con `PUT /api/jugadores/:id/umbrales`.
 
 ## Forma de una alerta
 
 ```json
 {
   "id": "6733f0c2a1b2c3d4e5f60718",
-  "jugadorId": "J08",
+  "jugadorId": "p8",
   "codigo": "CALOR_AMBAR",
   "severidad": "aviso",
   "mensaje": "Temperatura interna 39,2 °C (umbral 39 °C)",
@@ -30,7 +30,7 @@
 
 ## Dónde se publica
 
-- **MQTT:** `salud/<equipo>/alertas`, QoS 1, sin retain. El payload es la alerta completa. La publica la API; el Dashboard 2.0 de A está suscrito.
+- **MQTT:** `sensors/<equipo>/alertas` (`sensors/eq1/alertas`), QoS 1, sin retain. El payload es la alerta completa. La publica la API; el Dashboard 2.0 de A está suscrito.
 - **WebSocket:** `{"tipo": "alerta", "alerta": {…}}` para la web.
 - **MongoDB:** colección `alertas`.
 
