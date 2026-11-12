@@ -35,12 +35,7 @@ router.post('/:id/confirmar', requiereClave('medico'), async function (req, res)
     if (body.nota !== undefined && typeof body.nota !== 'string') {
         return res.status(400).json({ error: 'nota debe ser un texto' });
     }
-    try {
-        res.json(await alertas.confirmar(req.params.id, body.por.trim(), body.nota));
-    } catch (err) {
-        if (err instanceof alertas.ErrorAlerta) return res.status(err.status).json({ error: err.message });
-        throw err;
-    }
+    res.json(await alertas.confirmar(req.params.id, body.por.trim(), body.nota));
 });
 
 module.exports = router;

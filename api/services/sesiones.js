@@ -9,15 +9,9 @@ const mongoose = require('mongoose');
 const { Sesion, Lectura } = require('../models');
 const estado = require('./estado');
 const websocket = require('../servers/websocket');
+const { ErrorHttp } = require('./errores');
 
 const MAX_SESIONES = 100;
-
-class ErrorSesion extends Error {
-    constructor(status, mensaje) {
-        super(mensaje);
-        this.status = status;
-    }
-}
 
 function r1(n) {
     return Math.round(n * 10) / 10;
@@ -30,9 +24,9 @@ async function guardarVentanasAbiertas() {
 }
 
 async function buscar(id) {
-    if (!mongoose.isValidObjectId(id)) throw new ErrorSesion(404, 'No existe la sesión ' + id);
+    if (!mongoose.isValidObjectId(id)) throw new ErrorHttp(404, 'No existe la sesión ' + id);
     const sesion = await Sesion.findById(id);
-    if (!sesion) throw new ErrorSesion(404, 'No existe la sesión ' + id);
+    if (!sesion) throw new ErrorHttp(404, 'No existe la sesión ' + id);
     return sesion;
 }
 
@@ -76,7 +70,7 @@ async function resumenDe(id) {
 async function iniciar(datos) {
     const abierta = await Sesion.findOne({ fin: null });
     if (abierta) {
-        throw new ErrorSesion(409, 'Ya hay una sesión abierta (' + abierta.id + ', "' + abierta.nombre + '"). Ciérrala antes de empezar otra');
+        throw new ErrorHttp(409, 'Ya hay una sesión abierta (' + abierta.id + ', "' + abierta.nombre + '"). Ciérrala antes de empezar otra');
     }
     const sesion = new Sesion({ tipo: datos.tipo, nombre: datos.nombre });
     await sesion.validate();
@@ -91,7 +85,7 @@ async function iniciar(datos) {
 
 async function finalizar(id) {
     const sesion = await buscar(id);
-    if (sesion.fin) throw new ErrorSesion(409, 'La sesión ya está cerrada');
+    if (sesion.fin) throw new ErrorHttp(409, 'La sesión ya está cerrada');
 
     if (estado.sesionActual() === sesion.id) {
         await guardarVentanasAbiertas();   // los últimos segundos todavía cuentan para la sesión
@@ -101,9 +95,9 @@ async function finalizar(id) {
     const cerrada = await Sesion.findOneAndUpdate(
         { _id: sesion._id, fin: null },
         { fin: new Date(), resumen: await resumenDe(sesion._id) },
-        { new: true, runValidators: true }
+        { returnDocument: 'after', runValidators: true }
     );
-    if (!cerrada) throw new ErrorSesion(409, 'La sesión ya está cerrada');
+    if (!cerrada) throw new ErrorHttp(409, 'La sesión ya está cerrada');
 
     websocket.sendMessage({ tipo: 'sesion_cerrada', sesion: cerrada.toJSON() });
     return cerrada;
@@ -139,4 +133,4 @@ mongoose.connection.on('connected', function () {
     restaurar().catch(function (err) { console.warn('No se pudo recuperar la sesión abierta: %s', err.message); });
 });
 
-module.exports = { iniciar, finalizar, obtener, listar, resumenDe, restaurar, ErrorSesion };
+module.exports = { iniciar, finalizar, obtener, listar };

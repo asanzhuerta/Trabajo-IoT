@@ -21,7 +21,6 @@ app.use(express.json());
 // Web propia (ficha del jugador y campo 2D)
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
-// Rutas
 app.use('/health', healthRoutes);
 app.use('/api', requiereMongo);
 app.use('/api/telemetria', telemetriaRoutes);
@@ -38,7 +37,7 @@ app.use(function (req, res) {
     res.status(404).json({ error: 'Ruta no encontrada: ' + req.method + ' ' + req.originalUrl });
 });
 
-// Errores (JSON mal formado, validación de Mongoose, duplicados…)
+// Errores: los ErrorHttp de los servicios (404, 409…), JSON mal formado, validación de Mongoose, duplicados…
 app.use(function (err, req, res, next) {
     if (err.type === 'entity.parse.failed') {
         return res.status(400).json({ error: 'JSON mal formado' });
@@ -57,8 +56,11 @@ app.use(function (err, req, res, next) {
         const nombre = campo === '_id' ? 'id' : campo;
         return res.status(409).json({ error: 'Ya existe un registro con ese ' + nombre + ': ' + err.keyValue[campo] });
     }
+    if (err.status && err.status < 500) {
+        return res.status(err.status).json({ error: err.message });
+    }
     console.error(err);
-    res.status(err.status || 500).json({ error: err.message || 'Error interno' });
+    res.status(500).json({ error: 'Error interno' });
 });
 
 module.exports = app;

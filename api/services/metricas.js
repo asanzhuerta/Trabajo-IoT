@@ -5,6 +5,8 @@
 //   andar < 7 · trote 7–14,4 · carrera 14,4–19,8 · alta intensidad 19,8–25 · sprint > 25
 // Zonas de FC (% de la FCmáx): Z1 < 60 · Z2 60–70 · Z3 70–80 · Z4 80–90 · Z5 ≥ 90
 
+const sensores = require('./sensores');
+
 const ZONAS_VELOCIDAD = [
     { nombre: 'andar', hasta: 7 },
     { nombre: 'trote', hasta: 14.4 },
@@ -13,8 +15,6 @@ const ZONAS_VELOCIDAD = [
     { nombre: 'sprint', hasta: Infinity }
 ];
 
-const sensores = require('./sensores');
-
 const VEL_SPRINT = 25;           // km/h
 const ACCION_ALTA = 3;           // m/s²: aceleración o desaceleración de alta intensidad
 const GIRO_MIN = 45;             // grados para contar un cambio de dirección
@@ -22,10 +22,7 @@ const VEL_GIRO_MIN = 10;         // km/h: girar parado no cuenta
 const IMPACTO_MIN = 2.5;         // g para guardar un impacto como evento
 
 function zonaVelocidad(vel) {
-    for (const z of ZONAS_VELOCIDAD) {
-        if (vel < z.hasta) return z.nombre;
-    }
-    return 'sprint';
+    return ZONAS_VELOCIDAD.find(function (z) { return vel < z.hasta; }).nombre;
 }
 
 function zonaFc(pctFcMax) {
@@ -40,8 +37,8 @@ function zonaFc(pctFcMax) {
 // de velocidad mantenido durante todo el segundo, así que cumple el criterio de ±3 m/s² durante 0,5 s.
 function accionesAltas(s) {
     return {
-        acel: (sensores.aceleracion(s) || 0) >= ACCION_ALTA ? 1 : 0,
-        decel: (sensores.desaceleracion(s) || 0) >= ACCION_ALTA ? 1 : 0
+        acel: sensores.aceleracion(s) >= ACCION_ALTA ? 1 : 0,
+        decel: sensores.desaceleracion(s) >= ACCION_ALTA ? 1 : 0
     };
 }
 

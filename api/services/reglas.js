@@ -29,7 +29,7 @@ function fc(h) {
 }
 
 function umbralesDe(perfil) {
-    return { ...UMBRALES_DEFECTO, ...((perfil && perfil.umbrales) || {}) };
+    return { ...UMBRALES_DEFECTO, ...perfil.umbrales };
 }
 
 function n(valor) {
@@ -52,8 +52,9 @@ function sostenido(historial, ahora, seg, condicion) {
     return tramo.length >= Math.max(1, Math.floor(seg * 0.9)) && tramo.every(condicion);
 }
 
+// Con estado 'ok', estado.js ya ha rellenado sensors y derivados
 function conSenal(ctx) {
-    return ctx.e.estado === 'ok' && ctx.e.sensors && ctx.e.derivados;
+    return ctx.e.estado === 'ok';
 }
 
 function ajusteCalor(u, clima) {
@@ -196,7 +197,7 @@ function sobrecarga(ctx) {
 function asimetria(ctx) {
     if (!conSenal(ctx) || ctx.e.derivados.asimetria == null) return null;
     const u = umbralesDe(ctx.perfil);
-    const base = (ctx.perfil && ctx.perfil.asimetriaBase) || 0;
+    const base = ctx.perfil.asimetriaBase || 0;
     const valor = ctx.e.derivados.asimetria;
     const maximo = base + u.asimetriaUmbral;
     if (valor <= maximo) return null;
@@ -253,12 +254,12 @@ const REGLAS = [
 
 // Todas las reglas que se cumplen ahora: [{ codigo, severidad, valor, umbral, mensaje }]
 function evaluar(ctx) {
-    const resultado = [];
+    const disparadas = [];
     for (const regla of REGLAS) {
-        const r = regla.evaluar(ctx);
-        if (r) resultado.push({ codigo: regla.codigo, severidad: regla.severidad, ...r });
+        const alerta = regla.evaluar(ctx);
+        if (alerta) disparadas.push({ codigo: regla.codigo, severidad: regla.severidad, ...alerta });
     }
-    return resultado;
+    return disparadas;
 }
 
 module.exports = { REGLAS, evaluar, umbralesDe };

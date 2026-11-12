@@ -1,11 +1,10 @@
-# Infraestructura del proyecto Smart Health.
-# Por ahora: MongoDB. La API y Node-RED se añaden el sábado 14 (compose final).
+# Infraestructura del proyecto Smart Health: solo MongoDB.
 #
 #   docker compose up -d     -> levanta MongoDB en localhost:27017
 #   docker compose down      -> lo para (los datos se conservan en el volumen)
 #
-# Mosquitto NO va en Docker: usamos el Mosquitto nativo (servicio de Windows)
-# en localhost:1883, con la configuración de mosquitto/ (la prepara A).
+# Mosquitto, Node-RED y la API van instalados en local, no en Docker. Mosquitto usa la
+# configuración de mosquitto/ (ver TUTORIAL_DEV.md).
 
 services:
   mongo:

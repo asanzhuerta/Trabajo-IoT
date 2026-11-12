@@ -58,7 +58,8 @@ mongoose.connection.on('connected', function () {
 });
 
 setInterval(function () {
-    if (mongoose.connection.readyState === 1) cargar().catch(function () {});
+    if (mongoose.connection.readyState !== 1) return;
+    cargar().catch(function (err) { console.warn('No se pudieron recargar los perfiles: %s', err.message); });
 }, RECARGA_MS).unref();
 
 module.exports = { cargar, obtener, pauta, clima, fijarClima, recargarSiHaceFalta };

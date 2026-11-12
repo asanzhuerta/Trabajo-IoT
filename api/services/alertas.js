@@ -14,6 +14,7 @@ const estado = require('./estado');
 const perfiles = require('./perfiles');
 const websocket = require('../servers/websocket');
 const publisher = require('../mqtt/publisher');
+const { ErrorHttp } = require('./errores');
 
 const ESPERA_MS = 60000;
 const SINCRONIZA_MS = 30000;
@@ -21,13 +22,6 @@ const SINCRONIZA_MS = 30000;
 // Cuándo se marcó en memoria cada alerta (clave "p8:FC_ALTA"), para no borrarla al sincronizar
 // mientras se está guardando
 const marcadas = new Map();
-
-class ErrorAlerta extends Error {
-    constructor(status, mensaje) {
-        super(mensaje);
-        this.status = status;
-    }
-}
 
 // Puro: ¿se puede lanzar ahora este código para este jugador?
 function puedeLanzarse(e, codigo, ahora) {
@@ -84,8 +78,8 @@ async function evaluarJugador(jugadorId, perfil) {
 // POST /api/alertas/:id/confirmar
 async function confirmar(id, por, nota) {
     const alerta = await Alerta.findById(id);
-    if (!alerta) throw new ErrorAlerta(404, 'No existe la alerta ' + id);
-    if (alerta.estado === 'confirmada') throw new ErrorAlerta(409, 'La alerta ya está confirmada');
+    if (!alerta) throw new ErrorHttp(404, 'No existe la alerta ' + id);
+    if (alerta.estado === 'confirmada') throw new ErrorHttp(409, 'La alerta ya está confirmada');
 
     alerta.estado = 'confirmada';
     alerta.confirmadaPor = por;
@@ -137,7 +131,8 @@ mongoose.connection.on('connected', function () {
 });
 
 setInterval(function () {
-    if (mongoose.connection.readyState === 1) sincronizar().catch(function () {});
+    if (mongoose.connection.readyState !== 1) return;
+    sincronizar().catch(function (err) { console.warn('No se pudieron sincronizar las alertas: %s', err.message); });
 }, SINCRONIZA_MS).unref();
 
-module.exports = { evaluarJugador, confirmar, puedeLanzarse, ErrorAlerta, ESPERA_MS };
+module.exports = { evaluarJugador, confirmar, puedeLanzarse, ESPERA_MS };

@@ -91,7 +91,7 @@ function procesar(lectura, perfil) {
     e.ultimaDist = dist;
     const altaInt = vel > resumen.VEL_ALTA ? delta : 0;
 
-    const eventos = metricas.eventos(lectura, e.sensors ? sensores.velocidad(e.sensors) : null);
+    const eventos = metricas.eventos(lectura, sensores.velocidad(e.sensors));
     const sprint = eventos.some(function (ev) { return ev.tipo === 'sprint'; });
     const acciones = metricas.accionesAltas(s);
 

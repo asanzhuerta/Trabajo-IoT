@@ -13,18 +13,18 @@ function r1(n) {
 }
 
 const sensores = {
-    velocidad: function (s) { return valor(s && s.gps && s.gps.speed); },                         // km/h
-    distancia: function (s) { return valor(s && s.gps && s.gps.distancecovered); },               // m
-    x: function (s) { return valor(s && s.gps && s.gps.position && s.gps.position.X); },          // m
-    y: function (s) { return valor(s && s.gps && s.gps.position && s.gps.position.Y); },          // m
-    aceleracion: function (s) { return valor(s && s.accelerometer && s.accelerometer.acceleration); },       // m/s²
-    desaceleracion: function (s) { return valor(s && s.accelerometer && s.accelerometer.desacceleration); }, // m/s², en positivo
-    impacto: function (s) { return valor(s && s.accelerometer && s.accelerometer.impact); },      // g
-    giro: function (s) { return valor(s && s.giroscope && s.giroscope.changeinposition); },       // grados, con signo
-    pulso: function (s) { return valor(s && s.pulsemeter && s.pulsemeter.pulse); },               // lpm
-    temperatura: function (s) { return valor(s && s.termometer && s.termometer.temperature); },   // °C
-    pieIzquierdo: function (s) { return valor(s && s.pressuresensor && s.pressuresensor.pressureleftfoot); },   // %
-    pieDerecho: function (s) { return valor(s && s.pressuresensor && s.pressuresensor.pressurerightfoot); },    // %
+    velocidad: function (s) { return valor(s?.gps?.speed); },                              // km/h
+    distancia: function (s) { return valor(s?.gps?.distancecovered); },                    // m
+    x: function (s) { return valor(s?.gps?.position?.X); },                                // m
+    y: function (s) { return valor(s?.gps?.position?.Y); },                                // m
+    aceleracion: function (s) { return valor(s?.accelerometer?.acceleration); },           // m/s²
+    desaceleracion: function (s) { return valor(s?.accelerometer?.desacceleration); },     // m/s², en positivo
+    impacto: function (s) { return valor(s?.accelerometer?.impact); },                     // g
+    giro: function (s) { return valor(s?.giroscope?.changeinposition); },                  // grados, con signo
+    pulso: function (s) { return valor(s?.pulsemeter?.pulse); },                           // lpm
+    temperatura: function (s) { return valor(s?.termometer?.temperature); },               // °C
+    pieIzquierdo: function (s) { return valor(s?.pressuresensor?.pressureleftfoot); },     // %
+    pieDerecho: function (s) { return valor(s?.pressuresensor?.pressurerightfoot); },      // %
 
     // izq − der en puntos, CON signo (positivo si carga más el pie izquierdo), o null si no hay plantillas
     diferenciaPies: function (s) {
