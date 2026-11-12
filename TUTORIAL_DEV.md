@@ -99,6 +99,8 @@ npm run dev
 
 Abre `http://localhost:3000/health`: tiene que decir `"mongo":"connected"` y `"mqtt":"connected"`.
 
+En `http://localhost:3000/api-docs` está Swagger con todos los endpoints: pulsa *Authorize*, pon la clave del médico del `.env` y puedes probarlos desde el navegador. Si prefieres Postman, importa `docs/postman_collection.json`.
+
 ## 7. Node-RED: simulador y pasarela (consola 5)
 
 Desde la raíz del repo:

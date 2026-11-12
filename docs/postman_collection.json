@@ -1,0 +1,1194 @@
+{
+  "info": {
+    "name": "Smart Health · API REST",
+    "description": "Colección de la API de Smart Health (Practical Assignment IoT 2026/27).\n\n**Antes de empezar:**\n1. Arranca la API (`npm run dev` en `api/`) y carga los jugadores (`node scripts/seed.js`).\n2. En las variables de la colección, pon en **Current value** las claves del `.env`: `claveMedico` = `API_KEY_MEDICO` y `clavePasarela` = `API_KEY_PASARELA`. El *Current value* no se exporta ni se sube al repo.\n3. Si la API no está en el puerto 3000, cambia `baseUrl`.\n\n**Variables que se rellenan solas:** `sesionId` (al empezar una sesión), `alertaId` (al listar alertas activas) y `ahora` (fecha actual para la telemetría).\n\nCada petición comprueba el código de respuesta, así que se puede lanzar entera con el *Collection Runner*.\nLa documentación interactiva está en `{{baseUrl}}/api-docs` y los contratos en `docs/contratos/`.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "claveMedico",
+      "value": "pon-aqui-API_KEY_MEDICO"
+    },
+    {
+      "key": "clavePasarela",
+      "value": "pon-aqui-API_KEY_PASARELA"
+    },
+    {
+      "key": "jugadorId",
+      "value": "p1"
+    },
+    {
+      "key": "sesionId",
+      "value": ""
+    },
+    {
+      "key": "alertaId",
+      "value": ""
+    },
+    {
+      "key": "ahora",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Utilidad",
+      "description": "Comprobaciones rápidas.",
+      "item": [
+        {
+          "name": "Health",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Mongo conectado', function () { pm.expect(pm.response.json().mongo).to.eql('connected'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "Telemetría",
+      "description": "Lo que manda la pasarela de Node-RED una vez por segundo (clave de la pasarela).",
+      "item": [
+        {
+          "name": "Enviar un lote",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('ahora', new Date().toISOString());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 202', function () { pm.response.to.have.status(202); });",
+                  "pm.test('Recibe las 3 lecturas', function () { pm.expect(pm.response.json().recibidas).to.eql(3); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{clavePasarela}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/telemetria",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "telemetria"
+              ]
+            },
+            "description": "Lote con p1 y p8 en el formato del simulador de A, y p10 sin señal. `{{ahora}}` se rellena antes de enviarlo.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ts\": \"{{ahora}}\",\n  \"lecturas\": [\n    {\n      \"jugadorId\": \"p1\",\n      \"ts\": \"{{ahora}}\",\n      \"estado\": \"ok\",\n      \"sensors\": {\n        \"gps\": {\n          \"speed\": {\n            \"unit\": \"km/h\",\n            \"value\": 14.2\n          },\n          \"distancecovered\": {\n            \"unit\": \"m\",\n            \"value\": 2350\n          },\n          \"position\": {\n            \"X\": {\n              \"unit\": \"m\",\n              \"value\": 40.5\n            },\n            \"Y\": {\n              \"unit\": \"m\",\n              \"value\": 22.1\n            }\n          }\n        },\n        \"accelerometer\": {\n          \"acceleration\": {\n            \"unit\": \"m/s2\",\n            \"value\": 1.2\n          },\n          \"desacceleration\": {\n            \"unit\": \"m/s2\",\n            \"value\": 0\n          },\n          \"impact\": {\n            \"unit\": \"g\",\n            \"value\": 1.1\n          }\n        },\n        \"giroscope\": {\n          \"changeinposition\": {\n            \"unit\": \"degrees\",\n            \"value\": 12\n          }\n        },\n        \"pulsemeter\": {\n          \"pulse\": {\n            \"unit\": \"bpm\",\n            \"value\": 152\n          }\n        },\n        \"termometer\": {\n          \"temperature\": {\n            \"unit\": \"C\",\n            \"value\": 37.9\n          }\n        },\n        \"pressuresensor\": {\n          \"pressureleftfoot\": {\n            \"unit\": \"%\",\n            \"value\": 49\n          },\n          \"pressurerightfoot\": {\n            \"unit\": \"%\",\n            \"value\": 51\n          }\n        }\n      }\n    },\n    {\n      \"jugadorId\": \"p8\",\n      \"ts\": \"{{ahora}}\",\n      \"estado\": \"ok\",\n      \"sensors\": {\n        \"gps\": {\n          \"speed\": {\n            \"unit\": \"km/h\",\n            \"value\": 26.1\n          },\n          \"distancecovered\": {\n            \"unit\": \"m\",\n            \"value\": 3120\n          },\n          \"position\": {\n            \"X\": {\n              \"unit\": \"m\",\n              \"value\": 71\n            },\n            \"Y\": {\n              \"unit\": \"m\",\n              \"value\": 40.3\n            }\n          }\n        },\n        \"accelerometer\": {\n          \"acceleration\": {\n            \"unit\": \"m/s2\",\n            \"value\": 1.2\n          },\n          \"desacceleration\": {\n            \"unit\": \"m/s2\",\n            \"value\": 0\n          },\n          \"impact\": {\n            \"unit\": \"g\",\n            \"value\": 1.1\n          }\n        },\n        \"giroscope\": {\n          \"changeinposition\": {\n            \"unit\": \"degrees\",\n            \"value\": 12\n          }\n        },\n        \"pulsemeter\": {\n          \"pulse\": {\n            \"unit\": \"bpm\",\n            \"value\": 178\n          }\n        },\n        \"termometer\": {\n          \"temperature\": {\n            \"unit\": \"C\",\n            \"value\": 38.4\n          }\n        },\n        \"pressuresensor\": {\n          \"pressureleftfoot\": {\n            \"unit\": \"%\",\n            \"value\": 49\n          },\n          \"pressurerightfoot\": {\n            \"unit\": \"%\",\n            \"value\": 51\n          }\n        }\n      }\n    },\n    {\n      \"jugadorId\": \"p10\",\n      \"ts\": \"{{ahora}}\",\n      \"estado\": \"sin_senal\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Jugadores",
+      "description": "Perfil médico, umbrales, estado en vivo e histórico. Las escrituras piden la clave del médico.",
+      "item": [
+        {
+          "name": "Listar jugadores",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Hay jugadores', function () { pm.expect(pm.response.json().length).to.be.above(0); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jugadores"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Ver un jugador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/{{jugadorId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jugadores",
+                "{{jugadorId}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Estado en vivo y semáforo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Tiene semáforo', function () { pm.expect(['verde', 'ambar', 'rojo']).to.include(pm.response.json().semaforo); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/{{jugadorId}}/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jugadores",
+                "{{jugadorId}}",
+                "estado"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Histórico (últimos 15 min)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/{{jugadorId}}/historico",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jugadores",
+                "{{jugadorId}}",
+                "historico"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Histórico entre dos fechas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/{{jugadorId}}/historico?desde=2026-11-12T18:00:00Z&hasta=2026-11-12T18:15:00Z",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jugadores",
+                "{{jugadorId}}",
+                "historico"
+              ],
+              "query": [
+                {
+                  "key": "desde",
+                  "value": "2026-11-12T18:00:00Z"
+                },
+                {
+                  "key": "hasta",
+                  "value": "2026-11-12T18:15:00Z"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Dar de alta un jugador (p12)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201', function () { pm.response.to.have.status(201); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{claveMedico}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jugadores"
+              ]
+            },
+            "description": "La segunda vez responde 409 (ya existe). Para repetirlo, vuelve a lanzar el seed con `--limpiar`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"p12\",\n  \"dorsal\": 23,\n  \"posicion\": \"DFC\",\n  \"fcMax\": 192,\n  \"tempBasal\": 37,\n  \"asimetriaBase\": 3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Actualizar el perfil",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{claveMedico}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/{{jugadorId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jugadores",
+                "{{jugadorId}}"
+              ]
+            },
+            "description": "Solo cambia los campos que vengan. 3 es el valor que tiene p1 en el seed.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"asimetriaBase\": 3\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Ajustar umbrales",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{claveMedico}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/{{jugadorId}}/umbrales",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jugadores",
+                "{{jugadorId}}",
+                "umbrales"
+              ]
+            },
+            "description": "Los nombres de los umbrales están en `docs/contratos/alertas.md`. Aquí se dejan los valores por defecto.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fcAltaPct\": 92,\n  \"tempAmbar\": 39\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pauta de readaptación",
+      "description": "Límites que fija el médico a un jugador que vuelve de una lesión (p5 tiene una en el seed).",
+      "item": [
+        {
+          "name": "Ver la pauta activa de p5",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/p5/pauta",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jugadores",
+                "p5",
+                "pauta"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Crear una pauta para p5",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const d = new Date(Date.now() + 7 * 24 * 3600 * 1000);",
+                  "pm.collectionVariables.set('dentroDeUnaSemana', d.toISOString().slice(0, 10));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201', function () { pm.response.to.have.status(201); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{claveMedico}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/p5/pauta",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jugadores",
+                "p5",
+                "pauta"
+              ]
+            },
+            "description": "Sustituye a la anterior. `hasta` se pone a una semana vista antes de enviarla.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"velMax\": 22,\n  \"cargaMax\": 600,\n  \"asimetriaMax\": 8,\n  \"hasta\": \"{{dentroDeUnaSemana}}\",\n  \"notas\": \"Vuelta progresiva tras sobrecarga en isquios\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Alertas",
+      "description": "Alertas del motor de reglas. Para que haya alguna activa, lanza el fake-gateway con un escenario (p. ej. `--calor p8`).",
+      "item": [
+        {
+          "name": "Alertas activas",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });",
+                  "const activas = pm.response.json();",
+                  "if (activas.length) pm.collectionVariables.set('alertaId', activas[0].id);",
+                  "console.log(activas.length ? 'alertaId = ' + activas[0].id + ' (' + activas[0].codigo + ' de ' + activas[0].jugadorId + ')' : 'No hay alertas activas');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/alertas?estado=activa",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "alertas"
+              ],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "activa"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Alertas de un jugador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/alertas?jugadorId={{jugadorId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "alertas"
+              ],
+              "query": [
+                {
+                  "key": "jugadorId",
+                  "value": "{{jugadorId}}"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Confirmar la alerta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{claveMedico}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/alertas/{{alertaId}}/confirmar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "alertas",
+                "{{alertaId}}",
+                "confirmar"
+              ]
+            },
+            "description": "Confirma la alerta guardada en `alertaId` por «Alertas activas». Si ya estaba confirmada responde 409.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"por\": \"Dra. Pérez\",\n  \"nota\": \"Retirado a la banda, hidratación\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sesiones",
+      "description": "Entrenamientos y partidos. Solo puede haber una abierta; al cerrarla se guarda el resumen de cada jugador.",
+      "item": [
+        {
+          "name": "Empezar una sesión",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201', function () { pm.response.to.have.status(201); });",
+                  "pm.collectionVariables.set('sesionId', pm.response.json().id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{claveMedico}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sesiones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sesiones"
+              ]
+            },
+            "description": "Guarda el id en `sesionId`. Si ya hay una abierta responde 409: ciérrala antes.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"entrenamiento\",\n  \"nombre\": \"Entrenamiento de prueba (Postman)\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Sesión abierta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/sesiones?estado=abierta",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sesiones"
+              ],
+              "query": [
+                {
+                  "key": "estado",
+                  "value": "abierta"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Ver la sesión (resumen hasta ahora)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/sesiones/{{sesionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sesiones",
+                "{{sesionId}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Cerrar la sesión",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Queda cerrada', function () { pm.expect(pm.response.json().fin).to.not.eql(null); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{claveMedico}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sesiones/{{sesionId}}/fin",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sesiones",
+                "{{sesionId}}",
+                "fin"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Listar sesiones",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/sesiones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sesiones"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "Errores (para enseñarlos)",
+      "description": "Cómo responde la API cuando algo está mal. Cada petición espera su código de error.",
+      "item": [
+        {
+          "name": "401: sin clave",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 401', function () { pm.response.to.have.status(401); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sesiones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sesiones"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipo\": \"partido\",\n  \"nombre\": \"x\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "403: la pasarela intenta confirmar una alerta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 403', function () { pm.response.to.have.status(403); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{clavePasarela}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/alertas/000000000000000000000000/confirmar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "alertas",
+                "000000000000000000000000",
+                "confirmar"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"por\": \"Node-RED\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "400: lote con un pulso que no es un número",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('ahora', new Date().toISOString());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', function () { pm.response.to.have.status(400); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{clavePasarela}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/telemetria",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "telemetria"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ts\": \"{{ahora}}\",\n  \"lecturas\": [\n    {\n      \"jugadorId\": \"p1\",\n      \"ts\": \"{{ahora}}\",\n      \"estado\": \"ok\",\n      \"sensors\": {\n        \"gps\": {\n          \"speed\": {\n            \"unit\": \"km/h\",\n            \"value\": 10\n          },\n          \"distancecovered\": {\n            \"unit\": \"m\",\n            \"value\": 100\n          },\n          \"position\": {\n            \"X\": {\n              \"unit\": \"m\",\n              \"value\": 10\n            },\n            \"Y\": {\n              \"unit\": \"m\",\n              \"value\": 10\n            }\n          }\n        },\n        \"accelerometer\": {\n          \"acceleration\": {\n            \"unit\": \"m/s2\",\n            \"value\": 1.2\n          },\n          \"desacceleration\": {\n            \"unit\": \"m/s2\",\n            \"value\": 0\n          },\n          \"impact\": {\n            \"unit\": \"g\",\n            \"value\": 1.1\n          }\n        },\n        \"giroscope\": {\n          \"changeinposition\": {\n            \"unit\": \"degrees\",\n            \"value\": 12\n          }\n        },\n        \"pulsemeter\": {\n          \"pulse\": {\n            \"unit\": \"bpm\",\n            \"value\": \"mucho\"\n          }\n        },\n        \"termometer\": {\n          \"temperature\": {\n            \"unit\": \"C\",\n            \"value\": 37.5\n          }\n        },\n        \"pressuresensor\": {\n          \"pressureleftfoot\": {\n            \"unit\": \"%\",\n            \"value\": 49\n          },\n          \"pressurerightfoot\": {\n            \"unit\": \"%\",\n            \"value\": 51\n          }\n        }\n      }\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "400: velocidad en m/s en vez de km/h",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('ahora', new Date().toISOString());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', function () { pm.response.to.have.status(400); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{clavePasarela}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/telemetria",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "telemetria"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ts\": \"{{ahora}}\",\n  \"lecturas\": [\n    {\n      \"jugadorId\": \"p1\",\n      \"ts\": \"{{ahora}}\",\n      \"estado\": \"ok\",\n      \"sensors\": {\n        \"gps\": {\n          \"speed\": {\n            \"unit\": \"m/s\",\n            \"value\": 3\n          },\n          \"distancecovered\": {\n            \"unit\": \"m\",\n            \"value\": 100\n          },\n          \"position\": {\n            \"X\": {\n              \"unit\": \"m\",\n              \"value\": 10\n            },\n            \"Y\": {\n              \"unit\": \"m\",\n              \"value\": 10\n            }\n          }\n        },\n        \"accelerometer\": {\n          \"acceleration\": {\n            \"unit\": \"m/s2\",\n            \"value\": 1.2\n          },\n          \"desacceleration\": {\n            \"unit\": \"m/s2\",\n            \"value\": 0\n          },\n          \"impact\": {\n            \"unit\": \"g\",\n            \"value\": 1.1\n          }\n        },\n        \"giroscope\": {\n          \"changeinposition\": {\n            \"unit\": \"degrees\",\n            \"value\": 12\n          }\n        },\n        \"pulsemeter\": {\n          \"pulse\": {\n            \"unit\": \"bpm\",\n            \"value\": 150\n          }\n        },\n        \"termometer\": {\n          \"temperature\": {\n            \"unit\": \"C\",\n            \"value\": 37.5\n          }\n        },\n        \"pressuresensor\": {\n          \"pressureleftfoot\": {\n            \"unit\": \"%\",\n            \"value\": 49\n          },\n          \"pressurerightfoot\": {\n            \"unit\": \"%\",\n            \"value\": 51\n          }\n        }\n      }\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "400: JSON mal formado",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', function () { pm.response.to.have.status(400); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{claveMedico}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/sesiones",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "sesiones"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{ \"tipo\": \"partido\", ",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "404: jugador que no existe",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 404', function () { pm.response.to.have.status(404); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/p99",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jugadores",
+                "p99"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "409: dorsal repetido",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 409', function () { pm.response.to.have.status(409); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{claveMedico}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jugadores"
+              ]
+            },
+            "description": "El dorsal 1 ya lo tiene un jugador del seed.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"p13\",\n  \"dorsal\": 1,\n  \"posicion\": \"POR\",\n  \"fcMax\": 190\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

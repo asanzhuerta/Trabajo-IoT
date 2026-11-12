@@ -45,7 +45,7 @@ Simulador (Node-RED) ──MQTT──► Mosquitto ──MQTT──► Pasarela 
    ```bash
    cd api && npm install && npm run dev
    ```
-   Comprueba que responde en `http://localhost:3000/health`.
+   Comprueba que responde en `http://localhost:3000/health`. La documentación interactiva (Swagger) está en `http://localhost:3000/api-docs`.
 
 5. **Datos iniciales** (los 11 jugadores y la pauta de p5). Con `-- --limpiar` borra también lecturas, eventos, alertas y sesiones:
    ```bash
@@ -89,6 +89,12 @@ Con el Mosquitto por defecto (sin la configuración del proyecto) no hacen falta
 ```bash
 cd api && npm test
 ```
+
+### Documentación de la API y Postman
+
+- **Swagger:** `http://localhost:3000/api-docs`. Pulsa *Authorize*, pon la clave del médico o de la pasarela (las del `.env`) y prueba cualquier endpoint desde ahí. La especificación está en `api/openapi.yaml`.
+- **Postman:** importa `docs/postman_collection.json`. En las variables de la colección, pon en *Current value* `claveMedico` y `clavePasarela`. Se puede lanzar entera con el *Collection Runner*: cada petición comprueba su código de respuesta y la carpeta «Errores» enseña los 400, 401, 403, 404 y 409. La colección se regenera con `node scripts/generar-postman.js` desde `api/`.
+- **Sesiones:** `POST /api/sesiones` con `{"tipo": "entrenamiento", "nombre": "…"}` para empezar una y `POST /api/sesiones/<id>/fin` para cerrarla y guardar el resumen de cada jugador.
 
 ## Estructura
 

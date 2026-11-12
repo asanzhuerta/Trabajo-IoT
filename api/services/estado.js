@@ -145,6 +145,20 @@ function cerrarVencidas(ahora) {
     return cerrados;
 }
 
+// Cierra ya todas las ventanas abiertas, aunque no hayan llegado a 10 s. Se usa al empezar y al terminar una
+// sesión, para que cada resumen de 10 s quede entero dentro o fuera de ella. Devuelve los resúmenes a guardar.
+function cerrarTodas() {
+    const cerrados = [];
+    for (const e of jugadores.values()) {
+        if (e.ventana) {
+            const r = resumen.cerrar(e.ventana, e.jugadorId, sesionId);
+            if (r) cerrados.push(r);
+            e.ventana = null;
+        }
+    }
+    return cerrados;
+}
+
 function obtener(id) {
     return jugadores.get(id) || null;
 }
@@ -173,7 +187,7 @@ function vista() {
     return lista.sort(function (a, b) { return a.jugadorId.localeCompare(b.jugadorId, 'es', { numeric: true }); });
 }
 
-// Al empezar una sesión se ponen a cero los acumulados
+// Al empezar o terminar una sesión se ponen a cero los acumulados (id null = no hay sesión en curso)
 function iniciarSesion(id) {
     sesionId = id || null;
     for (const e of jugadores.values()) {
@@ -192,6 +206,6 @@ function limpiar() {
 }
 
 module.exports = {
-    procesar, cerrarVencidas, obtener, obtenerOCrear, todos, semaforoDe, vista,
+    procesar, cerrarVencidas, cerrarTodas, obtener, obtenerOCrear, todos, semaforoDe, vista,
     iniciarSesion, sesionActual, limpiar
 };

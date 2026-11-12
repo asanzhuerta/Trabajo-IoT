@@ -184,9 +184,27 @@ Al confirmarla se envía `{"tipo": "alerta_confirmada"}` por WebSocket y el sem�
 
 | Método | Ruta | Uso |
 |---|---|---|
-| `POST` | `/api/sesiones` (médico) | `{"tipo": "partido" \| "entrenamiento", "nombre": "J12 vs Cádiz B"}`. **`201`** con `{id, inicio}` |
-| `POST` | `/api/sesiones/:id/fin` (médico) | Cierra la sesión y calcula el resumen por jugador |
-| `GET` | `/api/sesiones` | Lista de sesiones con su resumen |
+| `POST` | `/api/sesiones` (médico) | Empieza una sesión: `{"tipo": "partido" \| "entrenamiento", "nombre": "J12 vs Cádiz B"}`. **`201`** con la sesión. Si ya hay una abierta, **`409`** |
+| `POST` | `/api/sesiones/:id/fin` (médico) | La cierra y guarda el resumen de cada jugador. **`200`** con la sesión. Si ya estaba cerrada, **`409`** |
+| `GET` | `/api/sesiones?estado=abierta\|cerrada` | Lista, de la más reciente a la más antigua (como mucho 100). El filtro es opcional |
+| `GET` | `/api/sesiones/:id` | Una sesión. Si sigue abierta, el resumen se calcula al momento con lo guardado hasta ahora |
+
+```json
+{
+  "id": "6733f0c2a1b2c3d4e5f60718", "tipo": "entrenamiento", "nombre": "Entrenamiento jueves 12",
+  "inicio": "2026-11-12T17:00:00.000Z", "fin": "2026-11-12T18:30:00.000Z",
+  "resumen": [
+    { "jugadorId": "p8", "minutos": 88.5, "distancia": 6840, "distAltaInt": 712, "sprints": 14,
+      "acelAltas": 38, "decelAltas": 41, "velMax": 31.2, "fcMedia": 158, "fcMax": 189 }
+  ]
+}
+```
+
+- **Solo puede haber una sesión abierta** (`fin: null`). Mientras lo está, los resúmenes de 10 s (`lecturas`) y los `eventos` se guardan con su `sesionId`, y los acumulados de `SOBRECARGA` y `PAUTA_EXCEDIDA` cuentan desde su inicio.
+- **El resumen se calcula en MongoDB** sumando los resúmenes de 10 s de la sesión. Si la API se reinicia a mitad, al reconectar recupera la sesión abierta y sigue; solo se pierde la ventana de 10 s que estaba a medias.
+- Al empezar y al cerrar, las ventanas de 10 s a medias se cierran en ese momento, para que cada resumen quede entero dentro o fuera de la sesión.
+- `minutos` son los minutos con datos del jugador (una lectura por segundo), con un decimal. `distAltaInt` es la carga de la sesión que usará el ACWR.
+- Al empezar y al cerrar se avisa por WebSocket (`sesion_iniciada` y `sesion_cerrada`).
 
 ## Clima (Open-Meteo → Node-RED → API)
 
@@ -222,6 +240,13 @@ En el mismo puerto que la API (`ws://localhost:3000`). Solo envía, del servidor
 | `telemetria` | `{ "tipo": "telemetria", "ts": "…", "jugadores": [ { "jugadorId", "ts", "estado", "semaforo", "sensors", "derivados" } ] }`, con `sensors` en el formato de A | 1 Hz |
 | `alerta` | `{ "tipo": "alerta", "alerta": { … } }` | Al momento |
 | `alerta_confirmada` | `{ "tipo": "alerta_confirmada", "alertaId": "…" }` | Al momento |
+| `sesion_iniciada` | `{ "tipo": "sesion_iniciada", "sesion": { … } }` | Al empezar una sesión |
+| `sesion_cerrada` | `{ "tipo": "sesion_cerrada", "sesion": { … } }`, con el resumen de cada jugador | Al cerrarla |
+
+## Documentación y pruebas
+
+- **Swagger UI:** `http://localhost:3000/api-docs`. Se genera a partir de `api/openapi.yaml`, que también está en `/api-docs/openapi.yaml` y `/api-docs/openapi.json`. Con el botón *Authorize* se pone la `x-api-key` y se puede probar cada endpoint.
+- **Postman:** `docs/postman_collection.json`, que se genera con `node scripts/generar-postman.js` desde `api/`. Las claves se ponen en el *Current value* de las variables `claveMedico` y `clavePasarela`.
 
 ## Registro de cambios
 
@@ -232,3 +257,4 @@ En el mismo puerto que la API (`ws://localhost:3000`). Solo envía, del servidor
 | Mié 11 nov | `/health` incluye `mqtt`. Confirmar una alerta ya confirmada devuelve `409`. El histórico añade `sprints`. Al crear una pauta, el jugador pasa a `enReadaptacion: true` |
 | Jue 12 nov (tarde) | La asimetría pasa a ser la media con signo (en `derivados`, del último minuto; en el histórico, de la ventana de 10 s), no la de una sola lectura, para no confundir las pisadas o los desplazamientos laterales con un desequilibrio |
 | Jue 12 nov | **Versión 2.0, adaptada al simulador de A.** Las lecturas llevan `sensors` con el formato de los topics `p1/sensors/<sensor>` (`{unit, value}`). Los ids pasan a `p1`…`p11`. `equipo` es opcional. La API cuenta las acciones de alta intensidad. `impact` y `giroscope` son opcionales. Las alertas se publican en `sensors/<equipo>/alertas`. La API guarda los sensores en este formato, sin traducirlos: `GET /estado` y el WebSocket devuelven `sensors` (formato de A) y `derivados` en lugar de `ultimo` |
+| Jue 12 nov (noche) | Sesiones implementadas: `409` si ya hay una abierta o si ya está cerrada, filtro `?estado=`, `GET /api/sesiones/:id`, el resumen añade `minutos` y `velMax`, y avisos `sesion_iniciada` y `sesion_cerrada` por WebSocket. Swagger UI en `/api-docs` y colección de Postman en `docs/`. Nada de esto cambia lo que manda la pasarela |

@@ -10,6 +10,8 @@ const healthRoutes = require('../routers/health');
 const telemetriaRoutes = require('../routers/telemetria');
 const jugadoresRoutes = require('../routers/jugadores');
 const alertasRoutes = require('../routers/alertas');
+const sesionesRoutes = require('../routers/sesiones');
+const documentacion = require('./documentacion');
 
 const app = express();
 
@@ -25,7 +27,11 @@ app.use('/api', requiereMongo);
 app.use('/api/telemetria', telemetriaRoutes);
 app.use('/api/jugadores', jugadoresRoutes);
 app.use('/api/alertas', alertasRoutes);
-// Próximos routers: /api/sesiones, /api/clima, /fhir
+app.use('/api/sesiones', sesionesRoutes);
+// Próximos routers: /api/clima, /fhir
+
+// Documentación interactiva (Swagger UI) a partir de openapi.yaml
+app.use('/api-docs', documentacion);
 
 // Ruta no encontrada
 app.use(function (req, res) {

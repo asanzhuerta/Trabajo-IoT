@@ -1,0 +1,708 @@
+openapi: 3.0.3
+info:
+  title: Smart Health · API REST
+  version: 2.1.0
+  description: |
+    API de la plataforma de monitorización de salud de un equipo de fútbol (Practical Assignment IoT 2026/27).
+
+    - **Datos de entrada:** la pasarela de Node-RED manda un lote por segundo con los sensores de cada jugador,
+      en el mismo formato que publica el simulador por MQTT (`p1/sensors/gps`…, con `{unit, value}`).
+    - **Autenticación:** cabecera `x-api-key`. Pulsa **Authorize** y pon la clave del médico o la de la pasarela
+      (están en el `.env`). Los `GET` no piden clave.
+    - **Tiempo real:** además de esta API hay un WebSocket en el mismo puerto (`ws://localhost:3000`) que manda
+      la telemetría a 1 Hz, las alertas y los cambios de sesión. No se puede describir en OpenAPI; está en
+      `docs/contratos/api.md`.
+    - **Ids de jugador:** seudónimos `p1`…`p11`, los mismos de los topics del simulador. Nunca nombres.
+
+    Contratos completos en `docs/contratos/api.md` y `docs/contratos/alertas.md`.
+servers:
+  - url: /
+    description: Esta misma API (la que sirve esta página)
+  - url: http://localhost:3000
+    description: Desarrollo local
+
+tags:
+  - name: Telemetría
+    description: Lo que manda la pasarela de Node-RED (un lote por segundo)
+  - name: Jugadores
+    description: Perfil médico, umbrales, estado en vivo e histórico
+  - name: Pauta
+    description: Pauta de readaptación de un jugador que vuelve de una lesión
+  - name: Alertas
+    description: Alertas del motor de reglas y su confirmación por el médico
+  - name: Sesiones
+    description: Entrenamientos y partidos, con el resumen de cada jugador al cerrarlos
+  - name: Utilidad
+
+paths:
+  # ------------------------------------------------------------------ telemetría
+  /api/telemetria:
+    post:
+      tags: [Telemetría]
+      summary: Lote de lecturas de la pasarela
+      description: |
+        Un lote por segundo con la última lectura de cada jugador. Si el watchdog de la pasarela lleva 5 s sin
+        datos de un jugador, su lectura va como `{jugadorId, ts, estado: "sin_senal"}`.
+
+        Si alguna lectura no cumple el formato, se rechaza el lote entero con `400` indicando la lectura y el campo.
+        Las lecturas de jugadores que no están dados de alta se descartan y se indican en `ignoradas`.
+      security: [{ clavePasarela: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Lote' }
+            example:
+              ts: '2026-11-12T18:30:05.000Z'
+              lecturas:
+                - jugadorId: p8
+                  ts: '2026-11-12T18:30:05.000Z'
+                  estado: ok
+                  sensors:
+                    gps:
+                      speed: { unit: km/h, value: 28.7 }
+                      distancecovered: { unit: m, value: 7842 }
+                      position: { X: { unit: m, value: 52.3 }, Y: { unit: m, value: 30.1 } }
+                    accelerometer:
+                      acceleration: { unit: m/s2, value: 3.7 }
+                      desacceleration: { unit: m/s2, value: 0 }
+                      impact: { unit: g, value: 1.2 }
+                    giroscope: { changeinposition: { unit: degrees, value: -72 } }
+                    pulsemeter: { pulse: { unit: bpm, value: 181 } }
+                    termometer: { temperature: { unit: C, value: 38.1 } }
+                    pressuresensor:
+                      pressureleftfoot: { unit: '%', value: 42 }
+                      pressurerightfoot: { unit: '%', value: 58 }
+                - jugadorId: p10
+                  ts: '2026-11-12T18:30:05.000Z'
+                  estado: sin_senal
+      responses:
+        '202':
+          description: Lote aceptado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  recibidas: { type: integer, example: 10 }
+                  ignoradas: { type: array, items: { type: string }, example: [p12] }
+        '400': { $ref: '#/components/responses/Invalido' }
+        '401': { $ref: '#/components/responses/SinClave' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '503': { $ref: '#/components/responses/SinMongo' }
+
+  # ------------------------------------------------------------------ jugadores
+  /api/jugadores:
+    get:
+      tags: [Jugadores]
+      summary: Lista de jugadores
+      responses:
+        '200':
+          description: Jugadores ordenados por id (p1, p2… p10, p11)
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/Jugador' } }
+        '503': { $ref: '#/components/responses/SinMongo' }
+    post:
+      tags: [Jugadores]
+      summary: Dar de alta un jugador
+      description: Los umbrales se rellenan con los valores por defecto (se cambian con `PUT /umbrales`).
+      security: [{ claveMedico: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/JugadorNuevo' }
+            example: { id: p12, dorsal: 23, posicion: DFC, fcMax: 192, tempBasal: 37.0, asimetriaBase: 3 }
+      responses:
+        '201':
+          description: Jugador creado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Jugador' }
+        '400': { $ref: '#/components/responses/Invalido' }
+        '401': { $ref: '#/components/responses/SinClave' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+
+  /api/jugadores/{id}:
+    parameters: [{ $ref: '#/components/parameters/JugadorId' }]
+    get:
+      tags: [Jugadores]
+      summary: Perfil de un jugador
+      responses:
+        '200':
+          description: Jugador
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Jugador' }
+        '404': { $ref: '#/components/responses/NoExiste' }
+    put:
+      tags: [Jugadores]
+      summary: Actualizar el perfil
+      description: Solo cambia los campos que vengan. El id y los umbrales no se cambian aquí.
+      security: [{ claveMedico: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PerfilJugador' }
+            example: { fcMax: 196, asimetriaBase: 5 }
+      responses:
+        '200':
+          description: Jugador actualizado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Jugador' }
+        '400': { $ref: '#/components/responses/Invalido' }
+        '401': { $ref: '#/components/responses/SinClave' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoExiste' }
+        '409': { $ref: '#/components/responses/Conflicto' }
+
+  /api/jugadores/{id}/umbrales:
+    parameters: [{ $ref: '#/components/parameters/JugadorId' }]
+    put:
+      tags: [Jugadores]
+      summary: Ajustar los umbrales de alerta de un jugador
+      description: Solo cambia los umbrales indicados. `tempRoja` tiene que ser mayor que `tempAmbar`.
+      security: [{ claveMedico: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Umbrales' }
+            example: { fcAltaPct: 90, tempAmbar: 38.8 }
+      responses:
+        '200':
+          description: Jugador con los umbrales nuevos
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Jugador' }
+        '400': { $ref: '#/components/responses/Invalido' }
+        '401': { $ref: '#/components/responses/SinClave' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoExiste' }
+
+  /api/jugadores/{id}/estado:
+    parameters: [{ $ref: '#/components/parameters/JugadorId' }]
+    get:
+      tags: [Jugadores]
+      summary: Estado en vivo y semáforo
+      description: |
+        Últimos sensores (formato del simulador), valores derivados que calcula la API y alertas activas.
+        Si el jugador todavía no ha mandado datos, `ts`, `estado`, `sensors` y `derivados` valen `null`.
+      responses:
+        '200':
+          description: Estado en vivo
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EstadoJugador' }
+        '404': { $ref: '#/components/responses/NoExiste' }
+
+  /api/jugadores/{id}/historico:
+    parameters: [{ $ref: '#/components/parameters/JugadorId' }]
+    get:
+      tags: [Jugadores]
+      summary: Resúmenes de 10 s entre dos fechas
+      description: Por defecto, los últimos 15 minutos. Como mucho 8640 resúmenes (24 h).
+      parameters:
+        - { name: desde, in: query, schema: { type: string, format: date-time }, example: '2026-11-12T18:00:00Z' }
+        - { name: hasta, in: query, schema: { type: string, format: date-time }, example: '2026-11-12T18:15:00Z' }
+      responses:
+        '200':
+          description: Resúmenes ordenados del más antiguo al más reciente
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/Resumen10s' } }
+        '400': { $ref: '#/components/responses/Invalido' }
+        '404': { $ref: '#/components/responses/NoExiste' }
+
+  # ------------------------------------------------------------------ pauta
+  /api/jugadores/{id}/pauta:
+    parameters: [{ $ref: '#/components/parameters/JugadorId' }]
+    get:
+      tags: [Pauta]
+      summary: Pauta de readaptación activa
+      responses:
+        '200':
+          description: Pauta activa
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Pauta' }
+        '404':
+          description: El jugador no existe o no tiene ninguna pauta activa
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+    post:
+      tags: [Pauta]
+      summary: Crear una pauta (sustituye a la anterior)
+      description: |
+        Hay que indicar al menos un límite. `cargaMax` son los metros en alta intensidad permitidos por sesión.
+        El jugador pasa a `enReadaptacion: true`. Si los supera, salta la alerta `PAUTA_EXCEDIDA`.
+      security: [{ claveMedico: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PautaNueva' }
+            example: { velMax: 22, cargaMax: 600, asimetriaMax: 8, hasta: '2026-11-20', notas: Vuelta progresiva tras sobrecarga en isquios }
+      responses:
+        '201':
+          description: Pauta creada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Pauta' }
+        '400': { $ref: '#/components/responses/Invalido' }
+        '401': { $ref: '#/components/responses/SinClave' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoExiste' }
+
+  # ------------------------------------------------------------------ alertas
+  /api/alertas:
+    get:
+      tags: [Alertas]
+      summary: Alertas, de la más reciente a la más antigua
+      description: Como mucho 200. Los dos filtros son opcionales.
+      parameters:
+        - { name: estado, in: query, schema: { type: string, enum: [activa, confirmada] } }
+        - { name: jugadorId, in: query, schema: { type: string }, example: p8 }
+      responses:
+        '200':
+          description: Alertas
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/Alerta' } }
+        '400': { $ref: '#/components/responses/Invalido' }
+
+  /api/alertas/{id}/confirmar:
+    post:
+      tags: [Alertas]
+      summary: Confirmar una alerta
+      description: |
+        El semáforo del jugador se recalcula y se avisa por WebSocket (`alerta_confirmada`).
+        Durante los 60 s siguientes no se vuelve a lanzar la misma alerta para ese jugador.
+      security: [{ claveMedico: [] }]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string }, example: 6733f0c2a1b2c3d4e5f60718 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [por]
+              properties:
+                por: { type: string, description: Quién la confirma }
+                nota: { type: string }
+            example: { por: Dra. Pérez, nota: 'Retirado a la banda, hidratación' }
+      responses:
+        '200':
+          description: Alerta confirmada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Alerta' }
+        '400': { $ref: '#/components/responses/Invalido' }
+        '401': { $ref: '#/components/responses/SinClave' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoExiste' }
+        '409':
+          description: La alerta ya estaba confirmada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  # ------------------------------------------------------------------ sesiones
+  /api/sesiones:
+    get:
+      tags: [Sesiones]
+      summary: Sesiones, de la más reciente a la más antigua
+      description: Como mucho 100. Las abiertas tienen `fin` a `null` y el resumen vacío (para verlo, `GET /api/sesiones/{id}`).
+      parameters:
+        - { name: estado, in: query, schema: { type: string, enum: [abierta, cerrada] } }
+      responses:
+        '200':
+          description: Sesiones
+          content:
+            application/json:
+              schema: { type: array, items: { $ref: '#/components/schemas/Sesion' } }
+        '400': { $ref: '#/components/responses/Invalido' }
+    post:
+      tags: [Sesiones]
+      summary: Empezar una sesión
+      description: |
+        Solo puede haber una abierta. Desde este momento, los resúmenes de 10 s y los eventos se guardan con su id,
+        y los acumulados de las alertas `SOBRECARGA` y `PAUTA_EXCEDIDA` empiezan de cero.
+        Se avisa por WebSocket (`sesion_iniciada`).
+      security: [{ claveMedico: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tipo, nombre]
+              properties:
+                tipo: { type: string, enum: [partido, entrenamiento] }
+                nombre: { type: string, maxLength: 100 }
+            example: { tipo: entrenamiento, nombre: Entrenamiento jueves 12 }
+      responses:
+        '201':
+          description: Sesión abierta
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Sesion' }
+        '400': { $ref: '#/components/responses/Invalido' }
+        '401': { $ref: '#/components/responses/SinClave' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '409':
+          description: Ya hay otra sesión abierta
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /api/sesiones/{id}:
+    parameters: [{ $ref: '#/components/parameters/SesionId' }]
+    get:
+      tags: [Sesiones]
+      summary: Una sesión con su resumen por jugador
+      description: Si sigue abierta, el resumen se calcula al momento con lo guardado hasta ahora (hasta el último resumen de 10 s).
+      responses:
+        '200':
+          description: Sesión
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Sesion' }
+        '404': { $ref: '#/components/responses/NoExiste' }
+
+  /api/sesiones/{id}/fin:
+    parameters: [{ $ref: '#/components/parameters/SesionId' }]
+    post:
+      tags: [Sesiones]
+      summary: Cerrar la sesión
+      description: Guarda el resumen de cada jugador y avisa por WebSocket (`sesion_cerrada`).
+      security: [{ claveMedico: [] }]
+      responses:
+        '200':
+          description: Sesión cerrada con su resumen
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Sesion' }
+        '401': { $ref: '#/components/responses/SinClave' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoExiste' }
+        '409':
+          description: La sesión ya estaba cerrada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  # ------------------------------------------------------------------ utilidad
+  /health:
+    get:
+      tags: [Utilidad]
+      summary: Comprobación rápida
+      description: Responde aunque MongoDB o el broker no estén conectados.
+      responses:
+        '200':
+          description: La API está viva
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: ok }
+                  mongo: { type: string, enum: [connected, connecting, disconnected, disconnecting] }
+                  mqtt: { type: string, example: connected }
+                  uptime: { type: integer, description: Segundos desde que arrancó, example: 123 }
+
+components:
+  securitySchemes:
+    claveMedico:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: API_KEY_MEDICO del .env. Todo lo que escribe datos clínicos.
+    clavePasarela:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: API_KEY_PASARELA del .env. Solo telemetría (y clima).
+
+  parameters:
+    JugadorId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, pattern: '^p\d{1,2}$' }
+      example: p1
+    SesionId:
+      name: id
+      in: path
+      required: true
+      schema: { type: string }
+      example: 6733f0c2a1b2c3d4e5f60718
+
+  responses:
+    Invalido:
+      description: Cuerpo o parámetros no válidos
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: 'lecturas[3]: sensors.pulsemeter.pulse.value debe ser un número' }
+    SinClave:
+      description: Falta la cabecera x-api-key o la clave no es válida
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: Falta la cabecera x-api-key }
+    SinPermiso:
+      description: La clave no tiene permiso para esta operación
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: 'Esta operación necesita la clave de: medico' }
+    NoExiste:
+      description: No existe
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: No existe el jugador p99 }
+    Conflicto:
+      description: Ya existe (id o dorsal repetido)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: 'Ya existe un registro con ese dorsal: 10' }
+    SinMongo:
+      description: MongoDB no está disponible
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: La base de datos no está disponible }
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error: { type: string }
+
+    # --- sensores, en el formato del simulador de A
+    Medida:
+      type: object
+      description: Un valor con su unidad. `unit` puede omitirse; si viene, tiene que ser la esperada.
+      required: [value]
+      properties:
+        unit: { type: string }
+        value: { type: number }
+    Sensores:
+      type: object
+      description: |
+        Cada bloque es el payload que el simulador publica en `<jugadorId>/sensors/<sensor>`.
+        `gps`, `accelerometer` y `pulsemeter` son obligatorios; el resto, opcionales.
+      required: [gps, accelerometer, pulsemeter]
+      properties:
+        gps:
+          type: object
+          properties:
+            speed: { $ref: '#/components/schemas/Medida' }
+            distancecovered: { $ref: '#/components/schemas/Medida' }
+            position:
+              type: object
+              properties:
+                X: { $ref: '#/components/schemas/Medida' }
+                Y: { $ref: '#/components/schemas/Medida' }
+        accelerometer:
+          type: object
+          properties:
+            acceleration: { $ref: '#/components/schemas/Medida' }
+            desacceleration: { $ref: '#/components/schemas/Medida' }
+            impact: { $ref: '#/components/schemas/Medida' }
+        giroscope:
+          type: object
+          properties:
+            changeinposition: { $ref: '#/components/schemas/Medida' }
+        pulsemeter:
+          type: object
+          properties:
+            pulse: { $ref: '#/components/schemas/Medida' }
+        termometer:
+          type: object
+          properties:
+            temperature: { $ref: '#/components/schemas/Medida' }
+        pressuresensor:
+          type: object
+          properties:
+            pressureleftfoot: { $ref: '#/components/schemas/Medida' }
+            pressurerightfoot: { $ref: '#/components/schemas/Medida' }
+    Lectura:
+      type: object
+      required: [jugadorId]
+      properties:
+        jugadorId: { type: string, pattern: '^p\d{1,2}$' }
+        ts: { type: string, format: date-time, description: Si no viene, se usa el del lote }
+        estado: { type: string, enum: [ok, sin_senal], default: ok }
+        sensors: { $ref: '#/components/schemas/Sensores' }
+    Lote:
+      type: object
+      required: [ts, lecturas]
+      properties:
+        ts: { type: string, format: date-time }
+        equipo: { type: string, description: 'Opcional; si viene, tiene que ser el del .env (eq1)' }
+        lecturas: { type: array, minItems: 1, items: { $ref: '#/components/schemas/Lectura' } }
+
+    # --- jugadores
+    PerfilJugador:
+      type: object
+      properties:
+        dorsal: { type: integer, minimum: 1, maximum: 99 }
+        posicion: { type: string, enum: [POR, LD, DFC, LI, MCD, MC, MCO, ED, EI, DC] }
+        fcMax: { type: number, minimum: 150, maximum: 230, description: lpm }
+        tempBasal: { type: number, minimum: 35.5, maximum: 38, default: 37 }
+        asimetriaBase: { type: number, minimum: 0, maximum: 30, default: 0, description: 'Puntos de |izq − der| normales en este jugador' }
+        enReadaptacion: { type: boolean, default: false }
+    JugadorNuevo:
+      allOf:
+        - $ref: '#/components/schemas/PerfilJugador'
+        - type: object
+          required: [id, dorsal, posicion, fcMax]
+          properties:
+            id: { type: string, pattern: '^p\d{1,2}$' }
+    Jugador:
+      allOf:
+        - type: object
+          properties:
+            id: { type: string, example: p8 }
+        - $ref: '#/components/schemas/PerfilJugador'
+        - type: object
+          properties:
+            umbrales: { $ref: '#/components/schemas/Umbrales' }
+    Umbrales:
+      type: object
+      description: Umbrales de las reglas de alerta (ver docs/contratos/alertas.md). Entre paréntesis, el valor por defecto.
+      properties:
+        tempAmbar: { type: number, description: '°C (39)' }
+        tempRoja: { type: number, description: '°C (40)' }
+        wbgtAlto: { type: number, description: '°C de WBGT a partir del cual bajan los umbrales de calor (28)' }
+        ajusteCalor: { type: number, description: '°C que bajan (0,3)' }
+        fcAltaPct: { type: number, description: '% de la FCmáx (92)' }
+        fcAltaSeg: { type: number, description: 's (60)' }
+        desacoplePct: { type: number, description: '% de la FCmáx (85)' }
+        desacopleVel: { type: number, description: 'km/h (7)' }
+        desacopleSeg: { type: number, description: 's (30)' }
+        recuperacionLpm: { type: number, description: 'lpm que debe bajar la FC en 60 s (12)' }
+        impactoG: { type: number, description: 'g (4)' }
+        inmovilSeg: { type: number, description: 's (10)' }
+        sobrecargaAcciones: { type: number, description: 'aceleraciones + desaceleraciones altas por sesión (120)' }
+        asimetriaUmbral: { type: number, description: 'puntos sobre la asimetría base (10)' }
+    EstadoJugador:
+      type: object
+      properties:
+        jugadorId: { type: string }
+        ts: { type: string, format: date-time, nullable: true }
+        estado: { type: string, enum: [ok, sin_senal], nullable: true }
+        semaforo: { type: string, enum: [verde, ambar, rojo] }
+        sensors:
+          allOf: [{ $ref: '#/components/schemas/Sensores' }]
+          nullable: true
+          description: Últimos valores en el formato del simulador. La temperatura y las plantillas conservan el último valor recibido.
+        derivados:
+          type: object
+          nullable: true
+          properties:
+            pctFcMax: { type: number, example: 93 }
+            asimetria: { type: number, nullable: true, description: '|media de (izq − der)| del último minuto', example: 16 }
+            zonaVelocidad: { type: string, enum: [andar, trote, carrera, alta, sprint] }
+            zonaFc: { type: string, enum: [Z1, Z2, Z3, Z4, Z5] }
+        alertasActivas:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              codigo: { type: string }
+              severidad: { type: string, enum: [aviso, critica] }
+    Resumen10s:
+      type: object
+      description: Resumen de 10 s de un jugador (colección time-series lecturas). Son datos que calcula la API.
+      properties:
+        ts: { type: string, format: date-time, description: Inicio de la ventana }
+        sesionId: { type: string, nullable: true }
+        muestras: { type: integer, example: 10 }
+        velMedia: { type: number, description: km/h }
+        velMax: { type: number, description: km/h }
+        distancia: { type: number, description: m en la ventana }
+        distAltaInt: { type: number, description: m a más de 19,8 km/h }
+        fcMedia: { type: number, description: lpm }
+        fcMax: { type: number, description: lpm }
+        temp: { type: number, nullable: true, description: °C }
+        asimetria: { type: number, nullable: true, description: '|media de (izq − der)| en la ventana' }
+        sprints: { type: integer }
+        acelAltas: { type: integer }
+        decelAltas: { type: integer }
+        x: { type: number, description: m }
+        y: { type: number, description: m }
+
+    # --- pauta
+    PautaNueva:
+      type: object
+      required: [hasta]
+      properties:
+        velMax: { type: number, minimum: 0, maximum: 45, description: km/h }
+        cargaMax: { type: number, minimum: 0, description: m de alta intensidad por sesión }
+        asimetriaMax: { type: number, minimum: 0, maximum: 100, description: 'puntos de |izq − der|' }
+        hasta: { type: string, format: date, description: Fecha futura }
+        notas: { type: string }
+    Pauta:
+      allOf:
+        - type: object
+          properties:
+            id: { type: string }
+            jugadorId: { type: string }
+            activa: { type: boolean }
+            creadaEn: { type: string, format: date-time }
+        - $ref: '#/components/schemas/PautaNueva'
+
+    # --- alertas
+    Alerta:
+      type: object
+      properties:
+        id: { type: string }
+        jugadorId: { type: string, example: p8 }
+        codigo:
+          type: string
+          enum: [CALOR_AMBAR, CALOR_ROJA, FC_ALTA, FC_DESACOPLE, RECUPERACION_LENTA, INCIDENTE, SOBRECARGA, ASIMETRIA, PAUTA_EXCEDIDA, SIN_SENAL]
+        severidad: { type: string, enum: [aviso, critica] }
+        mensaje: { type: string, example: 'Temperatura interna 39,2 °C (umbral 39 °C)' }
+        valor: { type: number, nullable: true }
+        umbral: { type: number, nullable: true }
+        ts: { type: string, format: date-time }
+        estado: { type: string, enum: [activa, confirmada] }
+        confirmadaPor: { type: string, nullable: true }
+        confirmadaEn: { type: string, format: date-time, nullable: true }
+        nota: { type: string, nullable: true }
+
+    # --- sesiones
+    ResumenJugadorSesion:
+      type: object
+      properties:
+        jugadorId: { type: string, example: p8 }
+        minutos: { type: number, description: Minutos con datos, example: 62.5 }
+        distancia: { type: number, description: m, example: 6840 }
+        distAltaInt: { type: number, description: 'm a más de 19,8 km/h (carga de la sesión para el ACWR)', example: 712 }
+        sprints: { type: integer, example: 14 }
+        acelAltas: { type: integer, example: 38 }
+        decelAltas: { type: integer, example: 41 }
+        velMax: { type: number, description: km/h, example: 31.2 }
+        fcMedia: { type: number, description: lpm, example: 158 }
+        fcMax: { type: number, description: lpm, example: 189 }
+    Sesion:
+      type: object
+      properties:
+        id: { type: string }
+        tipo: { type: string, enum: [partido, entrenamiento] }
+        nombre: { type: string }
+        inicio: { type: string, format: date-time }
+        fin: { type: string, format: date-time, nullable: true, description: null mientras está abierta }
+        resumen: { type: array, items: { $ref: '#/components/schemas/ResumenJugadorSesion' } }

@@ -137,6 +137,23 @@ test('los acumulados de la sesión se ponen a cero al empezar otra', function ()
     assert.equal(estado.sesionActual(), 'abc');
 });
 
+test('al empezar y terminar una sesión, las ventanas a medias se cierran con la sesión que tocaba', function () {
+    for (let s = 0; s < 4; s++) estado.procesar(lectura(s), PERFIL);
+    const antes = estado.cerrarTodas();          // lo de antes de la sesión, sin sesionId
+    assert.equal(antes.length, 1);
+    assert.equal(antes[0].muestras, 4);
+    assert.equal(antes[0].sesionId, null);
+
+    estado.iniciarSesion('abc');
+    for (let s = 4; s < 7; s++) estado.procesar(lectura(s), PERFIL);
+    const dentro = estado.cerrarTodas();         // los últimos segundos, todavía de la sesión
+    assert.equal(dentro.length, 1);
+    assert.equal(dentro[0].muestras, 3);
+    assert.equal(dentro[0].sesionId, 'abc');
+
+    assert.deepEqual(estado.cerrarTodas(), []);  // ya no queda ninguna abierta
+});
+
 test('semáforo: rojo si hay crítica, ámbar si hay aviso, verde si nada', function () {
     assert.equal(semaforo([]), 'verde');
     assert.equal(semaforo(['aviso']), 'ambar');
