@@ -8,20 +8,6 @@ Simulador (Node-RED, A) ──MQTT──► Mosquitto ──► Pasarela (Node-R
                                       └──────── alertas: sensors/eq1/alertas ◄─────┘
 ```
 
-| De quién | Qué hay |
-|---|---|
-| **A** (`edge`) | Configuración de Mosquitto (`mosquitto/`), simulador de un jugador, `p1` (`node_red/flows.json`), y `valores.json` |
-| **B** (`backend`) | API REST con MongoDB, motor de alertas y WebSocket (`api/`), y la pasarela (`node_red/flows_pasarela.json`) |
-
-- La **pasarela** se suscribe a `+/sensors/#`, junta cada segundo los mensajes de cada jugador y los manda a la API.
-  - No traduce nada: lo que va después de `sensors/` en el topic es la ruta dentro del objeto `sensors`.
-  - Si un jugador lleva 5 s sin mandar nada, lo manda como `sin_senal`.
-- Para probar con los 11 jugadores y escenarios (calor, incidente…) mientras el simulador de A tiene uno solo, está el **fake-gateway** (paso 9).
-
-> En `dev` el ACL tiene la línea `topic readwrite +/sensors/#` para `nodered`. Sin ella, Mosquitto rechaza los mensajes del simulador y la pasarela no puede suscribirse. A tiene que añadirla también en `edge`.
-
-Todos los comandos son de **PowerShell**. Los de Mosquitto van en una consola **como administrador**.
-
 ## 0. Requisitos
 
 | Herramienta | Versión |
