@@ -1,7 +1,7 @@
-// Carga los 11 jugadores y la pauta de readaptación de p5 en MongoDB.
+// Carga en MongoDB los 11 jugadores, la pauta de readaptación de p5 y 4 semanas de sesiones para el ACWR.
 //
-//   npm run seed               -> reemplaza jugadores y pautas
-//   npm run seed -- --limpiar  -> además borra lecturas, eventos, alertas y sesiones
+//   npm run seed               -> reemplaza jugadores, pautas y las sesiones simuladas
+//   npm run seed -- --limpiar  -> además borra lecturas, eventos, alertas y todas las sesiones
 //
 // La API puede estar arrancada: recarga los perfiles sola en menos de 30 s.
 
@@ -10,6 +10,7 @@ const mongoose = require('mongoose');
 const config = require('../config');
 const { Jugador, Pauta, Lectura, Evento, Alerta, Sesion } = require('../models');
 const plantilla = require('./plantilla');
+const historial = require('./historial');
 
 const { values: opciones } = parseArgs({
     options: { limpiar: { type: 'boolean', default: false } }
@@ -58,6 +59,11 @@ async function main() {
         console.log('Borrado: %d lecturas, %d eventos, %d alertas, %d sesiones',
             l.deletedCount, e.deletedCount, a.deletedCount, s.deletedCount);
     }
+
+    // Histórico para el ACWR: se rehace cada vez (relativo a hoy) sin tocar las sesiones reales
+    await Sesion.deleteMany({ simulada: true });
+    const sesiones = await Sesion.insertMany(historial.generar(Date.now()));
+    console.log('Histórico para el ACWR: %d sesiones de las últimas 4 semanas', sesiones.length);
 }
 
 main()

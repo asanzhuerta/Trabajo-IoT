@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Smart Health · API REST
-  version: 2.1.0
+  version: 2.2.0
   description: |
     API de la plataforma de monitorización de salud de un equipo de fútbol (Practical Assignment IoT 2026/27).
 
@@ -32,6 +32,10 @@ tags:
     description: Alertas del motor de reglas y su confirmación por el médico
   - name: Sesiones
     description: Entrenamientos y partidos, con el resumen de cada jugador al cerrarlos
+  - name: Clima
+    description: Condiciones ambientales de Open-Meteo (las manda Node-RED); el WBGT baja los umbrales de calor
+  - name: FHIR
+    description: Constantes vitales (FC y temperatura) como recursos FHIR R4 Observation
   - name: Utilidad
 
 paths:
@@ -218,6 +222,28 @@ paths:
         '400': { $ref: '#/components/responses/Invalido' }
         '404': { $ref: '#/components/responses/NoExiste' }
 
+  /api/jugadores/{id}/acwr:
+    parameters: [{ $ref: '#/components/parameters/JugadorId' }]
+    get:
+      tags: [Jugadores]
+      summary: ACWR (carga aguda entre crónica)
+      description: |
+        Carga de los últimos 7 días entre la media semanal de los últimos 28, con las sesiones cerradas.
+        La carga de cada sesión son los metros a alta intensidad (`distAltaInt`) de su resumen.
+        Franjas (Gabbett, 2016): `baja` < 0,8 · `optima` 0,8–1,3 · `alta` > 1,3. Es una referencia discutida
+        (Impellizzeri et al., 2020): sirve para vigilar picos de carga, no para predecir lesiones.
+        Sin carga en los 28 días, `ratio` y `franja` valen `null`.
+      parameters:
+        - { name: fecha, in: query, description: 'Calcula el ACWR a esa fecha (por defecto, ahora)', schema: { type: string, format: date-time } }
+      responses:
+        '200':
+          description: ACWR
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Acwr' }
+        '400': { $ref: '#/components/responses/Invalido' }
+        '404': { $ref: '#/components/responses/NoExiste' }
+
   # ------------------------------------------------------------------ pauta
   /api/jugadores/{id}/pauta:
     parameters: [{ $ref: '#/components/parameters/JugadorId' }]
@@ -397,6 +423,94 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Error' }
+
+  # ------------------------------------------------------------------ clima
+  /api/clima:
+    get:
+      tags: [Clima]
+      summary: Último registro de clima
+      responses:
+        '200':
+          description: Último registro
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Clima' }
+        '404':
+          description: Todavía no ha llegado ninguno
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+    post:
+      tags: [Clima]
+      summary: Guardar las condiciones ambientales (Node-RED)
+      description: |
+        Si no viene `wbgt` pero sí `humedad`, la API lo estima con la fórmula de la Oficina de Meteorología de
+        Australia (sombra, sin viento): `WBGT ≈ 0,567·T + 0,393·e + 3,94`, con `e` la presión de vapor en hPa.
+        Entonces `wbgtEstimado` es `true`. Con un WBGT ≥ `wbgtAlto` (28 °C), los umbrales de calor de todos los
+        jugadores bajan `ajusteCalor` (0,3 °C). Se avisa por WebSocket (`clima`).
+      security: [{ clavePasarela: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ClimaNuevo' }
+            example: { ts: '2026-11-12T18:30:00.000Z', temp: 31.5, humedad: 55, fuente: open-meteo }
+      responses:
+        '201':
+          description: Registro guardado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Clima' }
+        '400': { $ref: '#/components/responses/Invalido' }
+        '401': { $ref: '#/components/responses/SinClave' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+
+  # ------------------------------------------------------------------ FHIR
+  /fhir/Observation:
+    get:
+      tags: [FHIR]
+      summary: Buscar constantes vitales de un jugador
+      description: |
+        Devuelve un `Bundle` de tipo `searchset` con `Observation` de categoría `vital-signs`, de la más reciente
+        a la más antigua. Salen de los resúmenes de 10 s:
+        - frecuencia cardiaca: LOINC `8867-4`, la media de los 10 s, en `/min`;
+        - temperatura corporal: LOINC `8310-5`, la última lectura de los 10 s, en `Cel`.
+
+        Los errores se devuelven como `OperationOutcome`. La respuesta es `application/fhir+json`.
+      parameters:
+        - { name: patient, in: query, required: true, description: 'Seudónimo del jugador: p8 o Patient/p8', schema: { type: string }, example: p8 }
+        - { name: code, in: query, description: 'Código LOINC (8867-4 o 8310-5; también http://loinc.org|8867-4). Sin él, los dos', schema: { type: string }, example: 8867-4 }
+        - { name: _count, in: query, description: 'Cuántas de cada código (1 a 100)', schema: { type: integer, default: 20, minimum: 1, maximum: 100 } }
+      responses:
+        '200':
+          description: Bundle searchset
+          content:
+            application/fhir+json:
+              schema: { $ref: '#/components/schemas/FhirBundle' }
+        '400':
+          description: Parámetros no válidos
+          content:
+            application/fhir+json:
+              schema: { $ref: '#/components/schemas/FhirOperationOutcome' }
+        '503': { $ref: '#/components/responses/SinMongo' }
+
+  /fhir/Observation/{id}:
+    get:
+      tags: [FHIR]
+      summary: Una Observation por su id
+      parameters:
+        - { name: id, in: path, required: true, description: '<jugador>-<código LOINC>-<ts en ms>', schema: { type: string }, example: p8-8867-4-1794500000000 }
+      responses:
+        '200':
+          description: Observation
+          content:
+            application/fhir+json:
+              schema: { $ref: '#/components/schemas/FhirObservation' }
+        '404':
+          description: No existe
+          content:
+            application/fhir+json:
+              schema: { $ref: '#/components/schemas/FhirOperationOutcome' }
 
   # ------------------------------------------------------------------ utilidad
   /health:
@@ -706,3 +820,73 @@ components:
         inicio: { type: string, format: date-time }
         fin: { type: string, format: date-time, nullable: true, description: null mientras está abierta }
         resumen: { type: array, items: { $ref: '#/components/schemas/ResumenJugadorSesion' } }
+        simulada: { type: boolean, description: 'true en el histórico de 4 semanas que genera el seed para el ACWR' }
+
+    # --- ACWR
+    Acwr:
+      type: object
+      properties:
+        jugadorId: { type: string, example: p7 }
+        fecha: { type: string, format: date-time, description: Fecha a la que se calcula }
+        metrica: { type: string, example: distAltaInt, description: Qué se usa como carga de cada sesión }
+        cargaAguda: { type: number, description: m en los últimos 7 días, example: 2350 }
+        cargaCronica: { type: number, description: media semanal (m) de los últimos 28 días, example: 1725 }
+        ratio: { type: number, nullable: true, example: 1.36 }
+        franja: { type: string, enum: [baja, optima, alta], nullable: true }
+        sesiones7d: { type: integer, example: 4 }
+        sesiones28d: { type: integer, example: 16 }
+
+    # --- clima
+    ClimaNuevo:
+      type: object
+      required: [temp]
+      properties:
+        ts: { type: string, format: date-time, description: Por defecto, ahora }
+        temp: { type: number, minimum: -30, maximum: 55, description: °C }
+        humedad: { type: number, minimum: 0, maximum: 100, description: '%' }
+        wbgt: { type: number, minimum: -30, maximum: 50, description: '°C. Si no viene y hay humedad, lo estima la API' }
+        fuente: { type: string, default: open-meteo }
+    Clima:
+      allOf:
+        - type: object
+          properties:
+            id: { type: string }
+            wbgtEstimado: { type: boolean }
+        - $ref: '#/components/schemas/ClimaNuevo'
+
+    # --- FHIR (solo los campos que usa la API; el estándar completo está en hl7.org/fhir/R4)
+    FhirObservation:
+      type: object
+      properties:
+        resourceType: { type: string, example: Observation }
+        id: { type: string, example: p8-8867-4-1794500000000 }
+        status: { type: string, example: final }
+        category: { type: array, items: { type: object } }
+        code:
+          type: object
+          example: { coding: [{ system: 'http://loinc.org', code: 8867-4, display: Heart rate }], text: Frecuencia cardiaca }
+        subject: { type: object, example: { reference: Patient/p8 } }
+        effectiveDateTime: { type: string, format: date-time }
+        valueQuantity:
+          type: object
+          example: { value: 172, unit: /min, system: 'http://unitsofmeasure.org', code: /min }
+        method: { type: object, example: { text: Media de 10 s del pulsómetro del wearable } }
+    FhirBundle:
+      type: object
+      properties:
+        resourceType: { type: string, example: Bundle }
+        type: { type: string, example: searchset }
+        timestamp: { type: string, format: date-time }
+        total: { type: integer }
+        link: { type: array, items: { type: object } }
+        entry:
+          type: array
+          items:
+            type: object
+            properties:
+              fullUrl: { type: string }
+              resource: { $ref: '#/components/schemas/FhirObservation' }
+              search: { type: object, example: { mode: match } }
+    FhirOperationOutcome:
+      type: object
+      example: { resourceType: OperationOutcome, issue: [{ severity: error, code: required, diagnostics: 'Indica el paciente: patient=p8 (o patient=Patient/p8)' }] }

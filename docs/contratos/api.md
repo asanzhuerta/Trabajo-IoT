@@ -149,11 +149,16 @@ Resúmenes de 10 s entre dos fechas. Por defecto, los últimos 15 minutos.
 - `temp` es la última temperatura recibida en la ventana, y `asimetria` es `|media de (pressureleftfoot − pressurerightfoot)|` en la ventana. Pueden ser `null`.
 - Los resúmenes no son lecturas de un sensor, sino datos que calcula la API (medias, máximos, metros…), así que tienen sus propios campos.
 
-### `GET /api/jugadores/:id/acwr`
+### `GET /api/jugadores/:id/acwr?fecha=`
 ```json
-{ "jugadorId": "p8", "cargaAguda": 4200, "cargaCronica": 3800, "ratio": 1.11, "franja": "optima" }
+{ "jugadorId": "p7", "fecha": "2026-11-12T18:00:00.000Z", "metrica": "distAltaInt",
+  "cargaAguda": 2350, "cargaCronica": 1725, "ratio": 1.36, "franja": "alta", "sesiones7d": 4, "sesiones28d": 16 }
 ```
-`franja` puede ser `baja` (<0,8), `optima` (0,8–1,3) o `alta` (>1,3).
+- **Carga de una sesión:** los metros a alta intensidad (`distAltaInt`) del resumen del jugador en esa sesión. Solo cuentan las sesiones cerradas.
+- **`cargaAguda`:** suma de los últimos 7 días. **`cargaCronica`:** suma de los últimos 28 días entre 4 (media semanal; incluye la última semana).
+- **`franja`:** `baja` (<0,8), `optima` (0,8–1,3) o `alta` (>1,3), según Gabbett (2016). Es una referencia discutida (Impellizzeri et al., 2020): sirve para vigilar picos de carga, no para predecir lesiones. Sin carga en los 28 días, `ratio` y `franja` valen `null`.
+- `fecha` es opcional: calcula el ACWR a ese momento (por defecto, ahora).
+- El seed genera 4 semanas de sesiones (`simulada: true`; se rehacen cada vez que se lanza, sin tocar las reales): **p7** sale con un pico de carga (alta), **p5**, que está en readaptación, con poca (baja), y el resto en la zona óptima.
 
 ## Pauta de readaptación
 
@@ -210,18 +215,43 @@ Al confirmarla se envía `{"tipo": "alerta_confirmada"}` por WebSocket y el sem�
 
 ### `POST /api/clima` (pasarela)
 ```json
-{ "ts": "2026-11-12T18:30:00.000Z", "temp": 31.5, "humedad": 55, "wbgt": 28.9, "fuente": "open-meteo" }
+{ "ts": "2026-11-12T18:30:00.000Z", "temp": 31.5, "humedad": 55, "fuente": "open-meteo" }
 ```
+**`201`** con el registro guardado: `{"id", "ts", "temp", "humedad", "wbgt", "wbgtEstimado", "fuente"}`.
+
+- Solo `temp` es obligatoria (°C, de -30 a 55). `ts` por defecto es ahora; `humedad` va de 0 a 100 %.
+- **`wbgt` es opcional.** Si no viene pero sí la humedad, la API lo estima con la fórmula de la Oficina de Meteorología de Australia (sombra, sin viento): `WBGT ≈ 0,567·T + 0,393·e + 3,94`, con `e = (HR/100)·6,105·exp(17,27·T/(237,7+T))` en hPa, y devuelve `wbgtEstimado: true`. Así el flujo de Open-Meteo solo tiene que mandar la temperatura y la humedad. Si Node-RED lo calcula, se respeta el suyo.
+- El último registro es el clima actual: con un WBGT ≥ `wbgtAlto` (28 °C), los umbrales `CALOR_*` de todos los jugadores bajan `ajusteCalor` (0,3 °C) (ver `alertas.md`).
+- Se avisa por WebSocket: `{"tipo": "clima", "clima": {…}}`.
 
 ### `GET /api/clima`
-Último registro.
+El último registro, o **`404`** si todavía no ha llegado ninguno.
 
 ## FHIR
 
-### `GET /fhir/Observation?patient=p8&code=8867-4`
-Devuelve un `Bundle` (`type: searchset`) con `Observation` FHIR R4 de categoría `vital-signs`:
-- frecuencia cardiaca: LOINC `8867-4`, unidad UCUM `/min`;
-- temperatura corporal: LOINC `8310-5`, unidad UCUM `Cel`.
+### `GET /fhir/Observation?patient=p8&code=8867-4&_count=20`
+Devuelve un `Bundle` (`type: searchset`) con `Observation` FHIR R4 de categoría `vital-signs`, de la más reciente a la más antigua. Salen de los resúmenes de 10 s (`lecturas`):
+- frecuencia cardiaca: LOINC `8867-4` (*Heart rate*), la media de los 10 s, unidad UCUM `/min`;
+- temperatura corporal: LOINC `8310-5` (*Body temperature*), la última lectura de los 10 s, unidad UCUM `Cel`.
+
+```json
+{
+  "resourceType": "Observation", "id": "p8-8867-4-1794500000000", "status": "final",
+  "category": [{ "coding": [{ "system": "http://terminology.hl7.org/CodeSystem/observation-category", "code": "vital-signs" }] }],
+  "code": { "coding": [{ "system": "http://loinc.org", "code": "8867-4", "display": "Heart rate" }], "text": "Frecuencia cardiaca" },
+  "subject": { "reference": "Patient/p8" },
+  "effectiveDateTime": "2026-11-12T18:30:00.000Z",
+  "valueQuantity": { "value": 172, "unit": "/min", "system": "http://unitsofmeasure.org", "code": "/min" },
+  "method": { "text": "Media de 10 s del pulsómetro del wearable" }
+}
+```
+
+- `patient` es obligatorio (`p8` o `Patient/p8`). `code` es opcional (también `http://loinc.org|8867-4`, o los dos separados por comas); sin él, salen los dos. `_count` (de 1 a 100, por defecto 20) es cuántas de cada código.
+- El paciente es el seudónimo: no hay nombres ni recurso `Patient`.
+- La respuesta es `application/fhir+json` y los errores van como `OperationOutcome` (`400` si falta el paciente o el código no es uno de los dos).
+
+### `GET /fhir/Observation/:id`
+Una Observation por su id (`<jugador>-<código>-<ts en ms>`, el `fullUrl` de cada entrada del Bundle), o `404` con un `OperationOutcome`.
 
 ## Utilidad
 
@@ -242,6 +272,7 @@ En el mismo puerto que la API (`ws://localhost:3000`). Solo envía, del servidor
 | `alerta_confirmada` | `{ "tipo": "alerta_confirmada", "alertaId": "…" }` | Al momento |
 | `sesion_iniciada` | `{ "tipo": "sesion_iniciada", "sesion": { … } }` | Al empezar una sesión |
 | `sesion_cerrada` | `{ "tipo": "sesion_cerrada", "sesion": { … } }`, con el resumen de cada jugador | Al cerrarla |
+| `clima` | `{ "tipo": "clima", "clima": { … } }` | Cada vez que Node-RED manda el clima |
 
 ## Documentación y pruebas
 
@@ -258,3 +289,4 @@ En el mismo puerto que la API (`ws://localhost:3000`). Solo envía, del servidor
 | Jue 12 nov (tarde) | La asimetría pasa a ser la media con signo (en `derivados`, del último minuto; en el histórico, de la ventana de 10 s), no la de una sola lectura, para no confundir las pisadas o los desplazamientos laterales con un desequilibrio |
 | Jue 12 nov | **Versión 2.0, adaptada al simulador de A.** Las lecturas llevan `sensors` con el formato de los topics `p1/sensors/<sensor>` (`{unit, value}`). Los ids pasan a `p1`…`p11`. `equipo` es opcional. La API cuenta las acciones de alta intensidad. `impact` y `giroscope` son opcionales. Las alertas se publican en `sensors/<equipo>/alertas`. La API guarda los sensores en este formato, sin traducirlos: `GET /estado` y el WebSocket devuelven `sensors` (formato de A) y `derivados` en lugar de `ultimo` |
 | Jue 12 nov (noche) | Sesiones implementadas: `409` si ya hay una abierta o si ya está cerrada, filtro `?estado=`, `GET /api/sesiones/:id`, el resumen añade `minutos` y `velMax`, y avisos `sesion_iniciada` y `sesion_cerrada` por WebSocket. Swagger UI en `/api-docs` y colección de Postman en `docs/`. Nada de esto cambia lo que manda la pasarela |
+| Jue 12 nov (noche, 2) | Clima, FHIR y ACWR implementados. `POST /api/clima` estima el WBGT si no viene (y lo indica con `wbgtEstimado`); `GET /api/clima` da `404` sin datos; aviso `clima` por WebSocket. FHIR: `_count`, `GET /fhir/Observation/:id` y errores como `OperationOutcome`. ACWR: añade `fecha`, `metrica`, `sesiones7d` y `sesiones28d`. Las sesiones llevan `simulada`. Un error interno responde `500` con "Error interno", sin detalles |

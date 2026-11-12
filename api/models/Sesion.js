@@ -31,7 +31,8 @@ const sesionSchema = new mongoose.Schema({
     },
     inicio: { type: Date, default: Date.now },
     fin: { type: Date, default: null },
-    resumen: { type: [resumenJugadorSchema], default: [] }
+    resumen: { type: [resumenJugadorSchema], default: [] },
+    simulada: { type: Boolean, default: false }   // histórico de 4 semanas que genera el seed para el ACWR
 }, { ...opcionesJSON, collection: 'sesiones' });
 
 sesionSchema.index({ inicio: -1 });

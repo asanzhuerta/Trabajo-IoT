@@ -111,7 +111,7 @@ const coleccion = {
             '2. En las variables de la colección, pon en **Current value** las claves del `.env`: `claveMedico` = `API_KEY_MEDICO` y `clavePasarela` = `API_KEY_PASARELA`. El *Current value* no se exporta ni se sube al repo.',
             '3. Si la API no está en el puerto 3000, cambia `baseUrl`.',
             '',
-            '**Variables que se rellenan solas:** `sesionId` (al empezar una sesión), `alertaId` (al listar alertas activas) y `ahora` (fecha actual para la telemetría).',
+            '**Variables que se rellenan solas:** `sesionId` (al empezar una sesión), `alertaId` (al listar alertas activas), `observacionId` (al buscar la FC en FHIR) y `ahora` (fecha actual para la telemetría y el clima).',
             '',
             'Cada petición comprueba el código de respuesta, así que se puede lanzar entera con el *Collection Runner*.',
             'La documentación interactiva está en `{{baseUrl}}/api-docs` y los contratos en `docs/contratos/`.'
@@ -125,6 +125,7 @@ const coleccion = {
         { key: 'jugadorId', value: 'p1' },
         { key: 'sesionId', value: '' },
         { key: 'alertaId', value: '' },
+        { key: 'observacionId', value: '' },
         { key: 'ahora', value: '' }
     ],
     item: [
@@ -195,6 +196,42 @@ const coleccion = {
             peticion({ nombre: 'Listar sesiones', metodo: 'GET', ruta: '/api/sesiones' })
         ]),
 
+        carpeta('Clima', 'Lo que manda el flujo de Open-Meteo de Node-RED (clave de la pasarela). Con un WBGT de 28 °C o más, los umbrales de calor bajan 0,3 °C.', [
+            peticion({ nombre: 'Guardar clima (la API estima el WBGT)', metodo: 'POST', ruta: '/api/clima', clave: PASARELA, esperado: 201,
+                preRequest: PONER_AHORA,
+                cuerpo: { ts: '{{ahora}}', temp: 24, humedad: 55, fuente: 'open-meteo' },
+                guardar: ["pm.test('WBGT estimado', function () { pm.expect(pm.response.json().wbgtEstimado).to.eql(true); });"],
+                descripcion: 'Sin `wbgt`: la API lo estima con la temperatura y la humedad. Con 24 °C sale un WBGT de unos 24 °C, que no cambia los umbrales. Para probar el ajuste por calor, prueba con `"temp": 34, "humedad": 60` (y vuelve a mandar este después).' }),
+            peticion({ nombre: 'Último clima', metodo: 'GET', ruta: '/api/clima' })
+        ]),
+
+        carpeta('FHIR', 'Constantes vitales como recursos FHIR R4. Hacen falta datos: lanza antes el fake-gateway o la pasarela unos segundos.', [
+            peticion({ nombre: 'FC de un jugador (LOINC 8867-4)', metodo: 'GET', ruta: '/fhir/Observation',
+                query: [{ key: 'patient', value: '{{jugadorId}}' }, { key: 'code', value: '8867-4' }, { key: '_count', value: '5' }],
+                guardar: [
+                    'const b = pm.response.json();',
+                    "pm.test('Es un Bundle searchset', function () { pm.expect(b.resourceType + ' ' + b.type).to.eql('Bundle searchset'); });",
+                    "if (b.entry && b.entry.length) pm.collectionVariables.set('observacionId', b.entry[0].resource.id);"
+                ],
+                descripcion: 'Guarda el id de la primera Observation en `observacionId`.' }),
+            peticion({ nombre: 'Temperatura de un jugador (LOINC 8310-5)', metodo: 'GET', ruta: '/fhir/Observation',
+                query: [{ key: 'patient', value: 'Patient/{{jugadorId}}' }, { key: 'code', value: 'http://loinc.org|8310-5' }] }),
+            peticion({ nombre: 'Todas las constantes de un jugador', metodo: 'GET', ruta: '/fhir/Observation',
+                query: [{ key: 'patient', value: '{{jugadorId}}' }] }),
+            peticion({ nombre: 'Una Observation por su id', metodo: 'GET', ruta: '/fhir/Observation/{{observacionId}}',
+                preRequest: ["if (!pm.collectionVariables.get('observacionId')) pm.execution.skipRequest();"],
+                guardar: ["pm.test('Es una Observation', function () { pm.expect(pm.response.json().resourceType).to.eql('Observation'); });"],
+                descripcion: 'Usa el id que guardó «FC de un jugador». Si no había datos, se salta.' })
+        ]),
+
+        carpeta('ACWR', 'Carga aguda (7 días) entre crónica (media semanal de 28). El seed genera 4 semanas de sesiones: p7 sale alto, p5 bajo y el resto en la zona óptima.', [
+            peticion({ nombre: 'ACWR de p7 (pico de carga)', metodo: 'GET', ruta: '/api/jugadores/p7/acwr',
+                guardar: ["pm.test('Franja alta', function () { pm.expect(pm.response.json().franja).to.eql('alta'); });"] }),
+            peticion({ nombre: 'ACWR de p5 (readaptación)', metodo: 'GET', ruta: '/api/jugadores/p5/acwr',
+                guardar: ["pm.test('Franja baja', function () { pm.expect(pm.response.json().franja).to.eql('baja'); });"] }),
+            peticion({ nombre: 'ACWR de un jugador', metodo: 'GET', ruta: '/api/jugadores/{{jugadorId}}/acwr' })
+        ]),
+
         carpeta('Errores (para enseñarlos)', 'Cómo responde la API cuando algo está mal. Cada petición espera su código de error.', [
             peticion({ nombre: '401: sin clave', metodo: 'POST', ruta: '/api/sesiones', esperado: 401,
                 cuerpo: { tipo: 'partido', nombre: 'x' } }),
@@ -209,6 +246,10 @@ const coleccion = {
             peticion({ nombre: '400: JSON mal formado', metodo: 'POST', ruta: '/api/sesiones', clave: MEDICO, esperado: 400,
                 cuerpo: '{ "tipo": "partido", ' }),
             peticion({ nombre: '404: jugador que no existe', metodo: 'GET', ruta: '/api/jugadores/p99', esperado: 404 }),
+            peticion({ nombre: '400: clima sin temperatura', metodo: 'POST', ruta: '/api/clima', clave: PASARELA, esperado: 400,
+                cuerpo: { humedad: 55 } }),
+            peticion({ nombre: '400 FHIR: búsqueda sin paciente (OperationOutcome)', metodo: 'GET', ruta: '/fhir/Observation', esperado: 400,
+                guardar: ["pm.test('Es un OperationOutcome', function () { pm.expect(pm.response.json().resourceType).to.eql('OperationOutcome'); });"] }),
             peticion({ nombre: '409: dorsal repetido', metodo: 'POST', ruta: '/api/jugadores', clave: MEDICO, esperado: 409,
                 cuerpo: { id: 'p13', dorsal: 1, posicion: 'POR', fcMax: 190 },
                 descripcion: 'El dorsal 1 ya lo tiene un jugador del seed.' })

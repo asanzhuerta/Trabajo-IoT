@@ -1,7 +1,8 @@
-// /api/jugadores: perfil médico, umbrales, pauta de readaptación, estado en vivo e histórico.
+// /api/jugadores: perfil médico, umbrales, pauta de readaptación, estado en vivo, histórico y ACWR.
 
 const express = require('express');
-const { Jugador, Lectura, Alerta, Pauta } = require('../models');
+const { Jugador, Lectura, Alerta, Pauta, Sesion } = require('../models');
+const acwr = require('../services/acwr');
 const { requiereClave } = require('../middleware/clave');
 const perfiles = require('../services/perfiles');
 const estado = require('../services/estado');
@@ -177,6 +178,23 @@ router.get('/:id/historico', async function (req, res) {
         .limit(HISTORICO_MAX)
         .lean();
     res.json(lecturas);
+});
+
+// GET /api/jugadores/:id/acwr?fecha=: carga de 7 días entre la media semanal de 28 (por defecto, hasta ahora)
+router.get('/:id/acwr', async function (req, res) {
+    const id = req.params.id;
+    const fecha = fechaConsulta(req.query.fecha);
+    if (fecha === null) return res.status(400).json({ error: 'fecha debe ser una fecha ISO 8601' });
+    const ahora = (fecha || new Date()).getTime();
+    if (!(await Jugador.exists({ _id: id }))) return noExiste(res, id);
+
+    const sesiones = await Sesion.find(
+        { fin: { $ne: null }, inicio: { $gt: new Date(ahora - 28 * acwr.DIA_MS), $lte: new Date(ahora) }, 'resumen.jugadorId': id },
+        { inicio: 1, resumen: { $elemMatch: { jugadorId: id } } }
+    ).lean();
+    const cargas = sesiones.map(function (s) { return { inicio: s.inicio, carga: s.resumen[0].distAltaInt || 0 }; });
+
+    res.json({ jugadorId: id, fecha: new Date(ahora).toISOString(), metrica: 'distAltaInt', ...acwr.calcular(cargas, ahora) });
 });
 
 module.exports = router;

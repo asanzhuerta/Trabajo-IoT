@@ -11,6 +11,8 @@ const telemetriaRoutes = require('../routers/telemetria');
 const jugadoresRoutes = require('../routers/jugadores');
 const alertasRoutes = require('../routers/alertas');
 const sesionesRoutes = require('../routers/sesiones');
+const climaRoutes = require('../routers/clima');
+const fhirRoutes = require('../routers/fhir');
 const documentacion = require('./documentacion');
 
 const app = express();
@@ -27,7 +29,8 @@ app.use('/api/telemetria', telemetriaRoutes);
 app.use('/api/jugadores', jugadoresRoutes);
 app.use('/api/alertas', alertasRoutes);
 app.use('/api/sesiones', sesionesRoutes);
-// Próximos routers: /api/clima, /fhir
+app.use('/api/clima', climaRoutes);
+app.use('/fhir', requiereMongo, fhirRoutes);
 
 // Documentación interactiva (Swagger UI) a partir de openapi.yaml
 app.use('/api-docs', documentacion);

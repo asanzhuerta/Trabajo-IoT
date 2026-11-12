@@ -10,7 +10,7 @@ const eventoSchema = new mongoose.Schema({
     sesionId: { type: mongoose.Schema.Types.ObjectId, default: null },
     ts: { type: Date, required: true },
     tipo: { type: String, required: true, enum: TIPOS },
-    valor: Number            // km/h, m/s², grados o g según el tipo
+    valor: Number // km/h, m/s², grados o g según el tipo
 }, { ...opcionesJSON, collection: 'eventos' });
 
 eventoSchema.index({ jugadorId: 1, ts: -1 });

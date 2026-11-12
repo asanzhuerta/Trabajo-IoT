@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Smart Health · API REST",
-    "description": "Colección de la API de Smart Health (Practical Assignment IoT 2026/27).\n\n**Antes de empezar:**\n1. Arranca la API (`npm run dev` en `api/`) y carga los jugadores (`node scripts/seed.js`).\n2. En las variables de la colección, pon en **Current value** las claves del `.env`: `claveMedico` = `API_KEY_MEDICO` y `clavePasarela` = `API_KEY_PASARELA`. El *Current value* no se exporta ni se sube al repo.\n3. Si la API no está en el puerto 3000, cambia `baseUrl`.\n\n**Variables que se rellenan solas:** `sesionId` (al empezar una sesión), `alertaId` (al listar alertas activas) y `ahora` (fecha actual para la telemetría).\n\nCada petición comprueba el código de respuesta, así que se puede lanzar entera con el *Collection Runner*.\nLa documentación interactiva está en `{{baseUrl}}/api-docs` y los contratos en `docs/contratos/`.",
+    "description": "Colección de la API de Smart Health (Practical Assignment IoT 2026/27).\n\n**Antes de empezar:**\n1. Arranca la API (`npm run dev` en `api/`) y carga los jugadores (`node scripts/seed.js`).\n2. En las variables de la colección, pon en **Current value** las claves del `.env`: `claveMedico` = `API_KEY_MEDICO` y `clavePasarela` = `API_KEY_PASARELA`. El *Current value* no se exporta ni se sube al repo.\n3. Si la API no está en el puerto 3000, cambia `baseUrl`.\n\n**Variables que se rellenan solas:** `sesionId` (al empezar una sesión), `alertaId` (al listar alertas activas), `observacionId` (al buscar la FC en FHIR) y `ahora` (fecha actual para la telemetría y el clima).\n\nCada petición comprueba el código de respuesta, así que se puede lanzar entera con el *Collection Runner*.\nLa documentación interactiva está en `{{baseUrl}}/api-docs` y los contratos en `docs/contratos/`.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -27,6 +27,10 @@
     },
     {
       "key": "alertaId",
+      "value": ""
+    },
+    {
+      "key": "observacionId",
       "value": ""
     },
     {
@@ -857,6 +861,365 @@
       ]
     },
     {
+      "name": "Clima",
+      "description": "Lo que manda el flujo de Open-Meteo de Node-RED (clave de la pasarela). Con un WBGT de 28 °C o más, los umbrales de calor bajan 0,3 °C.",
+      "item": [
+        {
+          "name": "Guardar clima (la API estima el WBGT)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('ahora', new Date().toISOString());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 201', function () { pm.response.to.have.status(201); });",
+                  "pm.test('WBGT estimado', function () { pm.expect(pm.response.json().wbgtEstimado).to.eql(true); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{clavePasarela}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/clima",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "clima"
+              ]
+            },
+            "description": "Sin `wbgt`: la API lo estima con la temperatura y la humedad. Con 24 °C sale un WBGT de unos 24 °C, que no cambia los umbrales. Para probar el ajuste por calor, prueba con `\"temp\": 34, \"humedad\": 60` (y vuelve a mandar este después).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ts\": \"{{ahora}}\",\n  \"temp\": 24,\n  \"humedad\": 55,\n  \"fuente\": \"open-meteo\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Último clima",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/clima",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "clima"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "FHIR",
+      "description": "Constantes vitales como recursos FHIR R4. Hacen falta datos: lanza antes el fake-gateway o la pasarela unos segundos.",
+      "item": [
+        {
+          "name": "FC de un jugador (LOINC 8867-4)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });",
+                  "const b = pm.response.json();",
+                  "pm.test('Es un Bundle searchset', function () { pm.expect(b.resourceType + ' ' + b.type).to.eql('Bundle searchset'); });",
+                  "if (b.entry && b.entry.length) pm.collectionVariables.set('observacionId', b.entry[0].resource.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/fhir/Observation?patient={{jugadorId}}&code=8867-4&_count=5",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "fhir",
+                "Observation"
+              ],
+              "query": [
+                {
+                  "key": "patient",
+                  "value": "{{jugadorId}}"
+                },
+                {
+                  "key": "code",
+                  "value": "8867-4"
+                },
+                {
+                  "key": "_count",
+                  "value": "5"
+                }
+              ]
+            },
+            "description": "Guarda el id de la primera Observation en `observacionId`."
+          }
+        },
+        {
+          "name": "Temperatura de un jugador (LOINC 8310-5)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/fhir/Observation?patient=Patient/{{jugadorId}}&code=http://loinc.org|8310-5",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "fhir",
+                "Observation"
+              ],
+              "query": [
+                {
+                  "key": "patient",
+                  "value": "Patient/{{jugadorId}}"
+                },
+                {
+                  "key": "code",
+                  "value": "http://loinc.org|8310-5"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Todas las constantes de un jugador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/fhir/Observation?patient={{jugadorId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "fhir",
+                "Observation"
+              ],
+              "query": [
+                {
+                  "key": "patient",
+                  "value": "{{jugadorId}}"
+                }
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Una Observation por su id",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.collectionVariables.get('observacionId')) pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Es una Observation', function () { pm.expect(pm.response.json().resourceType).to.eql('Observation'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/fhir/Observation/{{observacionId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "fhir",
+                "Observation",
+                "{{observacionId}}"
+              ]
+            },
+            "description": "Usa el id que guardó «FC de un jugador». Si no había datos, se salta."
+          }
+        }
+      ]
+    },
+    {
+      "name": "ACWR",
+      "description": "Carga aguda (7 días) entre crónica (media semanal de 28). El seed genera 4 semanas de sesiones: p7 sale alto, p5 bajo y el resto en la zona óptima.",
+      "item": [
+        {
+          "name": "ACWR de p7 (pico de carga)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Franja alta', function () { pm.expect(pm.response.json().franja).to.eql('alta'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/p7/acwr",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jugadores",
+                "p7",
+                "acwr"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "ACWR de p5 (readaptación)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Franja baja', function () { pm.expect(pm.response.json().franja).to.eql('baja'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/p5/acwr",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jugadores",
+                "p5",
+                "acwr"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "ACWR de un jugador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/{{jugadorId}}/acwr",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jugadores",
+                "{{jugadorId}}",
+                "acwr"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
       "name": "Errores (para enseñarlos)",
       "description": "Cómo responde la API cuando algo está mal. Cada petición espera su código de error.",
       "item": [
@@ -1136,6 +1499,83 @@
                 "api",
                 "jugadores",
                 "p99"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "400: clima sin temperatura",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', function () { pm.response.to.have.status(400); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{clavePasarela}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/clima",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "clima"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"humedad\": 55\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "400 FHIR: búsqueda sin paciente (OperationOutcome)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', function () { pm.response.to.have.status(400); });",
+                  "pm.test('Es un OperationOutcome', function () { pm.expect(pm.response.json().resourceType).to.eql('OperationOutcome'); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/fhir/Observation",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "fhir",
+                "Observation"
               ]
             },
             "description": ""
