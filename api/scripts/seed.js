@@ -1,14 +1,14 @@
 // Carga en MongoDB los 11 jugadores, la pauta de readaptación de p5 y 4 semanas de sesiones para el ACWR.
 //
 //   npm run seed               -> reemplaza jugadores, pautas y las sesiones simuladas
-//   npm run seed -- --limpiar  -> además borra lecturas, eventos, alertas y todas las sesiones
+//   npm run seed -- --limpiar  -> además borra lecturas, eventos, alertas, clima y todas las sesiones
 //
 // La API puede estar arrancada: recarga los perfiles sola en menos de 30 s.
 
 const { parseArgs } = require('node:util');
 const mongoose = require('mongoose');
 const config = require('../config');
-const { Jugador, Pauta, Lectura, Evento, Alerta, Sesion } = require('../models');
+const { Jugador, Pauta, Lectura, Evento, Alerta, Sesion, Clima } = require('../models');
 const plantilla = require('./plantilla');
 const historial = require('./historial');
 
@@ -23,7 +23,7 @@ async function main() {
     console.log('Conectado a %s', config.mongoUrl);
 
     // Crea las colecciones (y la time-series de lecturas) si todavía no existen
-    await Promise.all([Jugador, Pauta, Lectura, Evento, Alerta, Sesion].map(function (m) { return m.init(); }));
+    await Promise.all([Jugador, Pauta, Lectura, Evento, Alerta, Sesion, Clima].map(function (m) { return m.init(); }));
 
     await Jugador.deleteMany({});
     await Jugador.insertMany(plantilla.map(function (j) {
@@ -53,11 +53,11 @@ async function main() {
     console.log('Pautas: %d (%s)', plantilla.PAUTAS.length, plantilla.PAUTAS.map(function (p) { return p.jugadorId; }).join(', '));
 
     if (opciones.limpiar) {
-        const [l, e, a, s] = await Promise.all([
-            Lectura.deleteMany({}), Evento.deleteMany({}), Alerta.deleteMany({}), Sesion.deleteMany({})
+        const [l, e, a, s, c] = await Promise.all([
+            Lectura.deleteMany({}), Evento.deleteMany({}), Alerta.deleteMany({}), Sesion.deleteMany({}), Clima.deleteMany({})
         ]);
-        console.log('Borrado: %d lecturas, %d eventos, %d alertas, %d sesiones',
-            l.deletedCount, e.deletedCount, a.deletedCount, s.deletedCount);
+        console.log('Borrado: %d lecturas, %d eventos, %d alertas, %d sesiones, %d registros de clima',
+            l.deletedCount, e.deletedCount, a.deletedCount, s.deletedCount, c.deletedCount);
     }
 
     // Histórico para el ACWR: se rehace cada vez (relativo a hoy) sin tocar las sesiones reales
