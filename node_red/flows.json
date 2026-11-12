@@ -1,0 +1,145 @@
+[
+    {
+        "id": "57c3d3cacdd543f8",
+        "type": "tab",
+        "label": "Player 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "c2bdc79845bf4181",
+        "type": "inject",
+        "z": "57c3d3cacdd543f8",
+        "name": "Jugador 1",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "1",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 230,
+        "y": 120,
+        "wires": [
+            [
+                "e483bbfd595c5a01",
+                "40a46f162c67a6de"
+            ]
+        ]
+    },
+    {
+        "id": "e483bbfd595c5a01",
+        "type": "function",
+        "z": "57c3d3cacdd543f8",
+        "name": "Termometro",
+        "func": "let temperatura = context.get(\"temperatura\") ?? 36.7;\nlet variacion = (Math.random() - 0.5) * 0.06;\ntemperatura += variacion;\ntemperatura = Math.max (36, Math.min (41, temperatura));\ntemperatura = Number(temperatura.toFixed(2));\ncontext.set(\"temperatura\", temperatura);\nmsg.topic = \"p1/sensors/termometer/temperature\";\nmsg.payload = {\"unit\": \"C\", \"value\" : temperatura};\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 430,
+        "y": 120,
+        "wires": [
+            [
+                "d141f54b4a57b323"
+            ]
+        ]
+    },
+    {
+        "id": "aff7dc9149d9c9f5",
+        "type": "mqtt out",
+        "z": "57c3d3cacdd543f8",
+        "name": "",
+        "topic": "",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "86eea92f9a9d4282",
+        "x": 730,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "d141f54b4a57b323",
+        "type": "json",
+        "z": "57c3d3cacdd543f8",
+        "name": "",
+        "property": "payload",
+        "action": "str",
+        "pretty": false,
+        "x": 590,
+        "y": 120,
+        "wires": [
+            [
+                "aff7dc9149d9c9f5"
+            ]
+        ]
+    },
+    {
+        "id": "40a46f162c67a6de",
+        "type": "function",
+        "z": "57c3d3cacdd543f8",
+        "name": "Movimiento",
+        "func": "const DT = 1;\nconst LARGO_CAMPO = 105;\nconst ANCHO_CAMPO = 68;\nconst PORTERIA_X = 0;\n\nconst ACELERACION_MAX = 2.0;  //m/s2\nconst FRENADA_MAX = 3.0;      //m/s2\nconst GIRO_MAX = 90;          //grados por segundo\nconst PULSO_BASE = 90;        //bpm, valor inicial orientativo\nconst LONGITUD_PASO = 0.75;   //metros por apoyo, aproximacion\n\nconst aleatorio = (min, max) => min + Math.random() * (max - min);\nconst limitar = (v, min, max) => Math.max(min, Math.min(max, v));\nconst normalizarAngulo = a => ((a + 540) % 360) - 180;\n\n//Un unico estado alimenta a los cinco sensores.\nlet s = context.get(\"estado\") || {\n    x: 4,\n    y: 34,\n    vx: 0,\n    vy: 0,\n    distancia: 0,\n    modo: \"parado\",\n    segundos: 0,\n    objetivoX: 4,\n    objetivoY: 34,\n    velocidadObjetivo: 0,\n    angulo: 0,\n    carga: 0,\n    pulso: PULSO_BASE,\n    fasePaso: 0\n};\n\nif (!Number.isFinite(s.angulo)) s.angulo = 0;\nif (!Number.isFinite(s.carga)) s.carga = 0;\nif (!Number.isFinite(s.pulso)) s.pulso = PULSO_BASE;\nif (!Number.isFinite(s.fasePaso)) s.fasePaso = 0;\n\n//Elegir comportamiento del portero.\nif (s.segundos <= 0) {\n    const p = Math.random();\n    s.modo = s.x > 9 ? \"volver\" :\n        p < 0.50 ? \"parado\" :\n            p < 0.80 ? \"lateral\" :\n                p < 0.95 ? \"recolocar\" : \"salida\";\n\n    switch (s.modo) {\n        case \"parado\":\n            s.objetivoX = s.x;\n            s.objetivoY = s.y;\n            s.velocidadObjetivo = 0;\n            s.segundos = Math.ceil(aleatorio(2, 8));\n            break;\n\n        case \"lateral\":\n            s.objetivoX = aleatorio(2, 6);\n            s.objetivoY = aleatorio(29, 39);\n            s.velocidadObjetivo = aleatorio(3, 8);\n            s.segundos = Math.ceil(aleatorio(2, 5));\n            break;\n\n        case \"recolocar\":\n            s.objetivoX = aleatorio(2, 9);\n            s.objetivoY = aleatorio(26, 42);\n            s.velocidadObjetivo = aleatorio(4, 10);\n            s.segundos = Math.ceil(aleatorio(2, 6));\n            break;\n\n        case \"salida\":\n            s.objetivoX = aleatorio(12, 20);\n            s.objetivoY = aleatorio(23, 45);\n            s.velocidadObjetivo = aleatorio(12, 22);\n            s.segundos = Math.ceil(aleatorio(3, 6));\n            break;\n\n        case \"volver\":\n            s.objetivoX = aleatorio(2, 6);\n            s.objetivoY = aleatorio(30, 38);\n            s.velocidadObjetivo = aleatorio(8, 16);\n            s.segundos = 8;\n            break;\n    }\n}\n\n//GPS: calcular desplazamiento y velocidad.\nconst dx = s.objetivoX - s.x;\nconst dy = s.objetivoY - s.y;\nconst distanciaObjetivo = Math.hypot(dx, dy);\nconst velocidadAnterior = Math.hypot(s.vx, s.vy);\nconst velocidadDeseada = Math.min(\n    s.velocidadObjetivo / 3.6,\n    Math.sqrt(2 * FRENADA_MAX * distanciaObjetivo)\n);\n\nconst vxDeseada = distanciaObjetivo > 0.001\n    ? dx / distanciaObjetivo * velocidadDeseada : 0;\n\nconst vyDeseada = distanciaObjetivo > 0.001\n    ? dy / distanciaObjetivo * velocidadDeseada : 0;\n\nconst dvx = vxDeseada - s.vx;\nconst dvy = vyDeseada - s.vy;\n\nconst cambioVector = Math.hypot(dvx, dvy);\n\nconst limite = velocidadDeseada < velocidadAnterior\n    ? FRENADA_MAX : ACELERACION_MAX;\n\nconst factor = cambioVector > 0\n    ? Math.min(1, limite * DT / cambioVector) : 0;\n\ns.vx += dvx * factor;\ns.vy += dvy * factor;\n\nconst xAnterior = s.x;\nconst yAnterior = s.y;\n\ns.x = limitar(s.x + s.vx * DT, 0, LARGO_CAMPO);\ns.y = limitar(s.y + s.vy * DT, 0, ANCHO_CAMPO);\n\ns.vx = (s.x - xAnterior) / DT;\ns.vy = (s.y - yAnterior) / DT;\n\nconst velocidadActual = Math.hypot(s.vx, s.vy);\n\nconst desplazamiento = Math.hypot(s.x - xAnterior, s.y - yAnterior);\n\ns.distancia += desplazamiento;\n\n//Acelerometro: cambios de rapidez entre lecturas.\nconst deltaRapidez = (velocidadActual - velocidadAnterior) / DT;\nconst aceleracion = Math.max(0, deltaRapidez);\nconst desaceleracion = Math.max(0, -deltaRapidez);\n\n//Giroscopio: variacion de orientacion por segundo.\nlet anguloObjetivo = s.angulo;\n\nif (velocidadActual > 0.25) {\n    anguloObjetivo = Math.atan2(s.vy, s.vx) * 180 / Math.PI;\n} else if (s.modo !== \"parado\" && distanciaObjetivo > 0.3) {\n    anguloObjetivo = Math.atan2(dy, dx) * 180 / Math.PI;\n}\n\nconst giro = limitar(\n    normalizarAngulo(anguloObjetivo - s.angulo),\n    -GIRO_MAX * DT, GIRO_MAX * DT);\n\ns.angulo = normalizarAngulo(s.angulo + giro);\n\n//Pulsometro: esfuerzo acumulado, respuesta lenta y recuperacion.\n//La intensidad depende de velocidad y de aceleraciones positivas.\nconst intensidad = limitar(\n    0.8 * limitar(velocidadActual / 6.1, 0, 1) +\n    0.2 * limitar(aceleracion / ACELERACION_MAX, 0, 1),\n    0, 1\n);\n\n//La carga aumenta mas deprisa de lo que se disipa.\nconst alphaCarga = intensidad > s.carga ? 0.18 : 0.04;\ns.carga += (intensidad - s.carga) * alphaCarga;\n\n//Al aumentar la carga, sube el pulso objetivo (hasta ~170 bpm).\nconst pulsoObjetivo = PULSO_BASE + 80 * s.carga;\nconst alphaPulso = pulsoObjetivo > s.pulso ? 0.13 : 0.035;\nconst ruido = aleatorio(-0.25, 0.25);\ns.pulso = limitar(\n    s.pulso + (pulsoObjetivo - s.pulso) * alphaPulso + ruido,\n    60, 180\n);\n\n//Sensor de presion: reparto porcentual de carga entre ambos pies.\n//50/50 aproximadamente en reposo. Durante el desplazamiento,\n//la carga alterna con las pisadas y se desplaza lateralmente.\n//Es una distribucion relativa, NO presion absoluta en kPa.\nconst actividad = limitar(velocidadActual / 6.1, 0, 1);\n\n//Cada 0.75 m de avance alterna el pie de apoyo.\ns.fasePaso = (s.fasePaso + Math.PI * desplazamiento / LONGITUD_PASO)\n    % (2 * Math.PI);\nconst repartoPorPisada = Math.sin(s.fasePaso) * 30 * Math.sqrt(actividad);\n\n//Asumimos X hacia la derecha e Y hacia arriba en el campo.\nconst velocidadDerecha = PORTERIA_X === 0 ? -s.vy : s.vy;\nconst sesgoLateral = 10 * limitar(velocidadDerecha / 3, -1, 1);\n\n//Ligera variacion de apoyo (incluido en reposo).\nconst ruidoApoyo = aleatorio(-1.5, 1.5);\nconst presionDerecha = Number(limitar(\n    50 + repartoPorPisada + sesgoLateral + ruidoApoyo,\n    5, 95\n).toFixed(1));\nconst presionIzquierda = Number((100 - presionDerecha).toFixed(1));\n\n//Guardar el estado actualizado.\ns.segundos--;\nif (s.modo !== \"parado\" &&\n    Math.hypot(s.objetivoX - s.x, s.objetivoY - s.y) < 0.5 &&\n    velocidadActual < 0.5) {\n    s.segundos = 0;\n}\ncontext.set(\"estado\", s);\n\nconst posicionX = PORTERIA_X === 0 ? s.x : LARGO_CAMPO - s.x;\nconst giroGlobal = PORTERIA_X === 0 ? giro : -giro;\n\n//Cinco publicaciones MQTT\nconst mensajeGPS = {\n    topic: \"p1/sensors/gps\",\n    payload: {\n        speed: { unit: \"km/h\", value: Number((velocidadActual * 3.6).toFixed(2)) },\n        distancecovered: { unit: \"m\", value: Number(s.distancia.toFixed(2)) },\n        position: {\n            X: { unit: \"m\", value: Number(posicionX.toFixed(2)) },\n            Y: { unit: \"m\", value: Number(s.y.toFixed(2)) }\n        }\n    }\n};\n\nconst mensajeAcelerometro = {\n    topic: \"p1/sensors/accelerometer\",\n    payload: {\n        acceleration: { unit: \"m/s2\", value: Number(aceleracion.toFixed(2)) },\n        desacceleration: { unit: \"m/s2\", value: Number(desaceleracion.toFixed(2)) }\n    }\n};\n\nconst mensajeGiroscopio = {\n    topic: \"p1/sensors/giroscope\",\n    payload: {\n        changeinposition: { unit: \"degrees\", value: Number(giroGlobal.toFixed(2)) }\n    }\n};\n\nconst mensajePulsometro = {\n    topic: \"p1/sensors/pulsemeter\",\n    payload: {\n        pulse: { unit: \"bpm\", value: Math.round(s.pulso) }\n    }\n};\n\nconst mensajePresion = {\n    topic: \"p1/sensors/pressuresensor\",\n    payload: {\n        pressureleftfoot: { unit: \"%\", value: presionIzquierda },\n        pressurerightfoot: { unit: \"%\", value: presionDerecha }\n    }\n};\n\nreturn [[\n    mensajeGPS,\n    mensajeAcelerometro,\n    mensajeGiroscopio,\n    mensajePulsometro,\n    mensajePresion\n]];\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 450,
+        "y": 200,
+        "wires": [
+            [
+                "d141f54b4a57b323"
+            ]
+        ]
+    },
+    {
+        "id": "86eea92f9a9d4282",
+        "type": "mqtt-broker",
+        "name": "ServidorLocal",
+        "broker": "localhost",
+        "port": 1883,
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": 4,
+        "keepalive": 60,
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    }
+]
