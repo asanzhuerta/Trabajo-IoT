@@ -1,6 +1,8 @@
 // Configuración centralizada. Los valores vienen de ../.env (ver .env.example)
 // o de las variables de entorno del contenedor. Si no hay nada, se usan los de desarrollo.
 
+require('./env');
+
 module.exports = {
     equipo: process.env.EQUIPO || 'eq1',
     port: Number(process.env.PORT) || 3000,

@@ -1,0 +1,185 @@
+// Estado en vivo de cada jugador, en memoria:
+//   - los últimos sensores, en el formato del simulador de A (sensors.gps.speed.value…), para GET /estado,
+//     el WebSocket y las reglas. La temperatura y las plantillas no llegan en todas las lecturas, así que
+//     se conserva el último valor de cada sensor;
+//   - los valores derivados (%FCmáx, asimetría, zonas);
+//   - un historial corto de los últimos segundos (lo usa el motor de alertas);
+//   - los acumulados de la sesión (distancia, metros a alta intensidad, sprints y acciones de alta intensidad);
+//   - la ventana de 10 s que se está rellenando;
+//   - las alertas activas (código → severidad), para pintar el semáforo.
+
+const resumen = require('./resumen');
+const metricas = require('./metricas');
+const sensores = require('./sensores');
+const { semaforo } = require('./semaforo');
+
+const HISTORIAL_SEG = 180;
+const GRACIA_MS = 5000;   // margen antes de cerrar una ventana a la que ya no llegan lecturas
+
+const jugadores = new Map();
+let sesionId = null;
+
+function sesionVacia() {
+    return { distancia: 0, distAltaInt: 0, sprints: 0, acelAltas: 0, decelAltas: 0 };
+}
+
+function nuevo(jugadorId) {
+    return {
+        jugadorId: jugadorId,
+        ts: null,
+        estado: null,          // 'ok' | 'sin_senal'
+        sensors: null,         // últimos sensores, formato de A
+        derivados: null,       // { pctFcMax, asimetria, zonaVelocidad, zonaFc }
+        historial: [],
+        ventana: null,
+        ultimaDist: null,
+        sesion: sesionVacia(),
+        alertas: new Map(),        // código → severidad de las alertas activas
+        confirmadas: new Map()     // código → momento (ms) en que se confirmó la última
+    };
+}
+
+function obtenerOCrear(id) {
+    let e = jugadores.get(id);
+    if (!e) {
+        e = nuevo(id);
+        jugadores.set(id, e);
+    }
+    return e;
+}
+
+function apuntarHistorial(e, punto) {
+    e.historial.push(punto);
+    if (e.historial.length > HISTORIAL_SEG) e.historial.shift();
+}
+
+// Incorpora una lectura ya validada (ver validacion.js). Devuelve:
+//   resumen: el resumen de 10 s si esta lectura cierra una ventana, o null;
+//   eventos: sprints, aceleraciones, desaceleraciones, cambios de dirección e impactos de esta lectura.
+function procesar(lectura, perfil) {
+    const e = obtenerOCrear(lectura.jugadorId);
+    const t = lectura.ts.getTime();
+    const inicio = resumen.inicioVentana(t);
+
+    let cerrado = null;
+    if (e.ventana && inicio > e.ventana.inicio) {
+        cerrado = resumen.cerrar(e.ventana, e.jugadorId, sesionId);
+        e.ventana = null;
+    }
+    if (!e.ventana) e.ventana = resumen.nuevaVentana(inicio);
+
+    e.ts = lectura.ts;
+    e.estado = lectura.estado;
+
+    if (lectura.estado === 'sin_senal') {
+        apuntarHistorial(e, { ts: t, estado: 'sin_senal' });
+        return { resumen: cerrado, eventos: [] };
+    }
+
+    const s = lectura.sensors;
+    const vel = sensores.velocidad(s);
+    const dist = sensores.distancia(s);
+
+    // Metros desde la lectura anterior. Si la distancia baja, el wearable se ha reiniciado.
+    let delta = 0;
+    if (e.ultimaDist !== null && dist >= e.ultimaDist) delta = dist - e.ultimaDist;
+    e.ultimaDist = dist;
+    const altaInt = vel > resumen.VEL_ALTA ? delta : 0;
+
+    const eventos = metricas.eventos(lectura, e.sensors ? sensores.velocidad(e.sensors) : null);
+    const sprint = eventos.some(function (ev) { return ev.tipo === 'sprint'; });
+    const acciones = metricas.accionesAltas(s);
+
+    // Los sensores que no vienen en esta lectura (temperatura, plantillas…) conservan su último valor
+    e.sensors = { ...(e.sensors || {}), ...s };
+    const pctFcMax = Math.round(sensores.pulso(s) / perfil.fcMax * 100);
+    e.derivados = {
+        pctFcMax: pctFcMax,
+        asimetria: sensores.asimetria(e.sensors),
+        zonaVelocidad: metricas.zonaVelocidad(vel),
+        zonaFc: metricas.zonaFc(pctFcMax)
+    };
+
+    e.sesion.distancia += delta;
+    e.sesion.distAltaInt += altaInt;
+    e.sesion.acelAltas += acciones.acel;
+    e.sesion.decelAltas += acciones.decel;
+    if (sprint) e.sesion.sprints++;
+
+    resumen.acumular(e.ventana, s, {
+        delta: delta, altaInt: altaInt, sprint: sprint,
+        acelAltas: acciones.acel, decelAltas: acciones.decel
+    });
+
+    apuntarHistorial(e, {
+        ts: t, estado: 'ok', sensors: e.sensors,
+        pctFcMax: pctFcMax, asimetria: e.derivados.asimetria
+    });
+
+    return { resumen: cerrado, eventos: eventos };
+}
+
+// Cierra las ventanas que llevan más de 10 s + margen sin recibir lecturas
+// (por ejemplo, si la pasarela se ha parado). Devuelve los resúmenes que haya que guardar.
+function cerrarVencidas(ahora) {
+    const cerrados = [];
+    for (const e of jugadores.values()) {
+        if (e.ventana && ahora >= e.ventana.inicio + resumen.VENTANA_MS + GRACIA_MS) {
+            const r = resumen.cerrar(e.ventana, e.jugadorId, sesionId);
+            if (r) cerrados.push(r);
+            e.ventana = null;
+        }
+    }
+    return cerrados;
+}
+
+function obtener(id) {
+    return jugadores.get(id) || null;
+}
+
+function todos() {
+    return Array.from(jugadores.values());
+}
+
+function semaforoDe(e) {
+    return semaforo(e.alertas.values());
+}
+
+// Lo que se manda por WebSocket una vez por segundo: los sensores de cada jugador en el formato de A
+function vista() {
+    const lista = [];
+    for (const e of jugadores.values()) {
+        lista.push({
+            jugadorId: e.jugadorId,
+            ts: e.ts,
+            estado: e.estado,
+            semaforo: semaforoDe(e),
+            sensors: e.sensors,
+            derivados: e.derivados
+        });
+    }
+    return lista.sort(function (a, b) { return a.jugadorId.localeCompare(b.jugadorId, 'es', { numeric: true }); });
+}
+
+// Al empezar una sesión se ponen a cero los acumulados
+function iniciarSesion(id) {
+    sesionId = id || null;
+    for (const e of jugadores.values()) {
+        e.sesion = sesionVacia();
+    }
+}
+
+function sesionActual() {
+    return sesionId;
+}
+
+// Solo para los tests
+function limpiar() {
+    jugadores.clear();
+    sesionId = null;
+}
+
+module.exports = {
+    procesar, cerrarVencidas, obtener, obtenerOCrear, todos, semaforoDe, vista,
+    iniciarSesion, sesionActual, limpiar
+};

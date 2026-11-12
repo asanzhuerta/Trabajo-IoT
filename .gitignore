@@ -3,6 +3,8 @@ node_modules/
 
 # Variables de entorno y secretos
 .env
+# Usuarios de Mosquitto (contraseñas cifradas). Lo genera A y cada uno lo tiene en local.
+mosquitto/passwd
 
 # Logs
 *.log
