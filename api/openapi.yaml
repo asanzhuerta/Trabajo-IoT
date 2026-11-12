@@ -709,7 +709,7 @@ components:
         impactoG: { type: number, description: 'g (4)' }
         inmovilSeg: { type: number, description: 's (10)' }
         sobrecargaAcciones: { type: number, description: 'aceleraciones + desaceleraciones altas por sesión (120)' }
-        asimetriaUmbral: { type: number, description: 'puntos sobre la asimetría base (10)' }
+        asimetriaUmbral: { type: number, description: 'puntos sobre la asimetría base (15)' }
     EstadoJugador:
       type: object
       properties:

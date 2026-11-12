@@ -33,12 +33,14 @@ function zonaFc(pctFcMax) {
     return 'Z5';
 }
 
-// Acciones de alta intensidad de una lectura. A 1 Hz, una aceleración de 3 m/s² o más es un cambio
+// Acciones de alta intensidad de una lectura. A 1 Hz, una aceleración de más de 3 m/s² es un cambio
 // de velocidad mantenido durante todo el segundo, así que cumple el criterio de ±3 m/s² durante 0,5 s.
+// Es "más de 3" y no "3 o más": el simulador de A limita la frenada a 3,0 m/s² justos y frena siempre a tope,
+// así que con ">=" cada parada contaba como alta intensidad (más de 300 por partido y SOBRECARGA en todos).
 function accionesAltas(s) {
     return {
-        acel: sensores.aceleracion(s) >= ACCION_ALTA ? 1 : 0,
-        decel: sensores.desaceleracion(s) >= ACCION_ALTA ? 1 : 0
+        acel: sensores.aceleracion(s) > ACCION_ALTA ? 1 : 0,
+        decel: sensores.desaceleracion(s) > ACCION_ALTA ? 1 : 0
     };
 }
 
@@ -64,4 +66,4 @@ function eventos(lectura, velAnterior) {
     return lista;
 }
 
-module.exports = { ZONAS_VELOCIDAD, VEL_SPRINT, ACCION_ALTA, zonaVelocidad, zonaFc, accionesAltas, eventos };
+module.exports = { zonaVelocidad, zonaFc, accionesAltas, eventos };

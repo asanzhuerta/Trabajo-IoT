@@ -15,7 +15,7 @@ const UMBRALES_DEFECTO = Object.freeze({
     impactoG: 4,              // g
     inmovilSeg: 10,           // s
     sobrecargaAcciones: 120,  // aceleraciones + desaceleraciones altas por sesión
-    asimetriaUmbral: 10       // puntos sobre la asimetría base
+    asimetriaUmbral: 15       // puntos sobre la asimetría base (con 10 saltaba en falso con el simulador de A)
 });
 
 module.exports = { UMBRALES_DEFECTO };

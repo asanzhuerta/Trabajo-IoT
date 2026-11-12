@@ -52,8 +52,8 @@
 | `FC_DESACOPLE` | FC > `desacoplePct` % de la FCmáx con velocidad < `desacopleVel` durante `desacopleSeg` | `desacoplePct` = 85, `desacopleVel` = 7 km/h, `desacopleSeg` = 30 s | aviso |
 | `RECUPERACION_LENTA` | Tras un esfuerzo (velocidad de >19,8 a <7 km/h), la FC baja ≤ `recuperacionLpm` en los 60 s siguientes | `recuperacionLpm` = 12 | aviso |
 | `INCIDENTE` | Impacto ≥ `impactoG`, seguido de velocidad < 1 km/h durante `inmovilSeg`, con FC anómala (<50 lpm o >95 % FCmáx) o sin señal | `impactoG` = 4 g, `inmovilSeg` = 10 s | critica |
-| `SOBRECARGA` | Acciones de alta intensidad (`acelAltas` + `decelAltas`) acumuladas en la sesión > `sobrecargaAcciones` | `sobrecargaAcciones` = 120 | aviso |
-| `ASIMETRIA` | \|media de (izq − der) en 60 s\| − `asimetriaBase` del jugador > `asimetriaUmbral` | `asimetriaUmbral` = 10 puntos | aviso |
+| `SOBRECARGA` | Acciones de alta intensidad (`acelAltas` + `decelAltas`, de más de 3 m/s²) acumuladas en la sesión > `sobrecargaAcciones` | `sobrecargaAcciones` = 120 | aviso |
+| `ASIMETRIA` | \|media de (izq − der) en 60 s\| − `asimetriaBase` del jugador > `asimetriaUmbral`, con al menos 45 s de plantillas | `asimetriaUmbral` = 15 puntos | aviso |
 | `PAUTA_EXCEDIDA` | Con pauta activa: velocidad > `velMax`, o distancia en alta intensidad de la sesión > `cargaMax`, o asimetría > `asimetriaMax` | Los fija la pauta del médico | aviso |
 | `SIN_SENAL` | Llega una lectura con `estado: "sin_senal"` (watchdog de la pasarela, 5 s) | — | aviso |
 
@@ -65,8 +65,8 @@
   - FIFA obliga a pausas de hidratación con WBGT ≥32 °C, y FIFPRO las pide desde 28 °C.
   - El ajuste de 0,3 °C es una decisión nuestra, no un valor publicado.
 - **Recuperación de la FC:** una caída de ≤12 lpm en el primer minuto tras el esfuerzo se asoció a más mortalidad en una cohorte clínica de 2.428 adultos (Cole et al., 1999). Aquí es un indicador, no un diagnóstico.
-- **Aceleraciones:** ±3 m/s² mantenidos 0,5 s es el umbral habitual de alta intensidad (STATSports, SciSports). En partidos de academia de élite se han registrado hasta 46 aceleraciones y 73 desaceleraciones de alta intensidad; de ahí el valor de 120 por sesión.
-- **Asimetría:** no hay un umbral fijo validado, por eso se compara con la línea base de cada jugador. El valor de 10 puntos es nuestro.
+- **Aceleraciones:** ±3 m/s² mantenidos 0,5 s es el umbral habitual de alta intensidad (STATSports, SciSports). En partidos de academia de élite se han registrado hasta 46 aceleraciones y 73 desaceleraciones de alta intensidad; de ahí el valor de 120 por sesión. Contamos las de **más** de 3 m/s²: el simulador de A limita la frenada a 3,0 m/s² justos y frena siempre a tope, y con "3 o más" cada parada contaba (más de 300 por partido y `SOBRECARGA` en todos a partir del minuto 33).
+- **Asimetría:** no hay un umbral fijo validado, por eso se compara con la línea base de cada jugador. El valor de 15 puntos es nuestro: con 10, el simulador de A pasaba del umbral de vez en cuando al moverse de lado (en 2 horas simuladas, la media de un minuto llegó a 17,4 puntos). Con 15 puntos y 45 s de datos como mínimo, no hubo ninguna alerta falsa en tres partidos simulados de 2 horas.
 - **Impacto:** el valor de 4 g es nuestro y se ajusta con el simulador.
 - **Temperatura interna:** en la realidad se mide con una cápsula ingerible o se estima a partir de la FC (algoritmo ECTemp, Buller et al., 2013).
 

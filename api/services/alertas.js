@@ -37,10 +37,10 @@ function difundir(alerta) {
     console.info('ALERTA %s %s (%s): %s', json.jugadorId, json.codigo, json.severidad, json.mensaje);
 }
 
-// Evalúa las reglas de un jugador y lanza las alertas nuevas. Devuelve las alertas creadas.
+// Evalúa las reglas de un jugador y lanza las alertas nuevas.
 async function evaluarJugador(jugadorId, perfil) {
     const e = estado.obtener(jugadorId);
-    if (!e || !e.ts) return [];
+    if (!e || !e.ts) return;
     const ahora = e.ts.getTime();
 
     const candidatas = reglas.evaluar({
@@ -51,7 +51,7 @@ async function evaluarJugador(jugadorId, perfil) {
         ahora: ahora
     });
     const nuevas = candidatas.filter(function (c) { return puedeLanzarse(e, c.codigo, ahora); });
-    if (nuevas.length === 0) return [];
+    if (nuevas.length === 0) return;
 
     // Se marcan antes de guardar para que el siguiente lote no las duplique mientras tanto
     for (const c of nuevas) {
@@ -64,14 +64,12 @@ async function evaluarJugador(jugadorId, perfil) {
             return { ...c, jugadorId: jugadorId, ts: new Date(ahora) };
         }));
         docs.forEach(difundir);
-        return docs;
     } catch (err) {
         for (const c of nuevas) {   // se reintentará con la siguiente lectura
             e.alertas.delete(c.codigo);
             marcadas.delete(jugadorId + ':' + c.codigo);
         }
         console.error('No se pudieron guardar las alertas de %s: %s', jugadorId, err.message);
-        return [];
     }
 }
 

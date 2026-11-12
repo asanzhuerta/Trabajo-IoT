@@ -136,11 +136,11 @@ function validarLote(body, equipoEsperado) {
                 throw err;
             }
         });
-        return { ok: true, lote: { equipo: equipoEsperado, ts: ts, lecturas: lecturas } };
+        return { ok: true, lote: { ts: ts, lecturas: lecturas } };
     } catch (err) {
         if (err instanceof ErrorValidacion) return { ok: false, error: err.message };
         throw err;
     }
 }
 
-module.exports = { validarLote, MAX_LECTURAS };
+module.exports = { validarLote };

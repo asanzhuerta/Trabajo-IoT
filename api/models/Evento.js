@@ -16,4 +16,3 @@ const eventoSchema = new mongoose.Schema({
 eventoSchema.index({ jugadorId: 1, ts: -1 });
 
 module.exports = mongoose.model('Evento', eventoSchema);
-module.exports.TIPOS = TIPOS;

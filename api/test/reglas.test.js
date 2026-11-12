@@ -173,11 +173,11 @@ test('SOBRECARGA con más de 120 acciones de alta intensidad en la sesión', fun
     assert.deepEqual(codigos(ctx({ sesion: { acelAltas: 60, decelAltas: 61 } })), ['SOBRECARGA']);
 });
 
-test('ASIMETRIA si supera en más de 10 puntos la base del jugador', function () {
-    assert.deepEqual(codigos(ctx({ ultimo: { asimetria: 14 } })), []);
-    const r = evaluar(ctx({ ultimo: { asimetria: 15 } }));
+test('ASIMETRIA si supera en más de 15 puntos la base del jugador', function () {
+    assert.deepEqual(codigos(ctx({ ultimo: { asimetria: 19 } })), []);
+    const r = evaluar(ctx({ ultimo: { asimetria: 20 } }));
     assert.equal(r[0].codigo, 'ASIMETRIA');
-    assert.equal(r[0].umbral, 14);
+    assert.equal(r[0].umbral, 19);
 });
 
 test('PAUTA_EXCEDIDA por velocidad, carga o asimetría, solo con pauta en vigor', function () {

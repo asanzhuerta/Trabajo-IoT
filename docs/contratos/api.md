@@ -86,7 +86,7 @@ La API guarda y usa los sensores en este mismo formato, sin convertirlos a otro.
 - `gps`, `accelerometer` y `pulsemeter` son obligatorios en cada lectura con `estado: "ok"`.
 - `unit` puede omitirse; si viene, tiene que ser la de la tabla (así se detecta, por ejemplo, una velocidad en m/s).
 - `equipo` en el lote es opcional; si viene, tiene que ser el del `.env` (`eq1`).
-- Las **acciones de alta intensidad** las cuenta la API: una lectura con `acceleration` o `desacceleration` de 3 m/s² o más es una aceleración o desaceleración alta. A 1 Hz, ese valor es un cambio de velocidad mantenido durante todo el segundo, así que cumple el criterio de ±3 m/s² durante 0,5 s.
+- Las **acciones de alta intensidad** las cuenta la API: una lectura con `acceleration` o `desacceleration` de **más de 3 m/s²** es una aceleración o desaceleración alta. A 1 Hz, ese valor es un cambio de velocidad mantenido durante todo el segundo, así que cumple el criterio de ±3 m/s² durante 0,5 s. Es "más de 3" y no "3 o más" porque el simulador de A limita la frenada a 3,0 m/s² justos y frena siempre a tope.
 
 **Respuesta `202`:** `{"recibidas": 11}`
 
@@ -136,7 +136,7 @@ Cambia solo los umbrales indicados. Los nombres están en `alertas.md`.
 - `estado` es `ok` o `sin_senal`.
 - `sensors` son los últimos valores en el formato del simulador de A. La temperatura y las plantillas conservan el último valor recibido.
 - `derivados` es lo que calcula la API: `zonaVelocidad` puede ser `andar`, `trote`, `carrera`, `alta` o `sprint`, y `zonaFc` va de `Z1` a `Z5`.
-- `derivados.asimetria` es `|media de (izq − der)|` de las plantillas del **último minuto**. En cada pisada la carga pasa de un pie al otro; con la media con signo esas alternancias se compensan y solo queda el desequilibrio que se mantiene.
+- `derivados.asimetria` es `|media de (izq − der)|` de las plantillas del **último minuto**. En cada pisada la carga pasa de un pie al otro; con la media con signo esas alternancias se compensan y solo queda el desequilibrio que se mantiene. Vale `null` hasta tener al menos 45 s de plantillas (con pocos segundos, la media sería una pisada o un desplazamiento lateral).
 - Si el jugador todavía no ha mandado datos, `ts`, `estado`, `sensors` y `derivados` valen `null`.
 
 ### `GET /api/jugadores/:id/historico?desde=&hasta=`
@@ -290,3 +290,4 @@ En el mismo puerto que la API (`ws://localhost:3000`). Solo envía, del servidor
 | Jue 12 nov | **Versión 2.0, adaptada al simulador de A.** Las lecturas llevan `sensors` con el formato de los topics `p1/sensors/<sensor>` (`{unit, value}`). Los ids pasan a `p1`…`p11`. `equipo` es opcional. La API cuenta las acciones de alta intensidad. `impact` y `giroscope` son opcionales. Las alertas se publican en `sensors/<equipo>/alertas`. La API guarda los sensores en este formato, sin traducirlos: `GET /estado` y el WebSocket devuelven `sensors` (formato de A) y `derivados` en lugar de `ultimo` |
 | Jue 12 nov (noche) | Sesiones implementadas: `409` si ya hay una abierta o si ya está cerrada, filtro `?estado=`, `GET /api/sesiones/:id`, el resumen añade `minutos` y `velMax`, y avisos `sesion_iniciada` y `sesion_cerrada` por WebSocket. Swagger UI en `/api-docs` y colección de Postman en `docs/`. Nada de esto cambia lo que manda la pasarela |
 | Jue 12 nov (noche, 2) | Clima, FHIR y ACWR implementados. `POST /api/clima` estima el WBGT si no viene (y lo indica con `wbgtEstimado`); `GET /api/clima` da `404` sin datos; aviso `clima` por WebSocket. FHIR: `_count`, `GET /fhir/Observation/:id` y errores como `OperationOutcome`. ACWR: añade `fecha`, `metrica`, `sesiones7d` y `sesiones28d`. Las sesiones llevan `simulada`. Un error interno responde `500` con "Error interno", sin detalles |
+| Jue 12 nov (noche, 3) | Calibrado con el simulador de 11 jugadores de A: las acciones de alta intensidad son las de **más** de 3 m/s², `asimetriaUmbral` pasa de 10 a 15 puntos y `derivados.asimetria` vale `null` hasta tener 45 s de plantillas. La plantilla del seed sigue el 4-2-3-1 del simulador de A (misma posición para cada id). Nada de esto cambia lo que manda la pasarela |

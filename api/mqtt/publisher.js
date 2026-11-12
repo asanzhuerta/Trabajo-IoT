@@ -28,7 +28,6 @@ function conectar() {
     client.on('error', function (err) {
         console.warn('MQTT: %s', err.message);
     });
-    return client;
 }
 
 function publicarAlerta(alerta) {
@@ -43,4 +42,4 @@ function estado() {
     return client.connected ? 'connected' : 'connecting';
 }
 
-module.exports = { conectar, publicarAlerta, estado, TOPIC_ALERTAS };
+module.exports = { conectar, publicarAlerta, estado };

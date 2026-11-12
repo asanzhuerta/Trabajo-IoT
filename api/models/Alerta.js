@@ -25,4 +25,3 @@ const alertaSchema = new mongoose.Schema({
 alertaSchema.index({ estado: 1, jugadorId: 1, ts: -1 });
 
 module.exports = mongoose.model('Alerta', alertaSchema);
-module.exports.CODIGOS = CODIGOS;

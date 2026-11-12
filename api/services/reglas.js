@@ -262,4 +262,4 @@ function evaluar(ctx) {
     return disparadas;
 }
 
-module.exports = { REGLAS, evaluar, umbralesDe };
+module.exports = { evaluar };

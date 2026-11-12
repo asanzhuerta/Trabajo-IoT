@@ -44,4 +44,3 @@ const jugadorSchema = new mongoose.Schema({
 }, { ...opcionesJSON, collection: 'jugadores' });
 
 module.exports = mongoose.model('Jugador', jugadorSchema);
-module.exports.POSICIONES = POSICIONES;

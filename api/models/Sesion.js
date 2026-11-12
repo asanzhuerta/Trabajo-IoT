@@ -38,4 +38,3 @@ const sesionSchema = new mongoose.Schema({
 sesionSchema.index({ inicio: -1 });
 
 module.exports = mongoose.model('Sesion', sesionSchema);
-module.exports.TIPOS = TIPOS;

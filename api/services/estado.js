@@ -18,9 +18,12 @@ const HISTORIAL_SEG = 180;
 // al moverse de lado carga un pie varios segundos seguidos (medido: 10 s pasa del umbral el 23 % del
 // tiempo, 60 s nunca). Un desequilibrio por lesión, en cambio, se mantiene durante minutos.
 const VENTANA_ASIMETRIA_MS = 60000;
-// Y hacen falta suficientes lecturas: con una o dos, la "media" es una sola pisada (al arrancar el simulador
-// de A saltaba ASIMETRIA en 10 de 11 jugadores en el segundo 0). 20 son 20 s con A y unos 40 s con el fake-gateway.
-const MIN_LECTURAS_ASIMETRIA = 20;
+// Y hace falta casi un minuto entero de plantillas: con pocos segundos, la "media" es una pisada o un
+// desplazamiento lateral (al arrancar el simulador de A saltaba ASIMETRIA en 10 de 11 jugadores en el
+// segundo 0, y con 20 s todavía en alguno). Se pide tiempo cubierto y no un número de lecturas porque
+// A manda las plantillas cada segundo y el fake-gateway cada 2 s.
+const MIN_TIEMPO_ASIMETRIA_MS = 45000;
+const MIN_LECTURAS_ASIMETRIA = 15;
 const GRACIA_MS = 5000;   // margen antes de cerrar una ventana a la que ya no llegan lecturas
 
 const jugadores = new Map();
@@ -105,7 +108,8 @@ function procesar(lectura, perfil) {
     const dif = sensores.diferenciaPies(s);
     if (dif !== null) e.pies.push({ ts: t, dif: dif });
     while (e.pies.length && e.pies[0].ts <= t - VENTANA_ASIMETRIA_MS) e.pies.shift();
-    const asimetria = e.pies.length < MIN_LECTURAS_ASIMETRIA
+    const cubierto = e.pies.length ? t - e.pies[0].ts : 0;
+    const asimetria = e.pies.length < MIN_LECTURAS_ASIMETRIA || cubierto < MIN_TIEMPO_ASIMETRIA_MS
         ? null
         : sensores.asimetriaMedia(e.pies.map(function (p) { return p.dif; }));
 
@@ -211,6 +215,6 @@ function limpiar() {
 }
 
 module.exports = {
-    procesar, cerrarVencidas, cerrarTodas, obtener, obtenerOCrear, todos, semaforoDe, vista,
+    procesar, cerrarVencidas, cerrarTodas, obtener, obtenerOCrear, todos, vista,
     iniciarSesion, sesionActual, limpiar
 };
