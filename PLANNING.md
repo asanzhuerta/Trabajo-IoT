@@ -8,10 +8,10 @@ Una plataforma **smart health** que vigila en tiempo real la salud de 11 jugador
 
 ```
 [Node-RED · Simulador wearables]  11 jugadores (ID seudónimo, sin nombres)
-     │ MQTT con usuario + ACL   salud/<equipo>/<id>/{gps|imu|fc|temp|plantillas}
+     │ MQTT con usuario + ACL   <id>/sensors/{gps|accelerometer|giroscope|pulsemeter|termometer|pressuresensor}
      ▼
-[Mosquitto] ◄──────── salud/<equipo>/alertas ─────────────┐
-     │ suscripción salud/+/+/+                             │
+[Mosquitto] ◄──────── sensors/<equipo>/alertas ───────────┐
+     │ suscripción +/sensors/#                             │
      ▼                                                     │
 [Node-RED · Pasarela]  valida, une → POST /api/telemetria  │
      ▼                                                     │
@@ -43,7 +43,7 @@ Cada bloque tiene un dueño. Los dos bloques solo se comunican a través de los 
 
 | | **Persona A — Edge y visualización** | **Persona B — Backend y datos** |
 |---|---|---|
-| Dueño de | `mosquitto/`, `node-red/` | `api/`, `docker-compose.yml` |
+| Dueño de | `mosquitto/`, `node_red/` | `api/`, `docker-compose.yml` |
 | Tareas | Mosquitto con usuarios y ACL, simulador de wearables y escenarios, pasarela MQTT→REST, Dashboard 2.0 "vista médica", Open-Meteo/WBGT, Telegram (opcional) | Express REST, MongoDB, motor de alertas, WebSockets, web con ficha del jugador y campo 2D, FHIR, Swagger y Postman, ACWR |
 | Informe | Simulación, MQTT, flujos de Node-RED, dashboard, seguridad del broker | API, alertas, base de datos, WebSockets, FHIR, web, seguridad de la API |
 
@@ -56,8 +56,8 @@ Asignación: **A = ________** · **B = ________**
 - **Una rama por persona:** `edge` (A) y `backend` (B). Cada uno trabaja siempre en la suya.
 - **Cada noche**, PR de tu rama a `main`. **El otro la revisa antes del merge.** Así los dos conocemos todo el sistema para la defensa.
 - **Cada mañana**, `git pull origin main` en tu rama para traer lo del otro.
-- **Solo A hace commits de `node-red/flows.json`.** Es un único fichero y dos personas editándolo a la vez acaban en conflicto. Si B necesita un cambio en un flujo, se lo pide a A.
-- Las credenciales no se suben al repo. Van en `.env`, y en git solo está `.env.example`.
+- **Solo A hace commits de `node_red/flows.json`.** Es un único fichero y dos personas editándolo a la vez acaban en conflicto. Si B necesita un cambio en un flujo, se lo pide a A.
+- Las credenciales no se suben al repo. Van en `.env`, y en git solo está `.env.example`. `mosquitto/passwd` tampoco se sube (está en `.gitignore`): lo genera A y se lo pasa a B por privado.
 
 ## Estructura del repositorio
 
@@ -65,10 +65,11 @@ Asignación: **A = ________** · **B = ________**
 Trabajo-IoT/
 ├── PLANNING.md             # este documento
 ├── README.md               # cómo arrancar todo, paso a paso
-├── docker-compose.yml      # mongo (api y node-red al final)
+├── docker-compose.yml      # mongo (api y Node-RED al final)
 ├── .env.example  .gitignore
 ├── mosquitto/              # mosquitto.conf, acl, passwd del Mosquitto nativo (A)
-├── node-red/               # userDir de Node-RED: package.json, settings.js, flows.json (A)
+├── node_red/               # userDir de Node-RED: package.json, settings.js, flows.json (A)
+├── valores.json            # ejemplo de la estructura de los sensores (A)
 ├── api/                    # Express (B)
 │   ├── server.js  servers/{http-server,websocket}.js  mqtt/publisher.js
 │   ├── routers/{telemetria,jugadores,alertas,pautas,sesiones,clima,fhir}.js
@@ -87,16 +88,19 @@ Trabajo-IoT/
 - `mqtt/publisher.js`, apuntado al Mosquitto local en vez de al broker público;
 - `website/js/wsinvocation.js`, como base del cliente web.
 
-## Contratos (se cierran el lunes 9 en `docs/contratos/`)
+## Contratos (en `docs/contratos/`; versión 2.0 del jueves 12, adaptada al simulador de A)
 
 ### MQTT
 
-- **Telemetría:** `salud/<equipo>/<idJugador>/{gps|imu|fc|temp|plantillas}`, con QoS 0, a 1 Hz. La temperatura va cada 10 s y las plantillas cada 2 s.
-- **Alertas:** `salud/<equipo>/alertas`, con QoS 1. Las publica la API.
-- **Escenarios:** `salud/control/escenario`. El dashboard los envía y el simulador los recibe.
-- **Estado del simulador:** LWT en `salud/sim/estado`, con retain.
+- **Telemetría:** `<idJugador>/sensors/<sensor>`, con QoS 0, a 1 Hz. Por ejemplo, `p1/sensors/gps`. Los sensores son `gps`, `accelerometer`, `giroscope`, `pulsemeter`, `termometer` y `pressuresensor`.
+  - Cada payload es un objeto de medidas `{unit, value}` con la estructura de `valores.json`. Por ejemplo, `p1/sensors/pulsemeter` → `{"pulse": {"unit": "bpm", "value": 150}}`.
+  - El resto del topic, después de `sensors/`, es la ruta dentro del objeto de sensores. Por eso la temperatura va en `p1/sensors/termometer/temperature` con payload `{unit, value}`, y queda en `sensors.termometer.temperature`.
+  - La pasarela junta los mensajes de cada jugador en `sensors` sin traducir nada y los manda en el lote de `POST /api/telemetria`. La API trabaja directamente con este formato.
+- **Alertas:** `sensors/<equipo>/alertas` (`sensors/eq1/alertas`), con QoS 1. Las publica la API.
+- **Escenarios** (propuesta, pendiente de A): `sensors/control/escenario`. El dashboard los envía y el simulador los recibe.
+- **Estado del simulador** (propuesta, pendiente de A): LWT en `sensors/sim/estado`, con retain.
 - **Caída de un sensor concreto:** la detecta un watchdog en la pasarela (nodo trigger). El LWT va por conexión, no por jugador, así que no sirve para esto.
-- **Identificadores:** son seudónimos. Nunca van nombres en los topics.
+- **Identificadores:** son seudónimos, `p1` … `p11`. Nunca van nombres en los topics.
 
 ### REST
 
@@ -170,14 +174,18 @@ acl_file mosquitto/acl
 ```
 # Node-RED: simulador, pasarela y dashboard
 user nodered
-topic readwrite salud/#
+topic readwrite sensors/#
+topic readwrite +/sensors/#
 
 # API: solo publica alertas
 user api
-topic write salud/+/alertas
+topic write sensors/+/alertas
 ```
 
-`mosquitto/passwd` se genera con `mosquitto_passwd`. Solo guarda hashes, así que se puede subir. Ojo: `-c` crea el fichero de cero y borra lo que hubiera.
+- La línea `+/sensors/#` es la que permite publicar en `p1/sensors/gps`. **Falta en el `acl` que hay ahora en `edge`**: con solo `sensors/#`, el broker rechaza la telemetría del simulador (`Denied PUBLISH`). Está comprobado con un broker de prueba.
+- `sensors/#` cubre las alertas (`sensors/eq1/alertas`), los escenarios y el LWT.
+
+`mosquitto/passwd` se genera con `mosquitto_passwd`. Aunque solo guarda hashes, **no se sube**: está en `.gitignore` y A se lo pasa a B por privado. Ojo: `-c` crea el fichero de cero y borra lo que hubiera.
 
 ```
 mosquitto_passwd -c -b mosquitto/passwd nodered <contraseña-nodered>
@@ -213,14 +221,14 @@ mosquitto -c mosquitto/mosquitto.conf -v
 En una consola, escuchar todo lo del proyecto:
 
 ```
-mosquitto_sub -h localhost -u nodered -P <contraseña-nodered> -t "salud/#" -v
+mosquitto_sub -h localhost -u nodered -P <contraseña-nodered> -t "#" -v
 ```
 
 En otra, publicar con usuario (tiene que aparecer en la primera) y sin usuario (tiene que fallar):
 
 ```
-mosquitto_pub -h localhost -u nodered -P <contraseña-nodered> -t salud/eq1/J08/fc -m 150
-mosquitto_pub -h localhost -t salud/prueba -m hola
+mosquitto_pub -h localhost -u nodered -P <contraseña-nodered> -t p8/sensors/pulsemeter -m '{"pulse":{"unit":"bpm","value":150}}'
+mosquitto_pub -h localhost -t sensors/prueba -m hola
 ```
 
 La segunda tiene que responder `Connection Refused: not authorised`.
@@ -230,12 +238,12 @@ La segunda tiene que responder `Connection Refused: not authorised`.
 | Día | Persona A | Persona B |
 |---|---|---|
 | **Dom 8** | Repartir los papeles A/B | — |
-| **Lun 9** | **Juntos (unas 2 h):** cerrar los contratos, README, `.gitignore` y comprobar las herramientas de los dos (Node, Node-RED, Mosquitto, Docker). **Después, A:** configuración del Mosquitto nativo en `mosquitto/` (conf, passwd y ACL, siguiendo la sección «Mosquitto nativo») y pasarle a B la contraseña del usuario `api`; `node-red/` como userDir con `@flowfuse/node-red-dashboard` y `credentialSecret` por variable de entorno | **Después, B:** esqueleto de Express con la estructura de clase, `docker-compose` con mongo, `/health`, conexión con Mongoose |
+| **Lun 9** | **Juntos (unas 2 h):** cerrar los contratos, README, `.gitignore` y comprobar las herramientas de los dos (Node, Node-RED, Mosquitto, Docker). **Después, A:** configuración del Mosquitto nativo en `mosquitto/` (conf, passwd y ACL, siguiendo la sección «Mosquitto nativo») y pasarle a B la contraseña del usuario `api`; `node_red/` como userDir con `@flowfuse/node-red-dashboard` y `credentialSecret` por variable de entorno | **Después, B:** esqueleto de Express con la estructura de clase, `docker-compose` con mongo, `/health`, conexión con Mongoose |
 | **Mar 10** | Simulador v1: máquina de estados por jugador (parado, andando, trote, carrera, sprint); posición en un campo de 105×68 m; distancia; aceleración y giro; FC con retraso respecto al esfuerzo. Publica por MQTT | Modelos (Jugador, Lectura resumida cada 10 s, Evento, Alerta, Pauta, Sesión), seed de los 11 jugadores, `POST /api/telemetria`, CRUD de jugadores |
-| **Mié 11** | Simulador v2: temperatura interna (sube con la carga y el calor), plantillas con línea base y LWT. Pasarela: suscripción `salud/+/+/+`, validación, unión por segundo, POST y watchdog | Servicio de métricas (zonas, carrera de alta intensidad, sprints, aceleraciones y desaceleraciones, %FCmáx). Motor de alertas con las 9 reglas, que publica en MQTT y guarda en Mongo |
+| **Mié 11** | Simulador v2: temperatura interna (sube con la carga y el calor), plantillas con línea base y LWT. Pasarela: suscripción `+/sensors/#`, validación, unión por segundo, POST y watchdog | Servicio de métricas (zonas, carrera de alta intensidad, sprints, aceleraciones y desaceleraciones, %FCmáx). Motor de alertas con las 9 reglas, que publica en MQTT y guarda en Mongo |
 | **Jue 12** | **Hito 1: el núcleo funciona de extremo a extremo** (simulador → MQTT → pasarela → API → alerta → dashboard). Dashboard 2.0: semáforo por jugador, indicadores, lista de alertas con confirmación (POST) y formulario de pauta | Servidor WebSocket, endpoints de pauta, umbrales y sesiones, `openapi.yaml` con Swagger UI en `/api-docs` |
 | **Vie 13** | Escenarios inyectables desde el dashboard (golpe de calor, asimetría creciente, incidente, sensor caído), flujo de Open-Meteo con WBGT estimado y POST a `/api/clima`, Telegram (opcional) | Web: ficha del jugador con gráficas históricas y campo 2D en vivo por WebSocket; endpoint `/fhir/Observation` |
-| **Sáb 14** | **Hito 2: extras integrados. Código congelado a las 20:00.** Pulir el dashboard, exportar los flujos y sacar capturas. Empezar el diagrama de arquitectura | ACWR con un histórico de 4 semanas generado, colección de Postman, `docker-compose` final (api y node-red), README de arranque |
+| **Sáb 14** | **Hito 2: extras integrados. Código congelado a las 20:00.** Pulir el dashboard, exportar los flujos y sacar capturas. Empezar el diagrama de arquitectura | ACWR con un histórico de 4 semanas generado, colección de Postman, `docker-compose` final (api y Node-RED), README de arranque |
 | **Dom 15** | **Juntos:** borrador completo del informe (cada uno sus secciones), guion y grabación del vídeo de 5 minutos, guion del TikTok. **Todo listo** | (juntos) |
 | **Lun 16 – Mié 18** | **Margen:** clonar el repo en limpio en el otro portátil y arrancarlo, corregir fallos, repasar el texto, generar el ZIP y el PDF con el nombre que exige el enunciado, subir el vídeo a YouTube como oculto y publicar el TikTok | (juntos) |
 | **Jue 19** | **Entrega** | |
@@ -279,10 +287,10 @@ La segunda tiene que responder `Connection Refused: not authorised`.
 
 ## Cómo comprobamos que funciona (en cada hito)
 
-- Mosquitto nativo en marcha con la configuración de `mosquitto/`, `docker compose up -d` (MongoDB), luego `node-red -u node-red` y `npm start` en `api/`.
-- `mosquitto_sub -h localhost -u <user> -P <pass> -t 'salud/#' -v` muestra la telemetría. Sin credenciales, la conexión se rechaza.
+- Mosquitto nativo en marcha con la configuración de `mosquitto/`, `docker compose up -d` (MongoDB), luego `node-red -u node_red` y `npm start` en `api/`.
+- `mosquitto_sub -h localhost -u nodered -P <pass> -t '+/sensors/#' -v` muestra la telemetría. Sin credenciales, la conexión se rechaza.
 - `curl` y Postman sobre GET/POST de jugadores, pauta y alertas. `/api-docs` carga.
-- Lanzar el escenario "golpe de calor jugador 8" desde el dashboard: en menos de 10 s aparece `CALOR_AMBAR` en el Dashboard 2.0 y en la web, y queda guardada en Mongo.
+- Lanzar el escenario "golpe de calor p8" desde el dashboard: en menos de 10 s aparece `CALOR_AMBAR` en el Dashboard 2.0 y en la web, y queda guardada en Mongo.
 - Parar un jugador en el simulador: en 5 s salta `SIN_SENAL`.
-- `GET /fhir/Observation?patient=8&code=8867-4` devuelve Observations con código LOINC.
+- `GET /fhir/Observation?patient=p8&code=8867-4` devuelve Observations con código LOINC.
 - El sábado 14 y el lunes 16: clonar el repo en limpio en el portátil del otro y que todo arranque solo siguiendo el README.
