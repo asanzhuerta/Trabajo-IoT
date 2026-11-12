@@ -1,0 +1,206 @@
+[
+    {
+        "id": "a1f0c0de00000001",
+        "type": "tab",
+        "label": "Pasarela MQTT → API",
+        "disabled": false,
+        "info": "Recibe por MQTT lo que publica el simulador (<id>/sensors/<sensor>), lo junta por jugador y cada segundo lo manda a la API REST (POST /api/telemetria).\n\nNecesita estas variables de entorno al arrancar Node-RED (están en el .env de la raíz del repo):\n- NODERED_MQTT_USER y NODERED_MQTT_PASS: usuario de Mosquitto\n- API_KEY_PASARELA: clave de la API\n- API_URL (opcional): por defecto http://localhost:3000"
+    },
+    {
+        "id": "a1f0c0de00000010",
+        "type": "comment",
+        "z": "a1f0c0de00000001",
+        "name": "Pasarela: MQTT (+/sensors/#) → lote por segundo → POST /api/telemetria",
+        "info": "Ver la descripción de la pestaña y docs/contratos/api.md.",
+        "x": 330,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "a1f0c0de00000011",
+        "type": "mqtt in",
+        "z": "a1f0c0de00000001",
+        "name": "Sensores de todos los jugadores",
+        "topic": "+/sensors/#",
+        "qos": "0",
+        "datatype": "json",
+        "broker": "a1f0c0de00000002",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 180,
+        "y": 100,
+        "wires": [
+            [
+                "a1f0c0de00000012"
+            ]
+        ]
+    },
+    {
+        "id": "a1f0c0de00000012",
+        "type": "function",
+        "z": "a1f0c0de00000001",
+        "name": "Guardar sensor en su jugador",
+        "func": "// Guarda cada mensaje del simulador en el jugador que toca, sin traducir nada.\n// El topic dice dónde va: lo que hay después de \"sensors/\" es la ruta dentro de \"sensors\".\n//   p1/sensors/gps                     →  sensors.gps = payload\n//   p1/sensors/termometer/temperature  →  sensors.termometer.temperature = payload\nconst partes = msg.topic.split('/');\nconst jugadorId = partes[0];\nconst ruta = partes.slice(2);\nif (partes[1] !== 'sensors' || ruta.length === 0 || !/^p\\d{1,2}$/.test(jugadorId)) {\n    return null;\n}\nif (typeof msg.payload !== 'object' || msg.payload === null) {\n    node.warn('Payload que no es JSON en ' + msg.topic);\n    return null;\n}\n\nconst jugadores = flow.get('jugadores') || {};\nconst j = jugadores[jugadorId] || { sensors: {}, ultimo: 0 };\n\nlet destino = j.sensors;\nfor (let i = 0; i < ruta.length - 1; i++) {\n    destino[ruta[i]] = destino[ruta[i]] || {};\n    destino = destino[ruta[i]];\n}\ndestino[ruta[ruta.length - 1]] = msg.payload;\nj.ultimo = Date.now();\n\njugadores[jugadorId] = j;\nflow.set('jugadores', jugadores);\nnode.status({ fill: 'green', shape: 'dot', text: Object.keys(jugadores).length + ' jugador(es)' });\nreturn null;",
+        "outputs": 0,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 460,
+        "y": 100,
+        "wires": []
+    },
+    {
+        "id": "a1f0c0de00000013",
+        "type": "inject",
+        "z": "a1f0c0de00000001",
+        "name": "Cada segundo",
+        "props": [],
+        "repeat": "1",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "2",
+        "topic": "",
+        "x": 140,
+        "y": 180,
+        "wires": [
+            [
+                "a1f0c0de00000014"
+            ]
+        ]
+    },
+    {
+        "id": "a1f0c0de00000014",
+        "type": "function",
+        "z": "a1f0c0de00000001",
+        "name": "Montar lote (+ watchdog)",
+        "func": "// Una vez por segundo junta lo que ha llegado de cada jugador en un lote para POST /api/telemetria\n// (formato en docs/contratos/api.md).\n//   - Un jugador entra en el lote cuando ya tiene gps, accelerometer y pulsemeter.\n//     Si le falta alguno (el mensaje llegará en un momento), espera al segundo siguiente.\n//   - Watchdog: si un jugador lleva 5 s sin mandar nada, va como \"sin_senal\".\nconst SIN_SENAL_MS = 5000;\nconst OBLIGATORIOS = ['gps', 'accelerometer', 'pulsemeter'];\n\nconst jugadores = flow.get('jugadores') || {};\nconst ahora = Date.now();\nconst ts = new Date(ahora).toISOString();\nconst lecturas = [];\nlet sinSenal = 0;\n\nfor (const [jugadorId, j] of Object.entries(jugadores)) {\n    if (ahora - j.ultimo > SIN_SENAL_MS) {\n        lecturas.push({ jugadorId: jugadorId, ts: ts, estado: 'sin_senal' });\n        sinSenal++;\n        continue;\n    }\n    if (OBLIGATORIOS.every(function (s) { return j.sensors[s]; })) {\n        lecturas.push({ jugadorId: jugadorId, ts: ts, estado: 'ok', sensors: j.sensors });\n        j.sensors = {};\n    }\n}\nflow.set('jugadores', jugadores);\n\nif (lecturas.length === 0) {\n    node.status({ fill: 'grey', shape: 'ring', text: 'esperando datos del simulador' });\n    return null;\n}\n\nconst clave = env.get('API_KEY_PASARELA');\nif (!clave) {\n    node.status({ fill: 'red', shape: 'ring', text: 'falta API_KEY_PASARELA' });\n    node.error('Falta la variable de entorno API_KEY_PASARELA: arranca Node-RED con las variables del .env');\n    return null;\n}\n\nmsg.url = (env.get('API_URL') || 'http://localhost:3000') + '/api/telemetria';\nmsg.headers = { 'Content-Type': 'application/json', 'x-api-key': clave };\nmsg.payload = { ts: ts, lecturas: lecturas };\nnode.status({ fill: 'blue', shape: 'dot', text: lecturas.length + ' lectura(s)' + (sinSenal ? ', ' + sinSenal + ' sin señal' : '') });\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 360,
+        "y": 180,
+        "wires": [
+            [
+                "a1f0c0de00000015",
+                "a1f0c0de00000018"
+            ]
+        ]
+    },
+    {
+        "id": "a1f0c0de00000015",
+        "type": "http request",
+        "z": "a1f0c0de00000001",
+        "name": "POST /api/telemetria",
+        "method": "POST",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 610,
+        "y": 180,
+        "wires": [
+            [
+                "a1f0c0de00000016"
+            ]
+        ]
+    },
+    {
+        "id": "a1f0c0de00000016",
+        "type": "function",
+        "z": "a1f0c0de00000001",
+        "name": "Respuesta de la API",
+        "func": "// Muestra en el nodo la respuesta de la API y saca por la salida solo los errores (van al debug)\nconst codigo = msg.statusCode;\nif (codigo === 202) {\n    const p = msg.payload || {};\n    let texto = '202 · ' + p.recibidas + ' recibidas';\n    if (p.ignoradas) texto += ' · ignoradas: ' + p.ignoradas.join(', ');\n    node.status({ fill: p.ignoradas ? 'yellow' : 'green', shape: 'dot', text: texto });\n    return null;\n}\nnode.status({ fill: 'red', shape: 'dot', text: codigo ? 'error ' + codigo : 'la API no responde' });\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 830,
+        "y": 180,
+        "wires": [
+            [
+                "a1f0c0de00000017"
+            ]
+        ]
+    },
+    {
+        "id": "a1f0c0de00000017",
+        "type": "debug",
+        "z": "a1f0c0de00000001",
+        "name": "Errores de la API",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1040,
+        "y": 180,
+        "wires": []
+    },
+    {
+        "id": "a1f0c0de00000018",
+        "type": "debug",
+        "z": "a1f0c0de00000001",
+        "name": "Lote enviado (actívalo para verlo)",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 640,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "a1f0c0de00000002",
+        "type": "mqtt-broker",
+        "name": "Mosquitto local (pasarela)",
+        "broker": "localhost",
+        "port": "1883",
+        "clientid": "pasarela-smarthealth",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "autoUnsubscribe": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": "",
+        "credentials": {
+            "user": "${NODERED_MQTT_USER}",
+            "password": "${NODERED_MQTT_PASS}"
+        }
+    }
+]

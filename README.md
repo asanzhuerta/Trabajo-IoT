@@ -11,6 +11,8 @@ Simulador (Node-RED) ──MQTT──► Mosquitto ──MQTT──► Pasarela 
                                                                                    └──WebSocket──► web y dashboard
 ```
 
+> **Para probar lo que hay hasta ahora** (lo de A y lo de B juntos), sigue [TUTORIAL_DEV.md](TUTORIAL_DEV.md) en la rama `dev`.
+
 ## Requisitos
 
 | Herramienta | Versión probada |
@@ -92,7 +94,7 @@ cd api && npm test
 |---|---|
 | `api/` | API REST en Express, WebSocket, modelos de Mongoose y motor de alertas |
 | `api/public/` | Web propia: plantilla, campo 2D y ficha del jugador |
-| `node_red/` | Flujos del simulador, la pasarela y el dashboard |
+| `node_red/` | Flujos de Node-RED: simulador y dashboard (`flows.json`, de A) y pasarela MQTT → API (`flows_pasarela.json`) |
 | `mosquitto/` | Configuración del broker, usuarios y ACL |
 | `docs/contratos/` | Contratos entre las dos partes: API, alertas y MQTT |
 | `informe/` | Informe y material del vídeo |

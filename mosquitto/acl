@@ -1,0 +1,8 @@
+# Node-RED: simulador, pasarela y dashboard
+user nodered
+topic readwrite sensors/#
+topic readwrite +/sensors/#
+
+# API: solo publica alertas
+user api
+topic write sensors/+/alertas
