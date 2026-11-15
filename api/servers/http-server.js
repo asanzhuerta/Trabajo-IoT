@@ -11,25 +11,26 @@ const telemetriaRoutes = require('../routers/telemetria');
 const jugadoresRoutes = require('../routers/jugadores');
 const alertasRoutes = require('../routers/alertas');
 const sesionesRoutes = require('../routers/sesiones');
-const climaRoutes = require('../routers/clima');
 const fhirRoutes = require('../routers/fhir');
+const simuladorRoutes = require('../routers/simulador');
 const documentacion = require('./documentacion');
+const { ErrorHttp } = require('../services/errores');
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-// Web propia (ficha del jugador y campo 2D)
+// Web propia: el campograma (public/index.html, ver public/README.md)
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
 app.use('/health', healthRoutes);
+app.use('/api/simulador', simuladorRoutes);   // no usa MongoDB: funciona aunque esté caído
 app.use('/api', requiereMongo);
 app.use('/api/telemetria', telemetriaRoutes);
 app.use('/api/jugadores', jugadoresRoutes);
 app.use('/api/alertas', alertasRoutes);
 app.use('/api/sesiones', sesionesRoutes);
-app.use('/api/clima', climaRoutes);
 app.use('/fhir', requiereMongo, fhirRoutes);
 
 // Documentación interactiva (Swagger UI) a partir de openapi.yaml
@@ -40,7 +41,7 @@ app.use(function (req, res) {
     res.status(404).json({ error: 'Ruta no encontrada: ' + req.method + ' ' + req.originalUrl });
 });
 
-// Errores: los ErrorHttp de los servicios (404, 409…), JSON mal formado, validación de Mongoose, duplicados…
+// Errores: los ErrorHttp de los servicios (404, 409, 503…), JSON mal formado, validación de Mongoose, duplicados…
 app.use(function (err, req, res, next) {
     if (err.type === 'entity.parse.failed') {
         return res.status(400).json({ error: 'JSON mal formado' });
@@ -59,7 +60,8 @@ app.use(function (err, req, res, next) {
         const nombre = campo === '_id' ? 'id' : campo;
         return res.status(409).json({ error: 'Ya existe un registro con ese ' + nombre + ': ' + err.keyValue[campo] });
     }
-    if (err.status && err.status < 500) {
+    // Los ErrorHttp llevan un mensaje pensado para el cliente; de otros errores solo se fía de los 4xx
+    if (err instanceof ErrorHttp || (err.status && err.status < 500)) {
         return res.status(err.status).json({ error: err.message });
     }
     console.error(err);

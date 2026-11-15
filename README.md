@@ -11,7 +11,7 @@ Simulador (Node-RED) ──MQTT──► Mosquitto ──MQTT──► Pasarela 
                                                                                    └──WebSocket──► web y dashboard
 ```
 
-> **Para arrancarlo todo de golpe**, haz doble clic en `arrancar-todo.cmd`: se abre una ventana de Windows Terminal con una pestaña por pieza, cada una con su historial de comandos.
+> **Para arrancarlo todo de golpe**, haz doble clic en `arrancar-todo.cmd`: se abre una ventana de Windows Terminal con una pestaña por pieza, cada una con su historial de comandos, y cuando la API está lista se abre el campograma (`http://localhost:3000`) en el navegador. Node-RED carga solo los flujos nuevos del repo.
 >
 > **Para probar lo que hay hasta ahora** (lo de A y lo de B juntos), sigue [TUTORIAL_DEV.md](TUTORIAL_DEV.md) en la rama `dev`.
 
@@ -45,7 +45,7 @@ Simulador (Node-RED) ──MQTT──► Mosquitto ──MQTT──► Pasarela 
    ```bash
    cd api && npm install && npm run dev
    ```
-   Comprueba que responde en `http://localhost:3000/health`. La documentación interactiva (Swagger) está en `http://localhost:3000/api-docs`.
+   Comprueba que responde en `http://localhost:3000/health`. La documentación interactiva (Swagger) está en `http://localhost:3000/api-docs` y el **campograma** (los 11 jugadores en el campo, con su semáforo y sus alertas en vivo) en `http://localhost:3000`.
 
 5. **Datos iniciales** (los 11 jugadores y la pauta de p5). Con `-- --limpiar` borra también lecturas, eventos, alertas y sesiones:
    ```bash

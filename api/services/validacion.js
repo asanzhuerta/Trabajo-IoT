@@ -71,8 +71,8 @@ const SENSORES = {
     pulsemeter: function (p) {
         return { pulse: medida(p, 'pulse', 'sensors.pulsemeter', 'bpm', 20, 250) };
     },
-    termometer: function (t) {
-        return { temperature: medida(t, 'temperature', 'sensors.termometer', 'C', 30, 45) };
+    thermometer: function (t) {
+        return { temperature: medida(t, 'temperature', 'sensors.thermometer', 'C', 30, 45) };
     },
     pressuresensor: function (p) {
         const r = {

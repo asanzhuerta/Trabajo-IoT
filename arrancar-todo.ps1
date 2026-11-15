@@ -6,8 +6,11 @@
 #   .\arrancar-todo.ps1              arranca todo
 #   .\arrancar-todo.ps1 -Limpiar     además vacía la base de datos (seed --limpiar) antes de empezar
 #   .\arrancar-todo.ps1 -Jugador p8  la última pestaña vigila a p8 en vez de a p1
+#   .\arrancar-todo.ps1 -SinNavegador   no abre el campograma en el navegador
 #
 # - Si el servicio de Windows de Mosquitto está arrancado, lo para primero (pide permiso de administrador una vez).
+# - Cuando la API responde, abre el campograma (http://localhost:3000) en el navegador.
+# - Node-RED carga solo los flujos del repo si son más nuevos que los suyos (ver node_red/arrancar.js).
 # - Cada pestaña tiene su propio historial de comandos (en ~/.smarthealth/historial). Cuando pares lo que se
 #   esté ejecutando (Ctrl+C), pulsa ↑ y salen los comandos de esa parte; lo que escribas se guarda para la próxima vez.
 # - Todas las pestañas cargan el .env, así que en los comandos puedes usar $env:NODERED_MQTT_PASS, etc.
@@ -16,7 +19,8 @@
 param(
     [string]$Pieza = '',
     [switch]$Limpiar,
-    [string]$Jugador = 'p1'
+    [string]$Jugador = 'p1',
+    [switch]$SinNavegador
 )
 
 $Repo = $PSScriptRoot
@@ -35,6 +39,7 @@ $ComandosIniciales = @{
         "& '$Mosquitto\mosquitto.exe' -c mosquitto/mosquitto.conf -v"
     )
     subscriber = @(
+        "& '$Mosquitto\mosquitto_sub.exe' -h localhost -u `$env:NODERED_MQTT_USER -P `$env:NODERED_MQTT_PASS -t 'equipo/estado' -v",
         "& '$Mosquitto\mosquitto_sub.exe' -h localhost -u `$env:NODERED_MQTT_USER -P `$env:NODERED_MQTT_PASS -t 'p1/sensors/#' -v",
         "& '$Mosquitto\mosquitto_sub.exe' -h localhost -u `$env:NODERED_MQTT_USER -P `$env:NODERED_MQTT_PASS -t 'sensors/eq1/alertas' -v",
         "& '$Mosquitto\mosquitto_sub.exe' -h localhost -u `$env:NODERED_MQTT_USER -P `$env:NODERED_MQTT_PASS -t '#' -v"
@@ -51,6 +56,8 @@ $ComandosIniciales = @{
         'node node_red/arrancar.js'
     )
     mirar      = @(
+        'Start-Process http://localhost:3000/api-docs',
+        'Start-Process http://localhost:3000',
         "Invoke-RestMethod 'http://localhost:3000/api/alertas?estado=activa' | Format-Table jugadorId, codigo, severidad, mensaje",
         "Invoke-RestMethod 'http://localhost:3000/api/jugadores/p1/historico' | Format-Table ts, velMedia, distancia, fcMedia, temp, asimetria",
         'Invoke-RestMethod http://localhost:3000/health',
@@ -77,6 +84,11 @@ function Preparar-Historial($nombre) {
         $archivo = Join-Path $CarpetaHistorial "$nombre.txt"
         if (-not (Test-Path $archivo)) {
             Set-Content -Path $archivo -Value $ComandosIniciales[$nombre] -Encoding UTF8
+        } else {
+            # Si el lanzador trae comandos nuevos, se añaden al principio (los más antiguos) sin tocar los tuyos
+            $tuyos = @(Get-Content $archivo -Encoding UTF8)
+            $nuevos = @($ComandosIniciales[$nombre] | Where-Object { $tuyos -notcontains $_ })
+            if ($nuevos.Count) { Set-Content -Path $archivo -Value ($nuevos + $tuyos) -Encoding UTF8 }
         }
         Set-PSReadLineOption -HistorySaveStyle SaveNothing
         [Microsoft.PowerShell.PSConsoleReadLine]::ClearHistory()
@@ -158,7 +170,16 @@ switch ($Pieza) {
     'mirar' {
         Titulo "Estado de $Jugador visto por la API"
         Set-Location (Join-Path $Repo 'api')
-        Start-Sleep -Seconds 5   # deja que arranquen la API y Node-RED
+        # Espera a que la API responda (Docker y MongoDB pueden tardar en arrancar) y abre el campograma
+        Write-Host 'Esperando a la API...' -ForegroundColor DarkGray
+        $lista = $false
+        for ($i = 0; $i -lt 60; $i++) {
+            try { Invoke-RestMethod http://localhost:3000/health -TimeoutSec 2 | Out-Null; $lista = $true; break } catch { Start-Sleep -Seconds 2 }
+        }
+        if ($lista -and -not $SinNavegador) {
+            Write-Host 'Abriendo el campograma: http://localhost:3000' -ForegroundColor Cyan
+            Start-Process 'http://localhost:3000'
+        }
         node scripts/vigilar.js $Jugador
         return
     }
@@ -174,6 +195,8 @@ if ((Get-Service mosquitto -ErrorAction SilentlyContinue).Status -eq 'Running') 
 $script = Join-Path $Repo 'arrancar-todo.ps1'
 $extra = ''
 if ($Limpiar) { $extra = ' -Limpiar' }
+$extraMirar = " -Jugador $Jugador"
+if ($SinNavegador) { $extraMirar += ' -SinNavegador' }
 
 function Pestana($titulo, $color, $pieza, $parametros = '') {
     return "new-tab --title `"$titulo`" --tabColor `"$color`" --suppressApplicationTitle -d `"$Repo`" " +
@@ -186,8 +209,9 @@ $pestanas = @(
     (Pestana 'Subscriber'       '#2E6B30' 'subscriber'),
     (Pestana 'API'              '#8B1E2E' 'api'),
     (Pestana 'Node-RED'         '#B5452B' 'nodered'),
-    (Pestana "Mirar $Jugador"   '#1F4E79' 'mirar' " -Jugador $Jugador")
+    (Pestana "Mirar $Jugador"   '#1F4E79' 'mirar' $extraMirar)
 )
 
 Start-Process wt -ArgumentList ('--window new ' + ($pestanas -join ' ; '))
 Write-Host 'Abierta la ventana de Windows Terminal con todo el proyecto.'
+if (-not $SinNavegador) { Write-Host 'El campograma (http://localhost:3000) se abrirá en el navegador cuando la API esté lista.' }

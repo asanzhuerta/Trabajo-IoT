@@ -4,8 +4,6 @@
 const UMBRALES_DEFECTO = Object.freeze({
     tempAmbar: 39,            // °C
     tempRoja: 40,             // °C
-    wbgtAlto: 28,             // °C de WBGT a partir del cual bajan los umbrales de calor
-    ajusteCalor: 0.3,         // °C que bajan
     fcAltaPct: 92,            // % de la FCmáx
     fcAltaSeg: 60,            // s
     desacoplePct: 85,         // % de la FCmáx

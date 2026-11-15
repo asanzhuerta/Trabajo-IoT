@@ -11,7 +11,7 @@
 La API está hecha con **Node.js 24 y Express 5** (carpeta `api/`) y sigue la estructura de los ejemplos de clase: `server.js` arranca el servidor HTTP y le ata el servidor WebSocket; `servers/http-server.js` monta los routers; la lógica está en `services/` y los modelos de MongoDB en `models/`.
 
 - **URL base:** `http://localhost:3000`. Peticiones y respuestas en JSON; fechas en ISO 8601 (UTC).
-- **Documentación interactiva:** Swagger UI en `http://localhost:3000/api-docs`, generada a partir de `api/openapi.yaml` (OpenAPI 3.0.3, 17 rutas).
+- **Documentación interactiva:** Swagger UI en `http://localhost:3000/api-docs`, generada a partir de `api/openapi.yaml` (OpenAPI 3.0.3, 16 rutas).
 - **Contrato completo:** `docs/contratos/api.md`.
 
 *Figura 5.1 — Arquitectura de la API por capas* (`docs/diagramas/api-arquitectura.png`).
@@ -34,12 +34,13 @@ La API está hecha con **Node.js 24 y Express 5** (carpeta `api/`) y sigue la es
 | `GET` · `POST` | `/api/sesiones` | — · médico | Lista de sesiones · empezar una |
 | `GET` | `/api/sesiones/:id` | — | Una sesión con su resumen por jugador |
 | `POST` | `/api/sesiones/:id/fin` | médico | Cerrar la sesión y guardar el resumen |
-| `GET` · `POST` | `/api/clima` | — · pasarela | Último clima · guardar el de Open-Meteo |
+| `GET` | `/api/simulador` | — | Fases y escenarios válidos y lo último que se mandó al simulador |
+| `POST` | `/api/simulador/fase` · `/escenario` · `/reiniciar` | — | Cambiar la fase de juego, poner un escenario de salud a un jugador o reiniciar el simulador (sección 5.5) |
 | `GET` | `/fhir/Observation?patient=&code=` | — | Constantes vitales en FHIR R4 |
 | `GET` | `/fhir/Observation/:id` | — | Una Observation |
 | `GET` | `/health` | — | Estado de la API, de MongoDB y del broker |
 
-**Errores.** Todas las rutas responden `{"error": "mensaje"}` con su código: `400` (cuerpo o parámetros no válidos, con el campo que falla), `401` (falta la clave o no es válida), `403` (la clave no tiene ese rol), `404`, `409` (ya existe, ya está confirmada o ya hay una sesión abierta) y `503` (MongoDB no disponible). Las rutas FHIR devuelven los errores como `OperationOutcome`, que es lo que espera un cliente FHIR.
+**Errores.** Todas las rutas responden `{"error": "mensaje"}` con su código: `400` (cuerpo o parámetros no válidos, con el campo que falla), `401` (falta la clave o no es válida), `403` (la clave no tiene ese rol), `404`, `409` (ya existe, ya está confirmada o ya hay una sesión abierta) y `503` (MongoDB no disponible o, en `/api/simulador`, Mosquitto). Las rutas FHIR devuelven los errores como `OperationOutcome`, que es lo que espera un cliente FHIR.
 
 ### 5.3 El lote de telemetría
 
@@ -66,7 +67,7 @@ La validación (`services/validacion.js`) comprueba cada medida, su unidad y su 
 
 **Desde Swagger UI.** En `/api-docs`, el botón *Authorize* pide la `x-api-key` (la del médico o la de la pasarela, que están en el `.env`) y cada operación se puede probar con *Try it out → Execute*. *Figura 5.3 — Swagger UI* (`informe/capturas/swagger.png`).
 
-**Desde Postman.** `docs/postman_collection.json` tiene 38 peticiones en 10 carpetas (una por recurso más una de errores). Las claves se ponen en el *Current value* de las variables `claveMedico` y `clavePasarela`, así que no se guardan en el archivo. Las peticiones encadenan datos entre sí (al empezar una sesión se guarda su id para cerrarla después) y cada una comprueba su código de respuesta, de modo que la colección entera se puede lanzar con el *Collection Runner*. *Figura 5.4 — Postman* (`informe/capturas/postman.png`).
+**Desde Postman.** `docs/postman_collection.json` tiene 35 peticiones en 9 carpetas (una por recurso más una de errores). Las claves se ponen en el *Current value* de las variables `claveMedico` y `clavePasarela`, así que no se guardan en el archivo. Las peticiones encadenan datos entre sí (al empezar una sesión se guarda su id para cerrarla después) y cada una comprueba su código de respuesta, de modo que la colección entera se puede lanzar con el *Collection Runner*. *Figura 5.4 — Postman* (`informe/capturas/postman.png`).
 
 **Con curl** (en PowerShell, `curl.exe`):
 
@@ -96,6 +97,30 @@ ws.onmessage = function (e) {
 };
 ```
 
+**El campograma.** La API sirve una web propia en `/` (`api/public/index.html`), hecha con `fetch` y `WebSocket` como en el ejemplo anterior: los 11 jugadores moviéndose en el campo con su semáforo, sus valores y las alertas activas.
+
+### 5.5 Control del simulador por MQTT
+
+Para la demo hay que poder provocar un golpe de calor o un incidente cuando se quiera, sin tocar Node-RED. El camino es el inverso al de la telemetría: **la API publica y el simulador se suscribe.**
+
+1. El dashboard de simulación (de la Persona A) llama a la API: `POST /api/simulador/escenario` con `{"jugadorId": "p8", "escenario": "golpe_calor"}`.
+2. La API valida la orden (`services/simulador.js`) y la publica en Mosquitto con **QoS 1** en `control/escenario`.
+3. El simulador de Node-RED la recibe con un `mqtt in` en `control/#` y cambia el comportamiento de ese jugador (en este caso, su temperatura sube hasta pasar de 40 °C).
+4. La telemetría vuelve por el camino normal y salta la alerta (`CALOR_AMBAR` y después `CALOR_ROJA`).
+
+| Topic | Mensaje | Qué hace el simulador |
+|---|---|---|
+| `control/fase` | `presion_alta` | El motor táctico cambia la fase de juego del equipo |
+| `control/escenario` | `{"jugadorId", "escenario", "ts"}` | El jugador sigue ese escenario hasta que llega `normal` |
+| `control/reset` | `true` | Vuelve a la formación inicial y quita los escenarios |
+
+- **Respuesta `202 Accepted`:** la API no espera a que el simulador cambie, solo a que el broker confirme la publicación (PUBACK).
+- **Errores:** `400` con la lista de fases o escenarios válidos, `503` si la API no está conectada a Mosquitto y `502` si el broker no confirma.
+- **Sin MongoDB y sin clave.** Estas rutas no tocan datos clínicos, así que no piden clave y funcionan aunque la base de datos esté caída.
+- **Escenarios:** golpe de calor, FC alta, desacople, recuperación lenta, incidente, asimetría, sobrecarga y sensor caído; cada uno provoca una de las alertas de la sección 6.
+
+*Figura 5.5 — Dashboard de simulación* (`informe/capturas/simulacion.png`).
+
 ---
 
 ## 6. Motor de alertas
@@ -105,7 +130,7 @@ ws.onmessage = function (e) {
 Cada segundo, por cada jugador del lote:
 
 1. **Estado en vivo** (`services/estado.js`). Se guardan en memoria sus últimos sensores, un historial de 180 s y unos valores derivados: % de la FC máxima, zona de FC (Z1–Z5), zona de velocidad (andar, trote, carrera, alta intensidad, sprint) y asimetría de carga entre pies. También se acumulan los datos de la sesión: distancia, metros a alta intensidad (más de 19,8 km/h), sprints (más de 25 km/h) y acciones de alta intensidad (más de 3 m/s²).
-2. **Reglas** (`services/reglas.js`). Diez funciones puras que reciben el estado del jugador, su perfil (con sus umbrales), su pauta y el último clima, y devuelven la alerta o nada.
+2. **Reglas** (`services/reglas.js`). Diez funciones puras que reciben el estado del jugador, su perfil (con sus umbrales) y su pauta, y devuelven la alerta o nada.
 3. **Antirrebote** (`services/alertas.js`). Una alerta no se repite para el mismo jugador mientras siga activa, ni durante los 60 s siguientes a que el médico la confirme.
 4. **Difusión.** Cada alerta nueva se guarda en MongoDB, se publica por MQTT en `sensors/eq1/alertas` con QoS 1 (la recibe el Dashboard 2.0) y se envía por WebSocket a la web.
 
@@ -119,7 +144,6 @@ Los umbrales son valores por defecto. Cada jugador guarda su propia copia, que e
 |---|---|---|---|
 | `CALOR_AMBAR` | Temperatura interna ≥ `tempAmbar` | 39 °C | aviso |
 | `CALOR_ROJA` | Temperatura interna ≥ `tempRoja` | 40 °C | crítica |
-| *(ajuste por clima)* | Con WBGT ≥ `wbgtAlto`, los dos umbrales de calor bajan `ajusteCalor` | 28 °C · 0,3 °C | — |
 | `FC_ALTA` | FC por encima del `fcAltaPct` % de la FCmáx durante `fcAltaSeg` | 92 % · 60 s | aviso |
 | `FC_DESACOPLE` | FC por encima del 85 % de la FCmáx caminando (menos de 7 km/h) durante 30 s | 85 % · 7 km/h · 30 s | aviso |
 | `RECUPERACION_LENTA` | Tras un esfuerzo (de más de 19,8 a menos de 7 km/h), la FC baja 12 lpm o menos en 60 s | 12 lpm | aviso |
@@ -129,11 +153,9 @@ Los umbrales son valores por defecto. Cada jugador guarda su propia copia, que e
 | `PAUTA_EXCEDIDA` | Con pauta activa: velocidad > `velMax`, metros a alta intensidad de la sesión > `cargaMax` o asimetría > `asimetriaMax` | los fija el médico | aviso |
 | `SIN_SENAL` | El watchdog de la pasarela lleva 5 s sin datos del jugador | 5 s | aviso |
 
-**WBGT.** Si el flujo de Open-Meteo manda temperatura y humedad pero no el WBGT, la API lo estima con la fórmula de la Oficina de Meteorología de Australia para la sombra: `WBGT ≈ 0,567·T + 0,393·e + 3,94`, con `e = (HR/100)·6,105·exp(17,27·T/(237,7+T))`. Con 30 °C y 50 % de humedad da 29,3 °C.
-
 ### 6.3 De dónde salen los umbrales
 
-- **Calor.** En partidos con calor, el pico medio de temperatura interna fue de 39,2 °C (rango 37,9–40,1 °C). Por encima de 39 °C empeora el sprint repetido, y 40 °C es el criterio clínico de golpe de calor. FIFA obliga a pausas de hidratación con WBGT ≥ 32 °C y FIFPRO las pide desde 28 °C. El ajuste de 0,3 °C es una decisión nuestra.
+- **Calor.** En partidos con calor, el pico medio de temperatura interna fue de 39,2 °C (rango 37,9–40,1 °C). Por encima de 39 °C empeora el sprint repetido, y 40 °C es el criterio clínico de golpe de calor.
 - **Recuperación de la FC.** Una caída de 12 lpm o menos en el primer minuto tras el esfuerzo se asoció a más mortalidad en una cohorte clínica de 2.428 adultos (Cole et al., 1999). Aquí es un indicador, no un diagnóstico.
 - **Aceleraciones.** ±3 m/s² mantenidos 0,5 s es el umbral habitual de alta intensidad (STATSports, SciSports). A 1 Hz, un valor de más de 3 m/s² es un cambio de velocidad mantenido todo el segundo. En partidos de academia de élite se han registrado hasta 46 aceleraciones y 73 desaceleraciones de alta intensidad; de ahí el límite de 120 por sesión.
 - **Asimetría.** No hay un umbral validado, por eso se compara con la línea base de cada jugador. Se usa la **media con signo** del último minuto: en cada pisada la carga pasa de un pie al otro y una lectura suelta puede marcar 20 o 30 puntos aunque el jugador esté bien; con la media esas alternancias se compensan y queda solo el desequilibrio que se mantiene.
@@ -164,7 +186,6 @@ MongoDB 8 en Docker (`docker-compose.yml`), con Mongoose. **No se guarda cada me
 | `alertas` | Cada alerta, con su valor, su umbral, su mensaje y quién la confirmó y cuándo | |
 | `pautas` | Pautas de readaptación (velocidad máxima, carga por sesión, asimetría máxima, hasta cuándo) | Una activa por jugador |
 | `sesiones` | Entrenamientos y partidos con el resumen de cada jugador al cerrarlos | Base del ACWR |
-| `clima` | Temperatura, humedad y WBGT (medido o estimado) | |
 
 **Por qué time-series.** Las lecturas son medidas en el tiempo de muchos jugadores: MongoDB las agrupa por jugador y por tiempo, ocupan menos y las consultas por rango de fechas (el histórico de la ficha) son más rápidas.
 
@@ -182,7 +203,7 @@ El servidor WebSocket comparte puerto con la API (`ws://localhost:3000`) y solo 
 | `alerta` | La alerta completa | Al momento |
 | `alerta_confirmada` | Id de la alerta | Al momento |
 | `sesion_iniciada` · `sesion_cerrada` | La sesión (con el resumen al cerrarla) | Al momento |
-| `clima` | El registro de clima | Cada vez que llega |
+| `simulador` | La fase y los escenarios que se acaban de mandar al simulador | Con cada orden |
 
 REST sirve para consultar y modificar; el WebSocket evita que la web tenga que preguntar cada segundo y hace que una alerta aparezca en cuanto se genera.
 
@@ -216,10 +237,10 @@ El paciente es el seudónimo (`Patient/p8`); cada Observation tiene un id establ
 Los datos de la plataforma (frecuencia cardiaca, temperatura interna, lesiones y pautas) son **datos de salud**, una categoría especial según el **artículo 9 del RGPD**. Las medidas de la API:
 
 - **Seudonimización y minimización.** Los jugadores se identifican solo con `p1`…`p11`, igual que en los topics MQTT; no se guarda ningún nombre. Se guardan resúmenes de 10 s y no la señal completa.
-- **Autenticación por API key con dos roles** (cabecera `x-api-key`, `middleware/clave.js`): la clave de la **pasarela** solo puede mandar telemetría y clima; la del **médico** es la única que escribe datos clínicos (perfiles, umbrales, pautas, confirmaciones y sesiones). Una clave válida usada en una operación que no le corresponde recibe `403`.
+- **Autenticación por API key con dos roles** (cabecera `x-api-key`, `middleware/clave.js`): la clave de la **pasarela** solo puede mandar telemetría; la del **médico** es la única que escribe datos clínicos (perfiles, umbrales, pautas, confirmaciones y sesiones). Una clave válida usada en una operación que no le corresponde recibe `403`.
 - **Comparación en tiempo constante.** Las claves se comparan con `crypto.timingSafeEqual` sobre su hash SHA-256, para no dar pistas por el tiempo de respuesta.
 - **Secretos fuera del repositorio.** Claves de la API y contraseñas de Mosquitto en el `.env` (en `.gitignore`); en los flujos de Node-RED solo aparecen `${NODERED_MQTT_USER}` y `${NODERED_MQTT_PASS}`, y en Postman las claves van en el *Current value*, que no se exporta.
-- **Mínimo privilegio en el broker.** El usuario `api` de Mosquitto solo puede escribir en `sensors/+/alertas` (la ACL de la Persona A).
+- **Mínimo privilegio en el broker.** El usuario `api` de Mosquitto solo puede escribir en `sensors/+/alertas` (las alertas) y en `control/#` (las órdenes al simulador); no puede leer nada. `nodered` solo puede leer `control/#`.
 - **Validación estricta de la entrada** (tipos, unidades, rangos y tamaño del lote) y errores sin detalles internos: un fallo inesperado responde "Error interno".
 
 **Limitaciones conocidas** (es un entorno de desarrollo): los `GET` no piden clave; no hay HTTPS ni TLS en MQTT; las claves son por rol y no por usuario, así que no queda registrado qué médico hizo cada cosa (salvo el campo `por` al confirmar una alerta); no hay límite de peticiones. En producción harían falta HTTPS, autenticación por usuario (por ejemplo OAuth 2.0 / OpenID Connect), clave también para leer, registro de accesos y cifrado de la base de datos.
@@ -228,8 +249,8 @@ Los datos de la plataforma (frecuencia cardiaca, temperatura interna, lesiones y
 
 ## 10. Pruebas (parte de la API)
 
-- **Tests automáticos:** 59 tests con `node:test` (`npm test`) sobre las partes puras: validación del lote, estado en vivo y resúmenes de 10 s, métricas, las 10 reglas y el antirrebote, ACWR, estimación del WBGT y conversión a FHIR.
-- **Colección de Postman:** las 38 peticiones pasan con el *Collection Runner*, incluidos los errores esperados (400, 401, 403, 404 y 409).
+- **Tests automáticos:** 61 tests con `node:test` (`npm test`) sobre las partes puras: validación del lote, estado en vivo y resúmenes de 10 s, métricas, las 10 reglas y el antirrebote, ACWR, conversión a FHIR y validación de las órdenes al simulador (con `503` si no hay broker).
+- **Colección de Postman:** las 35 peticiones pasan con el *Collection Runner*, incluidos los errores esperados (400, 401, 403, 404 y 409).
 - **Escenarios:** `api/scripts/fake-gateway.js` imita la pasarela con escenarios activables por jugador (golpe de calor, FC alta, desacople, recuperación lenta, incidente, asimetría, sin señal y sobrecarga). En 100 s saltan 9 de las 10 alertas; `SOBRECARGA` necesita más tiempo o bajar su umbral.
 - **Integración con el simulador de A:** se ejecutó el simulador real de 11 jugadores, segundo a segundo, a través de la pasarela y de la validación y el motor de alertas de la API. En un partido de 90 minutos (356.400 mensajes, 5.400 lotes) la API no rechazó ningún lote. Esta prueba destapó los dos ajustes de la sección 6.4; después de hacerlos, tres partidos de 2 horas sin ninguna alerta falsa.
 - **De extremo a extremo:** Mosquitto con usuarios y ACL → simulador y pasarela en Node-RED → API → MongoDB, comprobado con los 11 jugadores llegando en tiempo real y `/health` con MongoDB y MQTT conectados.
@@ -241,7 +262,6 @@ Los datos de la plataforma (frecuencia cardiaca, temperatura interna, lesiones y
 - Cole, C. R. et al. (1999). Heart-rate recovery immediately after exercise as a predictor of mortality. *NEJM*. https://pubmed.ncbi.nlm.nih.gov/10536127/
 - Temperatura interna en futbolistas con calor: https://opus.lib.uts.edu.au/bitstream/10453/191965/2/PIIS1440244025005377.pdf
 - Revisión sobre temperatura interna en competición: https://www.termedia.pl/Core-body-temperature-responses-during-competitive-sporting-events-a-narrative-review,78,50091,1,1.html
-- FIFPRO, calor extremo en el fútbol: https://www.fifpro.org/articles/2021/07/extreme-weather-in-football
 - STATSports, aceleraciones y desaceleraciones: https://statsports.com/the-locker/maximum-acceleration-and-decelerations-significance-for-an-athletes-physical-development
 - SciSports, glosario de variables físicas: https://support.scisports.com/en/articles/4476826-physical-variables-glossary
 - Plantillas instrumentadas y asimetría: https://pmc.ncbi.nlm.nih.gov/articles/PMC9208063

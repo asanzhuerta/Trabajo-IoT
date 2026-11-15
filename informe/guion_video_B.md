@@ -23,7 +23,7 @@
 | 0:35 | Confirmar la alerta (dashboard o `POST /api/alertas/{id}/confirmar` en Swagger) | "El médico la confirma: queda registrado quién y cuándo, y durante un minuto no se vuelve a lanzar, para no saturarle." |
 | 0:50 | Crear una pauta (`POST /api/jugadores/p8/pauta` con `velMax: 20`) | "Y le pone una pauta de readaptación: como máximo 20 km/h en lo que queda de sesión." |
 | 1:05 | Salta `PAUTA_EXCEDIDA` cuando p8 pasa de 20 km/h | "En cuanto la supera, la API avisa: pauta excedida, con la velocidad y el límite." |
-| 1:15 | Swagger: la lista de rutas y *Try it out* en `GET /api/jugadores/p8/estado` | "Toda la API está documentada en Swagger con OpenAPI, y hay una colección de Postman con 38 peticiones que se prueban solas." |
+| 1:15 | Swagger: la lista de rutas y *Try it out* en `GET /api/jugadores/p8/estado` | "Toda la API está documentada en Swagger con OpenAPI, y hay una colección de Postman con 35 peticiones que se prueban solas." |
 | 1:30 | `GET /fhir/Observation?patient=p8&code=8867-4` | "Y para la historia clínica, las constantes vitales salen en FHIR R4, como Observation con códigos LOINC, que es como las leería un hospital. El paciente es un seudónimo: nunca guardamos nombres." |
 
 ## Si sobra tiempo o para el TikTok (45–60 s)

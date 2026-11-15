@@ -1,11 +1,10 @@
 // Las reglas de alerta de docs/contratos/alertas.md, como funciones puras (test/reglas.test.js).
 //
-// Cada regla recibe un contexto { e, perfil, pauta, clima, ahora }:
+// Cada regla recibe un contexto { e, perfil, pauta, ahora }:
 //   e       estado en vivo del jugador (services/estado.js): sensors (formato de A), derivados,
 //           historial de 180 s, sesion…
 //   perfil  jugador con sus umbrales
 //   pauta   pauta de readaptación activa, o null
-//   clima   último registro de clima (con wbgt), o null
 //   ahora   instante (ms) de la última lectura
 // y devuelve { valor, umbral, mensaje } si se cumple, o null.
 // El motor (alertas.js) añade el código, la severidad, el antirrebote y la publicación.
@@ -36,10 +35,6 @@ function n(valor) {
     return Number(valor).toLocaleString('es-ES', { maximumFractionDigits: 2 });
 }
 
-function r2(valor) {
-    return Math.round(valor * 100) / 100;
-}
-
 // Puntos del historial de los últimos `seg` segundos
 function ultimosSegundos(historial, ahora, seg) {
     return historial.filter(function (h) { return h.ts > ahora - seg * 1000; });
@@ -57,25 +52,17 @@ function conSenal(ctx) {
     return ctx.e.estado === 'ok';
 }
 
-function ajusteCalor(u, clima) {
-    if (clima && clima.wbgt != null && clima.wbgt >= u.wbgtAlto) return u.ajusteCalor;
-    return 0;
-}
-
 function reglaCalor(campo) {
     return function (ctx) {
         if (!conSenal(ctx)) return null;
         const temp = sensores.temperatura(ctx.e.sensors);
         if (temp === null) return null;
-        const u = umbralesDe(ctx.perfil);
-        const ajuste = ajusteCalor(u, ctx.clima);
-        const umbral = r2(u[campo] - ajuste);
+        const umbral = umbralesDe(ctx.perfil)[campo];
         if (temp < umbral) return null;
-        const motivo = ajuste ? ', bajado ' + n(ajuste) + ' °C por WBGT de ' + n(ctx.clima.wbgt) + ' °C' : '';
         return {
             valor: temp,
             umbral: umbral,
-            mensaje: 'Temperatura interna de ' + n(temp) + ' °C (umbral ' + n(umbral) + ' °C' + motivo + ')'
+            mensaje: 'Temperatura interna de ' + n(temp) + ' °C (umbral ' + n(umbral) + ' °C)'
         };
     };
 }

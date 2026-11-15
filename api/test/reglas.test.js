@@ -45,7 +45,7 @@ function ctx(cambios = {}) {
     const u = cambios.ultimo || {};
     // Últimos sensores (formato de A) y derivados, como los deja services/estado.js
     const s = JSON.parse(JSON.stringify(ultimoPunto.sensors));
-    if (u.temp !== undefined) s.termometer.temperature.value = u.temp;
+    if (u.temp !== undefined) s.thermometer.temperature.value = u.temp;
     const e = {
         jugadorId: 'p8',
         estado: cambios.estado || h[h.length - 1].estado,
@@ -59,7 +59,6 @@ function ctx(cambios = {}) {
         e: e,
         perfil: cambios.perfil || PERFIL,
         pauta: cambios.pauta || null,
-        clima: cambios.clima || null,
         ahora: AHORA
     };
 }
@@ -80,15 +79,6 @@ test('CALOR_AMBAR desde 39 °C y CALOR_ROJA desde 40 °C', function () {
     assert.equal(roja.severidad, 'critica');
     assert.equal(roja.umbral, 40);
     assert.match(roja.mensaje, /40,1 °C/);
-});
-
-test('con WBGT alto los umbrales de calor bajan 0,3 °C', function () {
-    assert.deepEqual(codigos(ctx({ ultimo: { temp: 38.8 }, clima: { wbgt: 27.9 } })), []);
-    const r = evaluar(ctx({ ultimo: { temp: 38.8 }, clima: { wbgt: 29 } }));
-    assert.equal(r.length, 1);
-    assert.equal(r[0].codigo, 'CALOR_AMBAR');
-    assert.equal(r[0].umbral, 38.7);
-    assert.match(r[0].mensaje, /WBGT/);
 });
 
 test('los umbrales son los del jugador', function () {

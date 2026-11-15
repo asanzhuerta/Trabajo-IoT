@@ -2,7 +2,10 @@
 user nodered
 topic readwrite sensors/#
 topic readwrite +/sensors/#
+topic readwrite equipo/#
+topic read control/#
 
-# API: solo publica alertas
+# API: publica alertas y órdenes al simulador
 user api
 topic write sensors/+/alertas
+topic write control/#

@@ -1,9 +1,8 @@
-// ACWR, estimación del WBGT y conversión a FHIR
+// ACWR y conversión a FHIR
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const acwr = require('../services/acwr');
-const { estimarWbgt } = require('../services/clima');
 const fhir = require('../services/fhir');
 const historial = require('../scripts/historial');
 
@@ -72,12 +71,6 @@ test('el histórico del seed da las tres franjas: p7 alta, p5 baja y el resto ó
     for (const id of ['p1', 'p2', 'p3', 'p4', 'p6', 'p8', 'p9', 'p10', 'p11']) {
         assert.equal(ratioDe(id).franja, 'optima', id);
     }
-});
-
-test('WBGT estimado: 30 °C y 50 % de humedad dan unos 29 °C; más humedad, más WBGT', function () {
-    assert.equal(estimarWbgt(30, 50), 29.3);
-    assert.ok(estimarWbgt(30, 80) > estimarWbgt(30, 50));
-    assert.ok(estimarWbgt(20, 50) < 28);   // un día templado no baja los umbrales de calor
 });
 
 test('FHIR: una lectura de 10 s se convierte en una Observation de constantes vitales', function () {

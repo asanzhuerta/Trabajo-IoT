@@ -24,9 +24,9 @@
 
 - **QoS:** 0 = como mucho una vez (sin confirmación), 1 = al menos una vez (PUBACK), 2 = exactamente una vez (cuatro pasos).
 - **Retain:** el broker guarda el último mensaje de un topic y se lo da a quien se suscribe después. Útil para estados ("el simulador está vivo"), no para alertas, que no deben repetirse a cada suscriptor nuevo.
-- **LWT (last will):** mensaje que el broker publica en nombre de un cliente si este se desconecta sin avisar. Va por conexión, no por jugador; por eso la caída de un sensor concreto la detecta el watchdog de la pasarela (5 s sin datos → `sin_senal`).
+- **LWT (last will):** mensaje que el broker publica en nombre de un cliente si este se desconecta sin avisar. No lo usamos: va por conexión, no por jugador; por eso la caída de un sensor concreto la detecta el watchdog de la pasarela (5 s sin datos → `sin_senal`).
 - **Comodines:** `+` es un nivel (`+/sensors/#` = cualquier jugador); `#` es el resto del topic y va al final.
-- **Seguridad del broker:** `allow_anonymous false`, usuarios con contraseña (`passwd`, con hash) y ACL: `nodered` lee y escribe `sensors/#` y `+/sensors/#`; `api` solo puede escribir en `sensors/+/alertas`.
+- **Seguridad del broker:** `allow_anonymous false`, usuarios con contraseña (`passwd`, con hash) y ACL: `nodered` lee y escribe `sensors/#`, `+/sensors/#` y `equipo/#`, y solo lee `control/#`; `api` solo puede escribir en `sensors/+/alertas` y `control/#`.
 
 ## Node-RED (parte de A)
 
@@ -44,6 +44,8 @@
 - **Calibración:** con el simulador de A, `SOBRECARGA` y `ASIMETRIA` saltaban en falso; se midió en partidos simulados y se ajustó (acciones de más de 3 m/s², asimetría con 15 puntos y 45 s de datos). Detalle en la sección 6.4 del informe.
 - **ACWR:** carga de 7 días entre la media semanal de 28, con los metros a alta intensidad de cada sesión. Franja 0,8–1,3 (Gabbett 2016), discutida (Impellizzeri 2020): sirve para ver picos de carga, no para predecir lesiones.
 - **FHIR:** `Observation` de `vital-signs` con LOINC 8867-4 (FC) y 8310-5 (temperatura), unidades UCUM, en un `Bundle searchset`; errores como `OperationOutcome`. No es un servidor FHIR completo.
+- **Control del simulador:** el dashboard de simulación (lo hace A) llama a `POST /api/simulador/{fase,escenario,reiniciar}`; la API publica la orden en `control/#` con QoS 1 y el simulador la recibe con un `mqtt in`. Responde `202` (la orden está en el broker, no hace falta esperar al simulador), `400` con la lista de valores válidos y `503` sin MQTT. No pide clave ni MongoDB: no toca datos clínicos.
+- **¿Por qué la API publica en vez de que el dashboard hable con el broker?** El navegador no habla MQTT por TCP (haría falta MQTT sobre WebSocket y abrir el broker); así la orden se valida en un solo sitio y el broker sigue cerrado con su ACL.
 - **WebSocket:** el mismo puerto que la API; la telemetría a 1 Hz y las alertas al momento, para que la web no tenga que preguntar cada segundo.
 - **Seguridad:** `x-api-key` con dos roles (pasarela y médico) comparadas en tiempo constante; datos de salud (art. 9 del RGPD) con seudónimos y resúmenes. Limitaciones: GET sin clave, sin HTTPS, claves por rol y no por usuario.
-- **Pruebas:** 59 tests con `node:test`, colección de Postman con tests, escenarios con el fake-gateway y el simulador de A pasado por la pasarela y la API.
+- **Pruebas:** 61 tests con `node:test`, colección de Postman con tests, escenarios con el fake-gateway y el simulador de A pasado por la pasarela y la API.

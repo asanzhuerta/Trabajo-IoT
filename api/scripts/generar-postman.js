@@ -80,7 +80,7 @@ function lecturaEjemplo(jugadorId, v) {
             },
             giroscope: { changeinposition: { unit: 'degrees', value: 12 } },
             pulsemeter: { pulse: { unit: 'bpm', value: v.fc } },
-            termometer: { temperature: { unit: 'C', value: v.temp } },
+            thermometer: { temperature: { unit: 'C', value: v.temp } },
             pressuresensor: {
                 pressureleftfoot: { unit: '%', value: 49 },
                 pressurerightfoot: { unit: '%', value: 51 }
@@ -111,7 +111,7 @@ const coleccion = {
             '2. En las variables de la colección, pon en **Current value** las claves del `.env`: `claveMedico` = `API_KEY_MEDICO` y `clavePasarela` = `API_KEY_PASARELA`. El *Current value* no se exporta ni se sube al repo.',
             '3. Si la API no está en el puerto 3000, cambia `baseUrl`.',
             '',
-            '**Variables que se rellenan solas:** `sesionId` (al empezar una sesión), `alertaId` (al listar alertas activas), `observacionId` (al buscar la FC en FHIR) y `ahora` (fecha actual para la telemetría y el clima).',
+            '**Variables que se rellenan solas:** `sesionId` (al empezar una sesión), `alertaId` (al listar alertas activas), `observacionId` (al buscar la FC en FHIR) y `ahora` (fecha actual para la telemetría).',
             '',
             'Cada petición comprueba el código de respuesta, así que se puede lanzar entera con el *Collection Runner*.',
             'La documentación interactiva está en `{{baseUrl}}/api-docs` y los contratos en `docs/contratos/`.'
@@ -196,15 +196,6 @@ const coleccion = {
             peticion({ nombre: 'Listar sesiones', metodo: 'GET', ruta: '/api/sesiones' })
         ]),
 
-        carpeta('Clima', 'Lo que manda el flujo de Open-Meteo de Node-RED (clave de la pasarela). Con un WBGT de 28 °C o más, los umbrales de calor bajan 0,3 °C.', [
-            peticion({ nombre: 'Guardar clima (la API estima el WBGT)', metodo: 'POST', ruta: '/api/clima', clave: PASARELA, esperado: 201,
-                preRequest: PONER_AHORA,
-                cuerpo: { ts: '{{ahora}}', temp: 24, humedad: 55, fuente: 'open-meteo' },
-                guardar: ["pm.test('WBGT estimado', function () { pm.expect(pm.response.json().wbgtEstimado).to.eql(true); });"],
-                descripcion: 'Sin `wbgt`: la API lo estima con la temperatura y la humedad. Con 24 °C sale un WBGT de unos 24 °C, que no cambia los umbrales. Para probar el ajuste por calor, prueba con `"temp": 34, "humedad": 60` (y vuelve a mandar este después).' }),
-            peticion({ nombre: 'Último clima', metodo: 'GET', ruta: '/api/clima' })
-        ]),
-
         carpeta('FHIR', 'Constantes vitales como recursos FHIR R4. Hacen falta datos: lanza antes el fake-gateway o la pasarela unos segundos.', [
             peticion({ nombre: 'FC de un jugador (LOINC 8867-4)', metodo: 'GET', ruta: '/fhir/Observation',
                 query: [{ key: 'patient', value: '{{jugadorId}}' }, { key: 'code', value: '8867-4' }, { key: '_count', value: '5' }],
@@ -246,8 +237,6 @@ const coleccion = {
             peticion({ nombre: '400: JSON mal formado', metodo: 'POST', ruta: '/api/sesiones', clave: MEDICO, esperado: 400,
                 cuerpo: '{ "tipo": "partido", ' }),
             peticion({ nombre: '404: jugador que no existe', metodo: 'GET', ruta: '/api/jugadores/p99', esperado: 404 }),
-            peticion({ nombre: '400: clima sin temperatura', metodo: 'POST', ruta: '/api/clima', clave: PASARELA, esperado: 400,
-                cuerpo: { humedad: 55 } }),
             peticion({ nombre: '400 FHIR: búsqueda sin paciente (OperationOutcome)', metodo: 'GET', ruta: '/fhir/Observation', esperado: 400,
                 guardar: ["pm.test('Es un OperationOutcome', function () { pm.expect(pm.response.json().resourceType).to.eql('OperationOutcome'); });"] }),
             peticion({ nombre: '409: dorsal repetido', metodo: 'POST', ruta: '/api/jugadores', clave: MEDICO, esperado: 409,

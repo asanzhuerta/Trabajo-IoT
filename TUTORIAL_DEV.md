@@ -13,14 +13,15 @@ Simulador (Node-RED, A) ──MQTT──► Mosquitto ──► Pasarela (Node-R
 Con el `.env` preparado (paso 2), haz **doble clic en `arrancar-todo.cmd`**, o desde PowerShell en la raíz del repo:
 
 ```powershell
-.rrancar-todo.ps1
+.\arrancar-todo.ps1
 ```
 
-Se abre una ventana de Windows Terminal con una pestaña de color por cada pieza: **Docker / MongoDB**, **Mosquitto**, **Subscriber**, **API**, **Node-RED** y **Mirar p1**. Hace lo mismo que los pasos 3 a 7.
+Se abre una ventana de Windows Terminal con una pestaña de color por cada pieza: **Docker / MongoDB**, **Mosquitto**, **Subscriber**, **API**, **Node-RED** y **Mirar p1**. Hace lo mismo que los pasos 3 a 7 y, cuando la API responde, **abre el campograma** (`http://localhost:3000`) en el navegador.
 
-- `.rrancar-todo.ps1 -Limpiar` vacía antes la base de datos, y `-Jugador p8` vigila a p8 en lugar de a p1.
+- `.\arrancar-todo.ps1 -Limpiar` vacía antes la base de datos, `-Jugador p8` vigila a p8 en lugar de a p1 y `-SinNavegador` no abre el campograma. Las mismas opciones valen con el `.cmd` desde una consola: `arrancar-todo.cmd -Limpiar`.
+- **Node-RED carga solo los flujos nuevos:** si los del repo son más nuevos que los suyos (por ejemplo, después de traer cambios de A), los carga y guarda los anteriores en `~/.node-red-smarthealth/respaldo-<fecha>/`. Si lo último que hiciste fue un *Deploy* en el editor, se respetan tus cambios.
 - Si el servicio de Windows de Mosquitto está arrancado, lo para (pide permiso de administrador una vez).
-- **Cada pestaña tiene su propio historial**, en `~/.smarthealth/historial/<pestaña>.txt`. Cuando pares lo que se esté ejecutando (`Ctrl+C`), pulsa **↑** y te saldrán los comandos de esa parte: en la de la API, `npm run dev`, `npm test`, el seed y el fake-gateway; en la de Subscriber, las suscripciones a `#`, a las alertas y a `p1`… Lo que escribas se añade a ese historial. Para volver al historial inicial, borra la carpeta.
+- **Cada pestaña tiene su propio historial**, en `~/.smarthealth/historial/<pestaña>.txt`. Cuando pares lo que se esté ejecutando (`Ctrl+C`), pulsa **↑** y te saldrán los comandos de esa parte: en la de la API, `npm run dev`, `npm test`, el seed y el fake-gateway; en la de Subscriber, las suscripciones a `#`, a las alertas, a `p1` y a `equipo/estado`; en la de Mirar, abrir el campograma y Swagger… Lo que escribas se añade a ese historial. Si el lanzador trae comandos nuevos, se añaden solos sin tocar los tuyos. Para volver al historial inicial, borra la carpeta.
 - Todas las pestañas cargan el `.env`, así que puedes usar `$env:NODERED_MQTT_PASS` y similares en los comandos.
 - Para pararlo todo, cierra la ventana. Si quieres, deja el servicio como estaba con `net start mosquitto` (como administrador).
 
@@ -110,7 +111,7 @@ node node_red/arrancar.js
 ```
 
 - Arranca un Node-RED **solo para el proyecto**, con su propia carpeta (`~/.node-red-smarthealth`). Así no se mezcla con los ejercicios de clase de tu `~/.node-red`.
-- La primera vez lo prepara con el simulador de A (`flows.json`) y la pasarela (`flows_pasarela.json`). Con `--reiniciar` los vuelve a cargar desde el repo y se pierden los cambios hechos en el editor.
+- La primera vez lo prepara con el simulador de A (`flows.json`) y la pasarela (`flows_pasarela.json`). Si después cambian en el repo (al traer cambios de A), los vuelve a cargar solo y guarda los anteriores en `respaldo-<fecha>/`; si lo último fue un *Deploy* en el editor, los respeta. Con `--reiniciar` los carga siempre desde el repo.
 - Lee el `.env`: los nodos del broker usan `${NODERED_MQTT_USER}` y `${NODERED_MQTT_PASS}`, y la pasarela usa `API_KEY_PASARELA`. No hay que escribir ninguna contraseña en el editor.
 - Si ya tienes otro Node-RED abierto en el puerto 1880, ciérralo antes.
 
@@ -126,16 +127,17 @@ Cada 2 s muestra su estado, el semáforo, la posición, la velocidad, el pulso, 
 
 Qué tienes que ver:
 
-- **Consola 3:** cada segundo, `p1/sensors/gps`, `p1/sensors/accelerometer`, `p1/sensors/giroscope`, `p1/sensors/pulsemeter`, `p1/sensors/pressuresensor` y `p1/sensors/termometer/temperature`.
+- **Consola 3:** cada segundo, `p1/sensors/gps`, `p1/sensors/accelerometer`, `p1/sensors/giroscope`, `p1/sensors/pulsemeter`, `p1/sensors/pressuresensor` y `p1/sensors/thermometer`.
 - **Pestaña de la pasarela en el editor:** el nodo *Respuesta de la API* pone `202 · 1 recibidas`.
 - **Consola 6:** los datos del portero de A, que cambian cada 2 s.
 
 ## 8. Ver el flujo completo
 
+- **El campograma:** `http://localhost:3000`. Los 11 jugadores moviéndose en el campo, con el aro de su semáforo, la ficha del que selecciones y las alertas activas. Ver `api/public/README.md`.
 - **Pasarela → API:** `http://localhost:3000/api/jugadores/p1/estado` (semáforo, `sensors` en el formato de A y `derivados`) y `http://localhost:3000/api/jugadores/p1/historico` (resúmenes de 10 s).
 - **API → broker:** si salta una alerta, aparece en la consola 3 como `sensors/eq1/alertas {…}`.
 - **Probar una alerta:** baja el umbral de calor de `p1` por debajo de su temperatura (36-37 °C) con `PUT /api/jugadores/p1/umbrales` y `{"tempAmbar": 36.5}`. Salta `CALOR_AMBAR` en la consola 3 y en la 6. Después déjalo como estaba con `{"tempAmbar": 39}`.
-- **Probar el watchdog:** en Node-RED, desactiva el nodo inyectar *Jugador 1* del simulador (o bórralo) y pulsa **Deploy**. A los 5 s, `p1` pasa a `sin_senal` y salta la alerta `SIN_SENAL`.
+- **Probar el watchdog:** en Node-RED, desactiva el nodo *P1 | Portero* del simulador (doble clic → *Enabled* en la parte de abajo) y pulsa **Deploy**. A los 5 s, `p1` pasa a `sin_senal` y salta la alerta `SIN_SENAL`.
 - **Alertas en Node-RED (opcional):** añade un **mqtt in** con el topic `sensors/eq1/alertas`, el broker *Mosquitto local (pasarela)* y la salida *a parsed JSON object*, conectado a un **debug**.
 
 ### Confirmar una alerta (como el médico)

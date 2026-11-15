@@ -28,7 +28,7 @@ function lote(lecturas) {
 
 test('guarda los sensores de A tal cual, sin traducirlos', function () {
     const entrada = sensores({
-        termometer: { temperature: m('C', 38.1) },
+        thermometer: { temperature: m('C', 38.1) },
         pressuresensor: { pressureleftfoot: m('%', 42), pressurerightfoot: m('%', 58) }
     });
     const r = validarLote(lote([{ jugadorId: 'p8', ts: TS, estado: 'ok', sensors: entrada }]), 'eq1');
@@ -55,14 +55,14 @@ test('acepta la lectura sin señal del watchdog', function () {
     assert.deepEqual(r.lote.lecturas[1], { jugadorId: 'p10', ts: new Date(TS), estado: 'sin_senal' });
 });
 
-test('impact, giroscope, termometer y pressuresensor son opcionales', function () {
+test('impact, giroscope, thermometer y pressuresensor son opcionales', function () {
     const s = sensores({ accelerometer: { acceleration: m('m/s2', 1), desacceleration: m('m/s2', 0), impact: m('g', 6.5) } });
     delete s.giroscope;
     const r = validarLote(lote([{ jugadorId: 'p3', ts: TS, sensors: s }]), 'eq1');
     assert.equal(r.ok, true);
     assert.equal(r.lote.lecturas[0].sensors.accelerometer.impact.value, 6.5);
     assert.equal(r.lote.lecturas[0].sensors.giroscope, undefined);
-    assert.equal(r.lote.lecturas[0].sensors.termometer, undefined);
+    assert.equal(r.lote.lecturas[0].sensors.thermometer, undefined);
     assert.equal(r.lote.lecturas[0].estado, 'ok');
 });
 
@@ -103,7 +103,7 @@ test('rechaza valores fuera de rango', function () {
     const fuera = [
         { gps: { speed: m('km/h', 10), distancecovered: m('m', 1), position: { X: m('m', 120), Y: m('m', 30) } } },
         { pulsemeter: { pulse: m('bpm', 300) } },
-        { termometer: { temperature: m('C', 50) } },
+        { thermometer: { temperature: m('C', 50) } },
         { pressuresensor: { pressureleftfoot: m('%', 70), pressurerightfoot: m('%', 50) } }
     ];
     for (const cambio of fuera) {

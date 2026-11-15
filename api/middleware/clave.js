@@ -1,5 +1,5 @@
 // Autenticación por API key (cabecera x-api-key).
-//   - clave de la pasarela: telemetría y clima (Node-RED)
+//   - clave de la pasarela: telemetría (Node-RED)
 //   - clave del médico: todo lo que escribe datos clínicos
 // Las claves se comparan en tiempo constante para no dar pistas por el tiempo de respuesta.
 

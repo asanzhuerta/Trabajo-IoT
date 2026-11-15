@@ -61,7 +61,7 @@ test('el estado guarda los sensores en el formato de A y conserva temperatura y 
     const e = estado.obtener('p8');
     assert.equal(e.estado, 'ok');
     assert.deepEqual(e.sensors.pulsemeter, { pulse: { unit: 'bpm', value: 184 } });
-    assert.deepEqual(e.sensors.termometer, { temperature: { unit: 'C', value: 38.2 } });
+    assert.deepEqual(e.sensors.thermometer, { temperature: { unit: 'C', value: 38.2 } });
     assert.equal(e.sensors.pressuresensor.pressureleftfoot.value, 44);
     assert.equal(e.derivados.pctFcMax, 92);
     assert.equal(e.derivados.asimetria, null);   // con una sola lectura de las plantillas todavía no se calcula

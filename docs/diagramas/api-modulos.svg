@@ -6,28 +6,27 @@
 <text x="40" y="92" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#6B7280">Sacado de los require del código.</text>
 <path d="M1170,434 L1170,514" fill="none" stroke="#2E7D4F" stroke-width="2.2" opacity="0.9" marker-end="url(#f-servers)"/>
 <path d="M914,323.9913043478261 L866,323.0521739130435" fill="none" stroke="#2E7D4F" stroke-width="2.2" opacity="0.9" marker-end="url(#f-servers)"/>
-<path d="M937.6530612244899,514 L799.1836734693877,396" fill="none" stroke="#C27A12" stroke-width="2.2" opacity="0.9" marker-end="url(#f-routers)"/>
+<path d="M950.8636977058029,514 L804.3589743589744,396" fill="none" stroke="#C27A12" stroke-width="2.2" opacity="0.9" marker-end="url(#f-routers)"/>
 <path d="M1426,544 L1554,544" fill="none" stroke="#C27A12" stroke-width="2.2" opacity="0.9" marker-end="url(#f-routers)"/>
-<path d="M1554,491.6181818181818 L1417.942754919499,434" fill="none" stroke="#7346B5" stroke-width="2.2" opacity="0.9" marker-end="url(#f-services)"/>
-<path d="M1129.0697674418604,910 L1111.7054263565892,994" fill="none" stroke="#C27A12" stroke-width="2.2" opacity="0.9" marker-end="url(#f-routers)"/>
-<path d="M1600,993 L1546,1040" fill="none" stroke="#7346B5" stroke-width="2.2" opacity="0.9" marker-start="url(#f-models)" marker-end="url(#f-services)"/>
-<path d="M914,681.156626506024 L516,633.2048192771084" fill="none" stroke="#C27A12" stroke-width="2.2" opacity="0.9" marker-end="url(#f-routers)"/>
+<path d="M1554,479.1090909090909 L1426,429.07272727272726" fill="none" stroke="#7346B5" stroke-width="2.2" opacity="0.9" marker-end="url(#f-services)"/>
+<path d="M1135.4345165238678,867 L1110.5630354957161,994" fill="none" stroke="#C27A12" stroke-width="2.2" opacity="0.9" marker-end="url(#f-routers)"/>
+<path d="M1600,950 L1546,1040" fill="none" stroke="#7346B5" stroke-width="2.2" opacity="0.9" marker-start="url(#f-models)" marker-end="url(#f-services)"/>
+<path d="M914,666.2879518072289 L516,628.6457831325301" fill="none" stroke="#C27A12" stroke-width="2.2" opacity="0.9" marker-end="url(#f-routers)"/>
 <path d="M613.6986301369864,396 L516,473.1027027027027" fill="none" stroke="#0F766E" stroke-width="2.2" opacity="0.9" marker-end="url(#f-middleware)"/>
-<path d="M914,820.6476190476191 L458.41514726507717,1014" fill="none" stroke="#C27A12" stroke-width="2.2" opacity="0.9" marker-end="url(#f-routers)"/>
+<path d="M914,805.7 L451.1111111111111,1014" fill="none" stroke="#C27A12" stroke-width="2.2" opacity="0.9" marker-end="url(#f-routers)"/>
 <path d="M331.1938663745893,1014 L336.7579408543264,760" fill="none" stroke="#A3367A" stroke-width="2.2" opacity="0.9" marker-start="url(#f-raiz)" marker-end="url(#f-mqtt)"/>
 <path d="M960,224 C950,150 340,150 340,464" fill="none" stroke="#2E7D4F" stroke-width="2.2" opacity="0.9" marker-start="url(#f-raiz)" marker-end="url(#f-servers)"/>
-<path d="M2010,993 C2010,1410 330,1380 330,1123" fill="none" stroke="#7346B5" stroke-width="2.2" opacity="0.9" marker-end="url(#f-services)"/>
+<path d="M2010,950 C2010,1410 330,1380 330,1123" fill="none" stroke="#7346B5" stroke-width="2.2" opacity="0.9" marker-end="url(#f-services)"/>
 <path d="M106.3,612.1 L166.0,626.0" fill="none" stroke="#4B5563" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#f-ext)"/>
 <path d="M102.1,713.6 L166.0,669.0" fill="none" stroke="#4B5563" stroke-width="1.6" stroke-dasharray="6 4" marker-start="url(#f-ext)"/>
 <path d="M105.5,1053.9 L166.0,1075.0" fill="none" stroke="#4B5563" stroke-width="1.6" stroke-dasharray="6 4" marker-start="url(#f-ext)"/>
-<path d="M815.8,588.6 L860.0,575.0 L916.0,575.0" fill="none" stroke="#4B5563" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#f-ext)"/>
-<path d="M815.8,604.4 L860.0,618.0 L916.0,618.0" fill="none" stroke="#4B5563" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#f-ext)"/>
+<path d="M817.0,575.0 L916.0,575.0" fill="none" stroke="#4B5563" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#f-ext)"/>
 <path d="M1440.0,199.0 L1440.0,343.0 L1424.0,343.0" fill="none" stroke="#4B5563" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#f-ext)"/>
 <path d="M1515.0,199.0 L1515.0,386.0 L1424.0,386.0" fill="none" stroke="#4B5563" stroke-width="1.6" stroke-dasharray="6 4" marker-start="url(#f-ext)" marker-end="url(#f-ext)"/>
-<path d="M1467.0,710.0 L1446.0,710.0 L1446.0,661.0 L1424.0,661.0" fill="none" stroke="#4B5563" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#f-ext)"/>
-<path d="M1467.0,710.0 L1446.0,710.0 L1446.0,704.0 L1424.0,704.0" fill="none" stroke="#4B5563" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#f-ext)"/>
-<path d="M1467.0,710.0 L1446.0,710.0 L1446.0,776.0 L1424.0,776.0" fill="none" stroke="#4B5563" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#f-ext)"/>
-<path d="M1469.2,838.4 L1424.0,819.0" fill="none" stroke="#4B5563" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#f-ext)"/>
+<path d="M1467.0,667.0 L1446.0,667.0 L1446.0,618.0 L1424.0,618.0" fill="none" stroke="#4B5563" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#f-ext)"/>
+<path d="M1467.0,667.0 L1446.0,667.0 L1446.0,661.0 L1424.0,661.0" fill="none" stroke="#4B5563" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#f-ext)"/>
+<path d="M1467.0,667.0 L1446.0,667.0 L1446.0,733.0 L1424.0,733.0" fill="none" stroke="#4B5563" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#f-ext)"/>
+<path d="M1469.2,795.4 L1424.0,776.0" fill="none" stroke="#4B5563" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#f-ext)"/>
 <rect x="560" y="250" width="300" height="140" rx="14" fill="#FFFFFF" stroke="#0F766E" stroke-width="2"/>
 <path d="M574,250 h272 a14,14 0 0 1 14,14 v24 h-300 v-24 a14,14 0 0 1 14,-14 z" fill="#DDF3F0"/>
 <line x1="560" y1="288" x2="860" y2="288" stroke="#0F766E" stroke-opacity="0.35"/>
@@ -61,9 +60,8 @@
 <text x="1305" y="289" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">· jugadores</text>
 <text x="957" y="304" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">alertas</text>
 <text x="996.4" y="304" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">· sesiones</text>
-<text x="1051.4" y="304" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">· clima</text>
-<text x="1090.8" y="304" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">· fhir</text>
-<text x="1133" y="304" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#6B7280">↳ documentacion</text>
+<text x="1051.4" y="304" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">· fhir</text>
+<text x="1093.6" y="304" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#6B7280">↳ documentacion</text>
 <text x="949" y="319" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" font-style="italic" fill="#4B5563">Express: monta las rutas y maneja los errores</text>
 <path d="M932,337 h8 l4,4 v11 h-12 z" fill="#FFFFFF" stroke="#2E7D4F" stroke-width="1.3"/>
 <text x="949" y="348" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#111827">documentacion.js</text>
@@ -73,7 +71,7 @@
 <text x="949" y="362" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" font-style="italic" fill="#4B5563">Swagger UI en /api-docs</text>
 <path d="M932,380 h8 l4,4 v11 h-12 z" fill="#FFFFFF" stroke="#2E7D4F" stroke-width="1.3"/>
 <text x="949" y="391" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#111827">websocket.js</text>
-<text x="949" y="405" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" font-style="italic" fill="#4B5563">Difunde telemetría (1 Hz), alertas, sesiones y clima</text>
+<text x="949" y="405" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" font-style="italic" fill="#4B5563">Difunde telemetría (1 Hz), alertas y sesiones</text>
 <rect x="170" y="470" width="340" height="284" rx="14" fill="#FFFFFF" stroke="#2F5DA8" stroke-width="2"/>
 <path d="M184,470 h312 a14,14 0 0 1 14,14 v24 h-340 v-24 a14,14 0 0 1 14,-14 z" fill="#E0ECFF"/>
 <line x1="170" y1="508" x2="510" y2="508" stroke="#2F5DA8" stroke-opacity="0.35"/>
@@ -109,12 +107,12 @@
 <path d="M182,706 h8 l4,4 v11 h-12 z" fill="#FFFFFF" stroke="#2F5DA8" stroke-width="1.3"/>
 <text x="199" y="717" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#111827" font-style="italic">openapi.yaml</text>
 <text x="199" y="731" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" font-style="italic" fill="#4B5563">Especificación de la API para Swagger</text>
-<rect x="920" y="520" width="500" height="384" rx="14" fill="#FFFFFF" stroke="#C27A12" stroke-width="2"/>
+<rect x="920" y="520" width="500" height="341" rx="14" fill="#FFFFFF" stroke="#C27A12" stroke-width="2"/>
 <path d="M934,520 h472 a14,14 0 0 1 14,14 v24 h-500 v-24 a14,14 0 0 1 14,-14 z" fill="#FFF1DC"/>
 <line x1="920" y1="558" x2="1420" y2="558" stroke="#C27A12" stroke-opacity="0.35"/>
 <path d="M932,533 q0,-4 4,-4 h9 l4,4 h13 q4,0 4,4 v14 q0,4 -4,4 h-26 q-4,0 -4,-4 z" fill="#FFFFFF" stroke="#C27A12" stroke-width="1.6"/>
 <text x="972" y="546" font-family="'Segoe UI', Arial, sans-serif" font-size="17" font-weight="700" fill="#C27A12">routers/</text>
-<text x="1408" y="545" text-anchor="end" font-family="'Segoe UI', Arial, sans-serif" font-size="11.5" fill="#6B7280">7 archivos</text>
+<text x="1408" y="545" text-anchor="end" font-family="'Segoe UI', Arial, sans-serif" font-size="11.5" fill="#6B7280">6 archivos</text>
 <path d="M932,569 h8 l4,4 v11 h-12 z" fill="#FFFFFF" stroke="#C27A12" stroke-width="1.3"/>
 <text x="949" y="580" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#111827">telemetria.js</text>
 <rect x="1043.5" y="568.5" width="26.6" height="14" rx="7" fill="#E0ECFF" stroke="#2F5DA8" stroke-width="1"/>
@@ -129,76 +127,67 @@
 <text x="1331.9" y="579" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">· telemetria</text>
 <text x="949" y="594" font-family="Consolas, 'Cascadia Mono', monospace" font-size="10" font-weight="600" fill="#C27A12">POST /api/telemetria</text>
 <path d="M932,612 h8 l4,4 v11 h-12 z" fill="#FFFFFF" stroke="#C27A12" stroke-width="1.3"/>
-<text x="949" y="623" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#111827">clima.js</text>
-<rect x="1011" y="611.5" width="63" height="14" rx="7" fill="#DDF3F0" stroke="#0F766E" stroke-width="1"/>
-<text x="1042.5" y="622" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="600" fill="#0F766E">middleware</text>
-<text x="1078" y="622" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">clave</text>
-<rect x="1115" y="611.5" width="52.6" height="14" rx="7" fill="#F1E8FB" stroke="#7346B5" stroke-width="1"/>
-<text x="1141.3" y="622" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="600" fill="#7346B5">services</text>
-<text x="1171.6" y="622" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">clima</text>
-<text x="949" y="637" font-family="Consolas, 'Cascadia Mono', monospace" font-size="10" font-weight="600" fill="#C27A12">POST · GET /api/clima</text>
+<text x="949" y="623" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#111827">alertas.js</text>
+<rect x="1024" y="611.5" width="63" height="14" rx="7" fill="#DDF3F0" stroke="#0F766E" stroke-width="1"/>
+<text x="1055.5" y="622" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="600" fill="#0F766E">middleware</text>
+<text x="1091" y="622" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">clave</text>
+<rect x="1128" y="611.5" width="52.6" height="14" rx="7" fill="#F1E8FB" stroke="#7346B5" stroke-width="1"/>
+<text x="1154.3" y="622" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="600" fill="#7346B5">services</text>
+<text x="1184.6" y="622" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">alertas</text>
+<rect x="1232" y="611.5" width="42.2" height="14" rx="7" fill="#FDE7E7" stroke="#B3403F" stroke-width="1"/>
+<text x="1253.1" y="622" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="600" fill="#B3403F">models</text>
+<text x="1278.2" y="622" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">todos</text>
+<text x="949" y="637" font-family="Consolas, 'Cascadia Mono', monospace" font-size="10" font-weight="600" fill="#C27A12">GET /api/alertas · POST /:id/confirmar</text>
 <path d="M932,655 h8 l4,4 v11 h-12 z" fill="#FFFFFF" stroke="#C27A12" stroke-width="1.3"/>
-<text x="949" y="666" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#111827">alertas.js</text>
-<rect x="1024" y="654.5" width="63" height="14" rx="7" fill="#DDF3F0" stroke="#0F766E" stroke-width="1"/>
-<text x="1055.5" y="665" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="600" fill="#0F766E">middleware</text>
-<text x="1091" y="665" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">clave</text>
-<rect x="1128" y="654.5" width="52.6" height="14" rx="7" fill="#F1E8FB" stroke="#7346B5" stroke-width="1"/>
-<text x="1154.3" y="665" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="600" fill="#7346B5">services</text>
-<text x="1184.6" y="665" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">alertas</text>
-<rect x="1232" y="654.5" width="42.2" height="14" rx="7" fill="#FDE7E7" stroke="#B3403F" stroke-width="1"/>
-<text x="1253.1" y="665" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="600" fill="#B3403F">models</text>
-<text x="1278.2" y="665" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">todos</text>
-<text x="949" y="680" font-family="Consolas, 'Cascadia Mono', monospace" font-size="10" font-weight="600" fill="#C27A12">GET /api/alertas · POST /:id/confirmar</text>
-<path d="M932,698 h8 l4,4 v11 h-12 z" fill="#FFFFFF" stroke="#C27A12" stroke-width="1.3"/>
-<text x="949" y="709" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#111827">jugadores.js</text>
-<rect x="1037" y="697.5" width="63" height="14" rx="7" fill="#DDF3F0" stroke="#0F766E" stroke-width="1"/>
-<text x="1068.5" y="708" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="600" fill="#0F766E">middleware</text>
-<text x="1104" y="708" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">clave</text>
-<rect x="1141" y="697.5" width="52.6" height="14" rx="7" fill="#F1E8FB" stroke="#7346B5" stroke-width="1"/>
-<text x="1167.3" y="708" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="600" fill="#7346B5">services</text>
-<text x="1197.6" y="708" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">acwr</text>
-<text x="1221.4" y="708" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">· perfiles</text>
-<text x="1276.4" y="708" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">· estado</text>
-<text x="1321" y="708" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">· semaforo</text>
-<text x="957" y="723" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">umbrales</text>
-<rect x="1009.6" y="712.5" width="42.2" height="14" rx="7" fill="#FDE7E7" stroke="#B3403F" stroke-width="1"/>
-<text x="1030.7" y="723" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="600" fill="#B3403F">models</text>
-<text x="1055.8" y="723" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">todos</text>
-<text x="949" y="738" font-family="Consolas, 'Cascadia Mono', monospace" font-size="10" font-weight="600" fill="#C27A12">GET · POST /api/jugadores · GET · PUT /:id · PUT /umbrales · GET · POST /pauta ·</text>
-<text x="949" y="752" font-family="Consolas, 'Cascadia Mono', monospace" font-size="10" font-weight="600" fill="#C27A12">GET /estado · /historico · /acwr</text>
+<text x="949" y="666" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#111827">jugadores.js</text>
+<rect x="1037" y="654.5" width="63" height="14" rx="7" fill="#DDF3F0" stroke="#0F766E" stroke-width="1"/>
+<text x="1068.5" y="665" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="600" fill="#0F766E">middleware</text>
+<text x="1104" y="665" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">clave</text>
+<rect x="1141" y="654.5" width="52.6" height="14" rx="7" fill="#F1E8FB" stroke="#7346B5" stroke-width="1"/>
+<text x="1167.3" y="665" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="600" fill="#7346B5">services</text>
+<text x="1197.6" y="665" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">acwr</text>
+<text x="1221.4" y="665" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">· perfiles</text>
+<text x="1276.4" y="665" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">· estado</text>
+<text x="1321" y="665" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">· semaforo</text>
+<text x="957" y="680" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">umbrales</text>
+<rect x="1009.6" y="669.5" width="42.2" height="14" rx="7" fill="#FDE7E7" stroke="#B3403F" stroke-width="1"/>
+<text x="1030.7" y="680" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="600" fill="#B3403F">models</text>
+<text x="1055.8" y="680" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">todos</text>
+<text x="949" y="695" font-family="Consolas, 'Cascadia Mono', monospace" font-size="10" font-weight="600" fill="#C27A12">GET · POST /api/jugadores · GET · PUT /:id · PUT /umbrales · GET · POST /pauta ·</text>
+<text x="949" y="709" font-family="Consolas, 'Cascadia Mono', monospace" font-size="10" font-weight="600" fill="#C27A12">GET /estado · /historico · /acwr</text>
+<path d="M932,727 h8 l4,4 v11 h-12 z" fill="#FFFFFF" stroke="#C27A12" stroke-width="1.3"/>
+<text x="949" y="738" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#111827">sesiones.js</text>
+<rect x="1030.5" y="726.5" width="63" height="14" rx="7" fill="#DDF3F0" stroke="#0F766E" stroke-width="1"/>
+<text x="1062" y="737" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="600" fill="#0F766E">middleware</text>
+<text x="1097.5" y="737" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">clave</text>
+<rect x="1134.5" y="726.5" width="52.6" height="14" rx="7" fill="#F1E8FB" stroke="#7346B5" stroke-width="1"/>
+<text x="1160.8" y="737" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="600" fill="#7346B5">services</text>
+<text x="1191.1" y="737" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">sesiones</text>
+<text x="949" y="752" font-family="Consolas, 'Cascadia Mono', monospace" font-size="10" font-weight="600" fill="#C27A12">GET · POST /api/sesiones · GET /:id · POST /:id/fin</text>
 <path d="M932,770 h8 l4,4 v11 h-12 z" fill="#FFFFFF" stroke="#C27A12" stroke-width="1.3"/>
-<text x="949" y="781" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#111827">sesiones.js</text>
-<rect x="1030.5" y="769.5" width="63" height="14" rx="7" fill="#DDF3F0" stroke="#0F766E" stroke-width="1"/>
-<text x="1062" y="780" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="600" fill="#0F766E">middleware</text>
-<text x="1097.5" y="780" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">clave</text>
-<rect x="1134.5" y="769.5" width="52.6" height="14" rx="7" fill="#F1E8FB" stroke="#7346B5" stroke-width="1"/>
-<text x="1160.8" y="780" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="600" fill="#7346B5">services</text>
-<text x="1191.1" y="780" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">sesiones</text>
-<text x="949" y="795" font-family="Consolas, 'Cascadia Mono', monospace" font-size="10" font-weight="600" fill="#C27A12">GET · POST /api/sesiones · GET /:id · POST /:id/fin</text>
+<text x="949" y="781" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#111827">fhir.js</text>
+<rect x="1004.5" y="769.5" width="52.6" height="14" rx="7" fill="#F1E8FB" stroke="#7346B5" stroke-width="1"/>
+<text x="1030.8" y="780" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="600" fill="#7346B5">services</text>
+<text x="1061.1" y="780" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">fhir</text>
+<rect x="1092.9" y="769.5" width="42.2" height="14" rx="7" fill="#FDE7E7" stroke="#B3403F" stroke-width="1"/>
+<text x="1114" y="780" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="600" fill="#B3403F">models</text>
+<text x="1139.1" y="780" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">todos</text>
+<text x="949" y="795" font-family="Consolas, 'Cascadia Mono', monospace" font-size="10" font-weight="600" fill="#C27A12">GET /fhir/Observation · /Observation/:id</text>
 <path d="M932,813 h8 l4,4 v11 h-12 z" fill="#FFFFFF" stroke="#C27A12" stroke-width="1.3"/>
-<text x="949" y="824" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#111827">fhir.js</text>
-<rect x="1004.5" y="812.5" width="52.6" height="14" rx="7" fill="#F1E8FB" stroke="#7346B5" stroke-width="1"/>
-<text x="1030.8" y="823" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="600" fill="#7346B5">services</text>
-<text x="1061.1" y="823" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">fhir</text>
-<rect x="1092.9" y="812.5" width="42.2" height="14" rx="7" fill="#FDE7E7" stroke="#B3403F" stroke-width="1"/>
-<text x="1114" y="823" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="600" fill="#B3403F">models</text>
-<text x="1139.1" y="823" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">todos</text>
-<text x="949" y="838" font-family="Consolas, 'Cascadia Mono', monospace" font-size="10" font-weight="600" fill="#C27A12">GET /fhir/Observation · /Observation/:id</text>
-<path d="M932,856 h8 l4,4 v11 h-12 z" fill="#FFFFFF" stroke="#C27A12" stroke-width="1.3"/>
-<text x="949" y="867" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#111827">health.js</text>
-<rect x="1017.5" y="855.5" width="26.6" height="14" rx="7" fill="#E0ECFF" stroke="#2F5DA8" stroke-width="1"/>
-<text x="1030.8" y="866" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="600" fill="#2F5DA8">api</text>
-<text x="1048.1" y="866" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">db</text>
-<rect x="1069.5" y="855.5" width="31.8" height="14" rx="7" fill="#FBE6F2" stroke="#A3367A" stroke-width="1"/>
-<text x="1085.4" y="866" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="600" fill="#A3367A">mqtt</text>
-<text x="1105.3" y="866" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">publisher</text>
-<text x="949" y="881" font-family="Consolas, 'Cascadia Mono', monospace" font-size="10" font-weight="600" fill="#C27A12">GET /health</text>
-<rect x="1560" y="230" width="540" height="757" rx="14" fill="#FFFFFF" stroke="#7346B5" stroke-width="2"/>
+<text x="949" y="824" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#111827">health.js</text>
+<rect x="1017.5" y="812.5" width="26.6" height="14" rx="7" fill="#E0ECFF" stroke="#2F5DA8" stroke-width="1"/>
+<text x="1030.8" y="823" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="600" fill="#2F5DA8">api</text>
+<text x="1048.1" y="823" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">db</text>
+<rect x="1069.5" y="812.5" width="31.8" height="14" rx="7" fill="#FBE6F2" stroke="#A3367A" stroke-width="1"/>
+<text x="1085.4" y="823" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="600" fill="#A3367A">mqtt</text>
+<text x="1105.3" y="823" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">publisher</text>
+<text x="949" y="838" font-family="Consolas, 'Cascadia Mono', monospace" font-size="10" font-weight="600" fill="#C27A12">GET /health</text>
+<rect x="1560" y="230" width="540" height="714" rx="14" fill="#FFFFFF" stroke="#7346B5" stroke-width="2"/>
 <path d="M1574,230 h512 a14,14 0 0 1 14,14 v24 h-540 v-24 a14,14 0 0 1 14,-14 z" fill="#F1E8FB"/>
 <line x1="1560" y1="268" x2="2100" y2="268" stroke="#7346B5" stroke-opacity="0.35"/>
 <path d="M1572,243 q0,-4 4,-4 h9 l4,4 h13 q4,0 4,4 v14 q0,4 -4,4 h-26 q-4,0 -4,-4 z" fill="#FFFFFF" stroke="#7346B5" stroke-width="1.6"/>
 <text x="1612" y="256" font-family="'Segoe UI', Arial, sans-serif" font-size="17" font-weight="700" fill="#7346B5">services/</text>
-<text x="2088" y="255" text-anchor="end" font-family="'Segoe UI', Arial, sans-serif" font-size="11.5" fill="#6B7280">16 archivos</text>
+<text x="2088" y="255" text-anchor="end" font-family="'Segoe UI', Arial, sans-serif" font-size="11.5" fill="#6B7280">15 archivos</text>
 <path d="M1572,279 h8 l4,4 v11 h-12 z" fill="#FFFFFF" stroke="#7346B5" stroke-width="1.3"/>
 <text x="1589" y="290" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#111827">telemetria.js</text>
 <rect x="1683.5" y="278.5" width="47.4" height="14" rx="7" fill="#E3F4EA" stroke="#2E7D4F" stroke-width="1"/>
@@ -264,7 +253,7 @@
 <rect x="1670.5" y="723.5" width="42.2" height="14" rx="7" fill="#FDE7E7" stroke="#B3403F" stroke-width="1"/>
 <text x="1691.6" y="734" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="600" fill="#B3403F">models</text>
 <text x="1716.7" y="734" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">todos</text>
-<text x="1589" y="749" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" font-style="italic" fill="#4B5563">Caché de jugadores, pautas y clima</text>
+<text x="1589" y="749" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" font-style="italic" fill="#4B5563">Caché de jugadores y pautas</text>
 <path d="M1572,767 h8 l4,4 v11 h-12 z" fill="#FFFFFF" stroke="#7346B5" stroke-width="1.3"/>
 <text x="1589" y="778" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#111827">sesiones.js</text>
 <rect x="1670.5" y="766.5" width="47.4" height="14" rx="7" fill="#E3F4EA" stroke="#2E7D4F" stroke-width="1"/>
@@ -277,30 +266,20 @@
 <text x="1907.5" y="777" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#6B7280">· errores</text>
 <text x="1589" y="792" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" font-style="italic" fill="#4B5563">Sesiones y su resumen por jugador</text>
 <path d="M1572,810 h8 l4,4 v11 h-12 z" fill="#FFFFFF" stroke="#7346B5" stroke-width="1.3"/>
-<text x="1589" y="821" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#111827">clima.js</text>
-<rect x="1651" y="809.5" width="47.4" height="14" rx="7" fill="#E3F4EA" stroke="#2E7D4F" stroke-width="1"/>
-<text x="1674.7" y="820" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="600" fill="#2E7D4F">servers</text>
-<text x="1702.4" y="820" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">websocket</text>
-<rect x="1760.2" y="809.5" width="42.2" height="14" rx="7" fill="#FDE7E7" stroke="#B3403F" stroke-width="1"/>
-<text x="1781.3" y="820" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="600" fill="#B3403F">models</text>
-<text x="1806.4" y="820" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">todos</text>
-<text x="1843.4" y="820" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#6B7280">↳ perfiles</text>
-<text x="1589" y="835" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" font-style="italic" fill="#4B5563">Guarda el clima y estima el WBGT</text>
+<text x="1589" y="821" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#111827">acwr.js</text>
+<text x="1589" y="835" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" font-style="italic" fill="#4B5563">Carga aguda / crónica (7 y 28 días)</text>
 <path d="M1572,853 h8 l4,4 v11 h-12 z" fill="#FFFFFF" stroke="#7346B5" stroke-width="1.3"/>
-<text x="1589" y="864" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#111827">acwr.js</text>
-<text x="1589" y="878" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" font-style="italic" fill="#4B5563">Carga aguda / crónica (7 y 28 días)</text>
+<text x="1589" y="864" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#111827">fhir.js</text>
+<text x="1589" y="878" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" font-style="italic" fill="#4B5563">Convierte a Observation FHIR (LOINC)</text>
 <path d="M1572,896 h8 l4,4 v11 h-12 z" fill="#FFFFFF" stroke="#7346B5" stroke-width="1.3"/>
-<text x="1589" y="907" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#111827">fhir.js</text>
-<text x="1589" y="921" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" font-style="italic" fill="#4B5563">Convierte a Observation FHIR (LOINC)</text>
-<path d="M1572,939 h8 l4,4 v11 h-12 z" fill="#FFFFFF" stroke="#7346B5" stroke-width="1.3"/>
-<text x="1589" y="950" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#111827">errores.js</text>
-<text x="1589" y="964" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" font-style="italic" fill="#4B5563">ErrorHttp para los 404 y 409</text>
+<text x="1589" y="907" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#111827">errores.js</text>
+<text x="1589" y="921" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" font-style="italic" fill="#4B5563">ErrorHttp para los 404 y 409</text>
 <rect x="640" y="1000" width="900" height="198" rx="14" fill="#FFFFFF" stroke="#B3403F" stroke-width="2"/>
 <path d="M654,1000 h872 a14,14 0 0 1 14,14 v24 h-900 v-24 a14,14 0 0 1 14,-14 z" fill="#FDE7E7"/>
 <line x1="640" y1="1038" x2="1540" y2="1038" stroke="#B3403F" stroke-opacity="0.35"/>
 <path d="M652,1013 q0,-4 4,-4 h9 l4,4 h13 q4,0 4,4 v14 q0,4 -4,4 h-26 q-4,0 -4,-4 z" fill="#FFFFFF" stroke="#B3403F" stroke-width="1.6"/>
 <text x="692" y="1026" font-family="'Segoe UI', Arial, sans-serif" font-size="17" font-weight="700" fill="#B3403F">models/</text>
-<text x="1528" y="1025" text-anchor="end" font-family="'Segoe UI', Arial, sans-serif" font-size="11.5" fill="#6B7280">9 archivos</text>
+<text x="1528" y="1025" text-anchor="end" font-family="'Segoe UI', Arial, sans-serif" font-size="11.5" fill="#6B7280">8 archivos</text>
 <path d="M652,1049 h8 l4,4 v11 h-12 z" fill="#FFFFFF" stroke="#B3403F" stroke-width="1.3"/>
 <text x="669" y="1060" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#111827">index.js</text>
 <text x="731" y="1059" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#6B7280">↳ Jugador</text>
@@ -309,7 +288,6 @@
 <text x="875.2" y="1059" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#6B7280">· Alerta</text>
 <text x="677" y="1074" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#6B7280">Pauta</text>
 <text x="706" y="1074" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#6B7280">· Sesion</text>
-<text x="750.6" y="1074" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#6B7280">· Clima</text>
 <text x="669" y="1089" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" font-style="italic" fill="#4B5563">Exporta todos los modelos</text>
 <path d="M652,1107 h8 l4,4 v11 h-12 z" fill="#FFFFFF" stroke="#B3403F" stroke-width="1.3"/>
 <text x="669" y="1118" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#111827">comun.js</text>
@@ -340,10 +318,6 @@
 <text x="1255.6666666666665" y="1103" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#111827">Sesion.js</text>
 <text x="1324.1666666666665" y="1102" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#6B7280">↳ comun</text>
 <text x="1255.6666666666665" y="1117" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" font-style="italic" fill="#4B5563">Sesión y resumen por jugador</text>
-<path d="M1238.6666666666665,1135 h8 l4,4 v11 h-12 z" fill="#FFFFFF" stroke="#B3403F" stroke-width="1.3"/>
-<text x="1255.6666666666665" y="1146" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#111827">Clima.js</text>
-<text x="1317.6666666666665" y="1145" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#6B7280">↳ comun</text>
-<text x="1255.6666666666665" y="1160" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" font-style="italic" fill="#4B5563">Temperatura, humedad y WBGT</text>
 <rect x="170" y="1020" width="320" height="97" rx="14" fill="#FFFFFF" stroke="#A3367A" stroke-width="2"/>
 <path d="M184,1020 h292 a14,14 0 0 1 14,14 v24 h-320 v-24 a14,14 0 0 1 14,-14 z" fill="#FBE6F2"/>
 <line x1="170" y1="1058" x2="490" y2="1058" stroke="#A3367A" stroke-opacity="0.35"/>
@@ -441,56 +415,55 @@
 <rect x="2167" y="1058.5" width="52.6" height="14" rx="7" fill="#F1E8FB" stroke="#7346B5" stroke-width="1"/>
 <text x="2193.3" y="1069" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="600" fill="#7346B5">services</text>
 <text x="2223.6" y="1069" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">acwr</text>
-<text x="2247.4" y="1069" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">· clima</text>
-<text x="2286.8" y="1069" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">· fhir</text>
-<text x="2159" y="1084" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" font-style="italic" fill="#4B5563">ACWR, WBGT y FHIR</text>
+<text x="2247.4" y="1069" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#374151">· fhir</text>
+<text x="2159" y="1084" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" font-style="italic" fill="#4B5563">ACWR y FHIR</text>
 <circle cx="80" cy="606" r="24" fill="#F9FAFB" stroke="#4B5563" stroke-width="1.8"/>
 <circle cx="72" cy="606" r="2.6" fill="#4B5563"/><circle cx="80" cy="606" r="2.6" fill="#4B5563"/><circle cx="88" cy="606" r="2.6" fill="#4B5563"/>
 <circle cx="80" cy="729" r="24" fill="#F9FAFB" stroke="#4B5563" stroke-width="1.8"/>
 <circle cx="72" cy="729" r="2.6" fill="#4B5563"/><circle cx="80" cy="729" r="2.6" fill="#4B5563"/><circle cx="88" cy="729" r="2.6" fill="#4B5563"/>
 <circle cx="80" cy="1045" r="24" fill="#F9FAFB" stroke="#4B5563" stroke-width="1.8"/>
 <circle cx="72" cy="1045" r="2.6" fill="#4B5563"/><circle cx="80" cy="1045" r="2.6" fill="#4B5563"/><circle cx="88" cy="1045" r="2.6" fill="#4B5563"/>
-<circle cx="790" cy="596.5" r="24" fill="#F9FAFB" stroke="#4B5563" stroke-width="1.8"/>
-<circle cx="782" cy="596.5" r="2.6" fill="#4B5563"/><circle cx="790" cy="596.5" r="2.6" fill="#4B5563"/><circle cx="798" cy="596.5" r="2.6" fill="#4B5563"/>
+<circle cx="790" cy="575" r="24" fill="#F9FAFB" stroke="#4B5563" stroke-width="1.8"/>
+<circle cx="782" cy="575" r="2.6" fill="#4B5563"/><circle cx="790" cy="575" r="2.6" fill="#4B5563"/><circle cx="798" cy="575" r="2.6" fill="#4B5563"/>
 <circle cx="1440" cy="172" r="24" fill="#F9FAFB" stroke="#4B5563" stroke-width="1.8"/>
 <circle cx="1432" cy="172" r="2.6" fill="#4B5563"/><circle cx="1440" cy="172" r="2.6" fill="#4B5563"/><circle cx="1448" cy="172" r="2.6" fill="#4B5563"/>
 <circle cx="1515" cy="172" r="24" fill="#F9FAFB" stroke="#4B5563" stroke-width="1.8"/>
 <circle cx="1507" cy="172" r="2.6" fill="#4B5563"/><circle cx="1515" cy="172" r="2.6" fill="#4B5563"/><circle cx="1523" cy="172" r="2.6" fill="#4B5563"/>
-<circle cx="1494" cy="710" r="24" fill="#F9FAFB" stroke="#4B5563" stroke-width="1.8"/>
-<circle cx="1486" cy="710" r="2.6" fill="#4B5563"/><circle cx="1494" cy="710" r="2.6" fill="#4B5563"/><circle cx="1502" cy="710" r="2.6" fill="#4B5563"/>
-<circle cx="1494" cy="849" r="24" fill="#F9FAFB" stroke="#4B5563" stroke-width="1.8"/>
-<circle cx="1486" cy="849" r="2.6" fill="#4B5563"/><circle cx="1494" cy="849" r="2.6" fill="#4B5563"/><circle cx="1502" cy="849" r="2.6" fill="#4B5563"/>
+<circle cx="1494" cy="667" r="24" fill="#F9FAFB" stroke="#4B5563" stroke-width="1.8"/>
+<circle cx="1486" cy="667" r="2.6" fill="#4B5563"/><circle cx="1494" cy="667" r="2.6" fill="#4B5563"/><circle cx="1502" cy="667" r="2.6" fill="#4B5563"/>
+<circle cx="1494" cy="806" r="24" fill="#F9FAFB" stroke="#4B5563" stroke-width="1.8"/>
+<circle cx="1486" cy="806" r="2.6" fill="#4B5563"/><circle cx="1494" cy="806" r="2.6" fill="#4B5563"/><circle cx="1502" cy="806" r="2.6" fill="#4B5563"/>
 <rect x="1161.14" y="465" width="17.72" height="17" rx="8.5" fill="#FFFFFF" stroke="#2E7D4F" stroke-width="1.2"/>
 <text x="1170" y="477.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="700" fill="#2E7D4F">1</text>
 <rect x="881.14" y="314.52173913043475" width="17.72" height="17" rx="8.5" fill="#FFFFFF" stroke="#2E7D4F" stroke-width="1.2"/>
 <text x="890" y="327.02173913043475" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="700" fill="#2E7D4F">1</text>
-<rect x="859.5583673469388" y="446" width="17.72" height="17" rx="8.5" fill="#FFFFFF" stroke="#C27A12" stroke-width="1.2"/>
-<text x="868.4183673469388" y="458.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="700" fill="#C27A12">5</text>
+<rect x="868.7513360323886" y="446" width="17.72" height="17" rx="8.5" fill="#FFFFFF" stroke="#C27A12" stroke-width="1.2"/>
+<text x="877.6113360323886" y="458.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="700" fill="#C27A12">4</text>
 <rect x="1481.14" y="535" width="17.72" height="17" rx="8.5" fill="#FFFFFF" stroke="#C27A12" stroke-width="1.2"/>
-<text x="1490" y="547.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="700" fill="#C27A12">6</text>
-<rect x="1477.1113774597495" y="453.8090909090909" width="17.72" height="17" rx="8.5" fill="#FFFFFF" stroke="#7346B5" stroke-width="1.2"/>
-<text x="1485.9713774597494" y="466.3090909090909" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="700" fill="#7346B5">4</text>
-<rect x="1111.5275968992248" y="943" width="17.72" height="17" rx="8.5" fill="#FFFFFF" stroke="#C27A12" stroke-width="1.2"/>
-<text x="1120.3875968992247" y="955.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="700" fill="#C27A12">3</text>
-<rect x="1638.22" y="1008" width="143.56" height="17" rx="8.5" fill="#FFFFFF" stroke="#7346B5" stroke-width="1.2"/>
-<text x="1710" y="1020.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="700" fill="#7346B5">6 (en los dos sentidos)</text>
-<rect x="706.14" y="648.1807228915662" width="17.72" height="17" rx="8.5" fill="#FFFFFF" stroke="#C27A12" stroke-width="1.2"/>
-<text x="715" y="660.6807228915662" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="700" fill="#C27A12">2</text>
+<text x="1490" y="547.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="700" fill="#C27A12">5</text>
+<rect x="1481.14" y="445.0909090909091" width="17.72" height="17" rx="8.5" fill="#FFFFFF" stroke="#7346B5" stroke-width="1.2"/>
+<text x="1490" y="457.5909090909091" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="700" fill="#7346B5">3</text>
+<rect x="1114.138776009792" y="921.5" width="17.72" height="17" rx="8.5" fill="#FFFFFF" stroke="#C27A12" stroke-width="1.2"/>
+<text x="1122.998776009792" y="934" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="700" fill="#C27A12">3</text>
+<rect x="1638.22" y="965" width="143.56" height="17" rx="8.5" fill="#FFFFFF" stroke="#7346B5" stroke-width="1.2"/>
+<text x="1710" y="977.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="700" fill="#7346B5">5 (en los dos sentidos)</text>
+<rect x="706.14" y="638.4668674698795" width="17.72" height="17" rx="8.5" fill="#FFFFFF" stroke="#C27A12" stroke-width="1.2"/>
+<text x="715" y="650.9668674698795" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="700" fill="#C27A12">2</text>
 <rect x="555.9893150684932" y="425.55135135135134" width="17.72" height="17" rx="8.5" fill="#FFFFFF" stroke="#0F766E" stroke-width="1.2"/>
 <text x="564.8493150684932" y="438.05135135135134" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="700" fill="#0F766E">1</text>
-<rect x="677.3475736325386" y="908.3238095238096" width="17.72" height="17" rx="8.5" fill="#FFFFFF" stroke="#C27A12" stroke-width="1.2"/>
-<text x="686.2075736325386" y="920.8238095238096" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="700" fill="#C27A12">1</text>
+<rect x="673.6955555555555" y="900.85" width="17.72" height="17" rx="8.5" fill="#FFFFFF" stroke="#C27A12" stroke-width="1.2"/>
+<text x="682.5555555555555" y="913.35" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="700" fill="#C27A12">1</text>
 <rect x="262.19590361445785" y="878" width="143.56" height="17" rx="8.5" fill="#FFFFFF" stroke="#A3367A" stroke-width="1.2"/>
 <text x="333.9759036144578" y="890.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="700" fill="#A3367A">2 (en los dos sentidos)</text>
 <rect x="574.47" y="189.5" width="143.56" height="17" rx="8.5" fill="#FFFFFF" stroke="#2E7D4F" stroke-width="1.2"/>
 <text x="646.25" y="202" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="700" fill="#2E7D4F">2 (en los dos sentidos)</text>
-<rect x="1161.14" y="1301.75" width="17.72" height="17" rx="8.5" fill="#FFFFFF" stroke="#7346B5" stroke-width="1.2"/>
-<text x="1170" y="1314.25" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="700" fill="#7346B5">1</text>
+<rect x="1161.14" y="1296.375" width="17.72" height="17" rx="8.5" fill="#FFFFFF" stroke="#7346B5" stroke-width="1.2"/>
+<text x="1170" y="1308.875" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="700" fill="#7346B5">1</text>
 <text x="80" y="646" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="700" fill="#111827">.env</text>
 <text x="80" y="660" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" fill="#4B5563">raíz del repo</text>
 <circle cx="170" cy="626" r="3" fill="#4B5563"/>
 <text x="80" y="769" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="700" fill="#111827">MongoDB</text>
-<text x="80" y="783" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" fill="#4B5563">Docker, 7 colecciones</text>
+<text x="80" y="783" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" fill="#4B5563">Docker, 6 colecciones</text>
 <text x="80" y="796" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" fill="#4B5563">(models/ define</text>
 <text x="80" y="809" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" fill="#4B5563">las colecciones)</text>
 <circle cx="170" cy="669" r="3" fill="#4B5563"/>
@@ -499,28 +472,26 @@
 <text x="80" y="1112" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" fill="#4B5563">→ Dashboard 2.0 de A</text>
 <text x="118" y="1069" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="600" fill="#4B5563" paint-order="stroke" stroke="#FFFFFF" stroke-width="3">MQTT</text>
 <circle cx="170" cy="1075" r="3" fill="#4B5563"/>
-<text x="758" y="586.5" text-anchor="end" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="700" fill="#111827">Pasarela Node-RED</text>
-<text x="758" y="600.5" text-anchor="end" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" fill="#4B5563">lote por segundo y</text>
-<text x="758" y="613.5" text-anchor="end" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" fill="#4B5563">clima de Open-Meteo</text>
+<text x="758" y="571" text-anchor="end" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="700" fill="#111827">Pasarela Node-RED</text>
+<text x="758" y="585" text-anchor="end" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" fill="#4B5563">un lote por segundo</text>
 <circle cx="920" cy="575" r="3" fill="#4B5563"/>
-<circle cx="920" cy="618" r="3" fill="#4B5563"/>
 <text x="1408" y="162" text-anchor="end" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="700" fill="#111827">Swagger · Postman</text>
 <text x="1408" y="176" text-anchor="end" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" fill="#4B5563">/api-docs, y prueban</text>
 <text x="1408" y="189" text-anchor="end" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" fill="#4B5563">todas las rutas</text>
 <circle cx="1420" cy="343" r="3" fill="#4B5563"/>
 <text x="1547" y="162" text-anchor="start" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="700" fill="#111827">Web (navegador)</text>
-<text x="1547" y="176" text-anchor="start" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" fill="#4B5563">ficha y campo 2D</text>
+<text x="1547" y="176" text-anchor="start" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" fill="#4B5563">campograma (/)</text>
 <text x="1547" y="189" text-anchor="start" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" fill="#4B5563">(+ GET /api/jugadores/…)</text>
 <text x="1508" y="346" text-anchor="end" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="600" fill="#4B5563" paint-order="stroke" stroke="#FFFFFF" stroke-width="3">WebSocket</text>
 <circle cx="1420" cy="386" r="3" fill="#4B5563"/>
-<text x="1494" y="750" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="700" fill="#111827">Dashboard de A</text>
-<text x="1494" y="764" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" fill="#4B5563">vista del médico</text>
+<text x="1494" y="707" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="700" fill="#111827">Dashboard de A</text>
+<text x="1494" y="721" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" fill="#4B5563">vista del médico</text>
+<circle cx="1420" cy="618" r="3" fill="#4B5563"/>
 <circle cx="1420" cy="661" r="3" fill="#4B5563"/>
-<circle cx="1420" cy="704" r="3" fill="#4B5563"/>
+<circle cx="1420" cy="733" r="3" fill="#4B5563"/>
+<text x="1494" y="846" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="700" fill="#111827">Cliente FHIR</text>
+<text x="1494" y="860" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" fill="#4B5563">historia clínica</text>
 <circle cx="1420" cy="776" r="3" fill="#4B5563"/>
-<text x="1494" y="889" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="700" fill="#111827">Cliente FHIR</text>
-<text x="1494" y="903" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" fill="#4B5563">historia clínica</text>
-<circle cx="1420" cy="819" r="3" fill="#4B5563"/>
 <rect x="1150" y="18" width="1230" height="112" rx="10" fill="#FAFAFA" stroke="#D1D5DB"/>
 <text x="1164" y="40" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="700" fill="#374151">Leyenda</text>
 <path d="M1164,60 L1208,60" stroke="#2E7D4F" stroke-width="2.2" marker-end="url(#f-servers)"/>

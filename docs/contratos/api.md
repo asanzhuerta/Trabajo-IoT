@@ -14,16 +14,17 @@
 - **Formato:** JSON en peticiones y respuestas (`Content-Type: application/json`). Las fechas van en ISO 8601 UTC (`2026-11-12T18:30:05.000Z`).
 - **Identificadores de jugador:** seudónimos `p1` … `p11`, los mismos que el simulador usa en los topics (`p1/sensors/...`). Nunca se usan nombres.
 - **Autenticación:** cabecera `x-api-key`.
-  - `API_KEY_PASARELA`: solo para `POST /api/telemetria` y `POST /api/clima` (la usa Node-RED).
+  - `API_KEY_PASARELA`: solo para `POST /api/telemetria` (la usa Node-RED).
   - `API_KEY_MEDICO`: para todo lo que escribe datos clínicos (jugadores, umbrales, pautas, confirmar alertas, sesiones).
   - Los `GET` no piden clave en esta versión. Es una limitación conocida y se explica en el informe.
+  - `/api/simulador` tampoco: solo mueve el simulador, no toca datos clínicos.
 - **Errores:** `{"error": "mensaje"}` con el código HTTP correspondiente.
   - `400` cuerpo inválido
   - `401` falta la clave o no es válida
   - `403` la clave no tiene permiso para esa operación
   - `404` no existe
   - `409` ya existe (id o dorsal repetido)
-  - `503` MongoDB no está disponible
+  - `503` MongoDB no está disponible (en `/api/simulador`, Mosquitto)
 
 ## Telemetría (pasarela → API)
 
@@ -52,7 +53,7 @@ Un lote por segundo con la última lectura de cada jugador. Clave: `API_KEY_PASA
         },
         "giroscope": { "changeinposition": { "unit": "degrees", "value": -72 } },
         "pulsemeter": { "pulse": { "unit": "bpm", "value": 181 } },
-        "termometer": { "temperature": { "unit": "C", "value": 38.1 } },
+        "thermometer": { "temperature": { "unit": "C", "value": 38.1 } },
         "pressuresensor": {
           "pressureleftfoot": { "unit": "%", "value": 42 },
           "pressurerightfoot": { "unit": "%", "value": 58 }
@@ -66,7 +67,7 @@ Un lote por segundo con la última lectura de cada jugador. Clave: `API_KEY_PASA
 
 Cada bloque de `sensors` es el payload que el simulador publica en `<jugadorId>/sensors/<sensor>`. **La pasarela no tiene que traducir nada:** el resto del topic, después de `sensors/`, es la ruta dentro de `sensors`. Por ejemplo:
 - `p1/sensors/gps` con `{speed, distancecovered, position}` va a `sensors.gps`;
-- `p1/sensors/termometer/temperature` con `{unit, value}` va a `sensors.termometer.temperature`.
+- `p1/sensors/thermometer` con `{temperature}` va a `sensors.thermometer`.
 
 La API guarda y usa los sensores en este mismo formato, sin convertirlos a otro.
 
@@ -80,7 +81,7 @@ La API guarda y usa los sensores en este mismo formato, sin convertirlos a otro.
 | `accelerometer.impact` | g | Pico de impacto del último segundo. **Opcional**, pero sin él no salta la alerta `INCIDENTE` |
 | `giroscope.changeinposition` | grados | Giro del último segundo, con signo. **Opcional** (si no viene, 0) |
 | `pulsemeter.pulse` | lpm | Frecuencia cardiaca |
-| `termometer.temperature` | °C | Temperatura interna. **Opcional** |
+| `thermometer.temperature` | °C | Temperatura interna. **Opcional** |
 | `pressuresensor.pressureleftfoot`, `pressurerightfoot` | % | Reparto de carga entre los pies (suman 100). **Opcional** |
 
 - `gps`, `accelerometer` y `pulsemeter` son obligatorios en cada lectura con `estado: "ok"`.
@@ -128,7 +129,7 @@ Cambia solo los umbrales indicados. Los nombres están en `alertas.md`.
   "jugadorId": "p8", "ts": "2026-11-12T18:30:05.000Z",
   "estado": "ok",
   "semaforo": "ambar",
-  "sensors": { "gps": { … }, "accelerometer": { … }, "giroscope": { … }, "pulsemeter": { "pulse": { "unit": "bpm", "value": 181 } }, "termometer": { … }, "pressuresensor": { … } },
+  "sensors": { "gps": { … }, "accelerometer": { … }, "giroscope": { … }, "pulsemeter": { "pulse": { "unit": "bpm", "value": 181 } }, "thermometer": { … }, "pressuresensor": { … } },
   "derivados": { "pctFcMax": 93, "asimetria": 16, "zonaVelocidad": "sprint", "zonaFc": "Z5" },
   "alertasActivas": [ { "id": "…", "codigo": "FC_ALTA", "severidad": "aviso" } ]
 }
@@ -211,21 +212,71 @@ Al confirmarla se envía `{"tipo": "alerta_confirmada"}` por WebSocket y el sem�
 - `minutos` son los minutos con datos del jugador (una lectura por segundo), con un decimal. `distAltaInt` es la carga de la sesión que usará el ACWR.
 - Al empezar y al cerrar se avisa por WebSocket (`sesion_iniciada` y `sesion_cerrada`).
 
-## Clima (Open-Meteo → Node-RED → API)
+## Control del simulador (dashboard de simulación → API → MQTT → simulador)
 
-### `POST /api/clima` (pasarela)
+Sirve para provocar los escenarios de salud y cambiar la fase de juego durante la demo, sin tocar Node-RED a mano.
+
+- El dashboard de simulación (lo hace A) llama a estos endpoints.
+- La API publica la orden en Mosquitto con QoS 1 y sin retain, con el usuario `api`, que en la ACL solo puede escribir en `control/#` y en las alertas.
+- El simulador de Node-RED la recibe con un `mqtt in` en `control/#` (usuario `nodered`, que en la ACL puede leer `control/#`).
+- **No piden clave:** solo mueven el simulador y no tocan datos clínicos.
+- **No usan MongoDB,** así que funcionan aunque esté caído.
+
+| Topic | Mensaje | Lo entiende |
+|---|---|---|
+| `control/fase` | El código de la fase, como texto: `presion_alta` | El motor táctico de A (ya lo hace) |
+| `control/escenario` | `{"jugadorId": "p8", "escenario": "golpe_calor", "ts": "…"}` | La función de cada jugador del simulador (falta) |
+| `control/reset` | `true` | El motor táctico (formación inicial, ya lo hace) y los jugadores (quitan su escenario, falta) |
+
+### `GET /api/simulador`
 ```json
-{ "ts": "2026-11-12T18:30:00.000Z", "temp": 31.5, "humedad": 55, "fuente": "open-meteo" }
+{
+  "mqtt": "connected", "fase": "presion_alta", "escenarios": { "p8": "golpe_calor" },
+  "fases": [ { "codigo": "ataque_organizado", "nombre": "Ataque organizado" } ],
+  "escenariosDisponibles": [ { "codigo": "golpe_calor", "nombre": "Golpe de calor", "descripcion": "…", "alerta": "CALOR_AMBAR y CALOR_ROJA" } ]
+}
 ```
-**`201`** con el registro guardado: `{"id", "ts", "temp", "humedad", "wbgt", "wbgtEstimado", "fuente"}`.
+- `fase` y `escenarios` son lo último que se mandó desde la API.
+- Si se reinicia Node-RED, el simulador vuelve a lo normal aunque aquí siga apuntado.
 
-- Solo `temp` es obligatoria (°C, de -30 a 55). `ts` por defecto es ahora; `humedad` va de 0 a 100 %.
-- **`wbgt` es opcional.** Si no viene pero sí la humedad, la API lo estima con la fórmula de la Oficina de Meteorología de Australia (sombra, sin viento): `WBGT ≈ 0,567·T + 0,393·e + 3,94`, con `e = (HR/100)·6,105·exp(17,27·T/(237,7+T))` en hPa, y devuelve `wbgtEstimado: true`. Así el flujo de Open-Meteo solo tiene que mandar la temperatura y la humedad. Si Node-RED lo calcula, se respeta el suyo.
-- El último registro es el clima actual: con un WBGT ≥ `wbgtAlto` (28 °C), los umbrales `CALOR_*` de todos los jugadores bajan `ajusteCalor` (0,3 °C) (ver `alertas.md`).
-- Se avisa por WebSocket: `{"tipo": "clima", "clima": {…}}`.
+### `POST /api/simulador/fase`
+```json
+{ "fase": "presion_alta" }
+```
+**`202`** `{"mensaje": "Orden publicada", "topic": "control/fase", "fase": "presion_alta"}`.
 
-### `GET /api/clima`
-El último registro, o **`404`** si todavía no ha llegado ninguno.
+- Fases válidas: `ataque_organizado`, `transicion_defensiva`, `presion_alta`, `defensa_organizada` y `transicion_ofensiva`, las del motor táctico de A.
+- Con otra cosa responde **`400`** con la lista de las válidas.
+
+### `POST /api/simulador/escenario`
+```json
+{ "jugadorId": "p8", "escenario": "golpe_calor" }
+```
+**`202`** con la orden publicada: `{"mensaje", "topic": "control/escenario", "jugadorId", "escenario", "ts"}`.
+
+- Cada jugador tiene un escenario como mucho; uno nuevo sustituye al anterior.
+- `"normal"` se lo quita.
+- **Lo que tiene que hacer el simulador** con ese jugador para que salte la alerta (umbrales por defecto de `alertas.md`):
+
+| `escenario` | Qué hace el simulador con ese jugador | Alerta |
+|---|---|---|
+| `golpe_calor` | La temperatura interna sube unos 0,05 °C por segundo hasta pasar de 40 °C y se queda ahí | `CALOR_AMBAR` (39 °C) y `CALOR_ROJA` (40 °C) |
+| `fc_alta` | La FC por encima del 92 % de su FCmáx durante más de 60 s | `FC_ALTA` |
+| `desacople` | Camina o trota (menos de 7 km/h) con la FC por encima del 85 % de su FCmáx durante más de 30 s | `FC_DESACOPLE` |
+| `recuperacion_lenta` | Un sprint (más de 19,8 km/h), después camina (menos de 7 km/h) 60 s y la FC baja 12 lpm o menos | `RECUPERACION_LENTA` |
+| `incidente` | Un impacto de más de 4 g (`accelerometer.impact`), después inmóvil (menos de 1 km/h) más de 10 s y la FC cae por debajo de 50 lpm | `INCIDENTE` |
+| `asimetria` | Un pie carga cada vez más que el otro, hasta más de 15 puntos sobre su base, durante más de 45 s | `ASIMETRIA` |
+| `sobrecarga` | Arranca y frena sin parar, con aceleraciones de más de 3 m/s², hasta pasar de 120 en la sesión | `SOBRECARGA` |
+| `sin_senal` | El jugador deja de publicar (la pasarela lo marca a los 5 s) | `SIN_SENAL` |
+
+### `POST /api/simulador/reiniciar`
+**`202`** `{"mensaje": "Orden publicada", "topic": "control/reset"}`. Publica `true` en `control/reset`: el motor táctico vuelve a la formación inicial y los jugadores quitan su escenario.
+
+### Errores y avisos
+- **`400`** la orden no es válida.
+- **`503`** la API no está conectada a Mosquitto.
+- **`502`** el broker no confirmó la publicación.
+- Cada orden publicada se avisa por WebSocket: `{"tipo": "simulador", "fase", "escenarios"}`.
 
 ## FHIR
 
@@ -272,7 +323,7 @@ En el mismo puerto que la API (`ws://localhost:3000`). Solo envía, del servidor
 | `alerta_confirmada` | `{ "tipo": "alerta_confirmada", "alertaId": "…" }` | Al momento |
 | `sesion_iniciada` | `{ "tipo": "sesion_iniciada", "sesion": { … } }` | Al empezar una sesión |
 | `sesion_cerrada` | `{ "tipo": "sesion_cerrada", "sesion": { … } }`, con el resumen de cada jugador | Al cerrarla |
-| `clima` | `{ "tipo": "clima", "clima": { … } }` | Cada vez que Node-RED manda el clima |
+| `simulador` | `{ "tipo": "simulador", "fase": "presion_alta", "escenarios": { "p8": "golpe_calor" } }` | Cada orden al simulador |
 
 ## Documentación y pruebas
 
@@ -291,3 +342,5 @@ En el mismo puerto que la API (`ws://localhost:3000`). Solo envía, del servidor
 | Jue 12 nov (noche) | Sesiones implementadas: `409` si ya hay una abierta o si ya está cerrada, filtro `?estado=`, `GET /api/sesiones/:id`, el resumen añade `minutos` y `velMax`, y avisos `sesion_iniciada` y `sesion_cerrada` por WebSocket. Swagger UI en `/api-docs` y colección de Postman en `docs/`. Nada de esto cambia lo que manda la pasarela |
 | Jue 12 nov (noche, 2) | Clima, FHIR y ACWR implementados. `POST /api/clima` estima el WBGT si no viene (y lo indica con `wbgtEstimado`); `GET /api/clima` da `404` sin datos; aviso `clima` por WebSocket. FHIR: `_count`, `GET /fhir/Observation/:id` y errores como `OperationOutcome`. ACWR: añade `fecha`, `metrica`, `sesiones7d` y `sesiones28d`. Las sesiones llevan `simulada`. Un error interno responde `500` con "Error interno", sin detalles |
 | Jue 12 nov (noche, 3) | Calibrado con el simulador de 11 jugadores de A: las acciones de alta intensidad son las de **más** de 3 m/s², `asimetriaUmbral` pasa de 10 a 15 puntos y `derivados.asimetria` vale `null` hasta tener 45 s de plantillas. La plantilla del seed sigue el 4-2-3-1 del simulador de A (misma posición para cada id). Nada de esto cambia lo que manda la pasarela |
+| Sáb 15 nov | El sensor de temperatura pasa a llamarse `thermometer` (con h), como lo publica ahora el simulador de A: topic `<id>/sensors/thermometer` con `{"temperature": {unit, value}}`, y en la API `sensors.thermometer.temperature`. La API sirve el campograma en `/` (`api/public/index.html`) |
+| Dom 15 nov | **Se quita el clima:** Open-Meteo sale del proyecto, y con él `POST/GET /api/clima`, el WBGT, el ajuste de los umbrales de calor y el aviso `clima`. **Control del simulador:** `GET /api/simulador` y `POST /api/simulador/{fase,escenario,reiniciar}` publican en `control/#` con QoS 1; aviso `simulador` por WebSocket. Nada de esto cambia lo que manda la pasarela |

@@ -249,7 +249,7 @@ function lecturaDe(j, t, ts) {
     };
 
     // Temperatura cada 10 s y plantillas cada 2 s, desfasadas entre jugadores
-    if ((t + j.indice) % 10 === 0) sensors.termometer = { temperature: medida('C', r2(j.temp)) };
+    if ((t + j.indice) % 10 === 0) sensors.thermometer = { temperature: medida('C', r2(j.temp)) };
     if ((t + j.indice) % 2 === 0) {
         const asim = Math.max(0, j.asimetriaBase + j.asimExtra + azar(-1.5, 1.5));
         const izq = r1(limitar(50 + j.lado * asim / 2, 0, 100));

@@ -26,7 +26,7 @@ async function mirar() {
         console.log('%s  %s %s | %s | X %s Y %s | %s km/h | %s lpm (%s%%) | %s °C | pies %s/%s, asimetría (1 min): %s | alertas: %s',
             hora, jugador, e.estado.padEnd(9), e.semaforo.toUpperCase().padEnd(5),
             valor(s?.gps?.position?.X), valor(s?.gps?.position?.Y), valor(s?.gps?.speed), valor(s?.pulsemeter?.pulse),
-            d?.pctFcMax ?? '-', valor(s?.termometer?.temperature),
+            d?.pctFcMax ?? '-', valor(s?.thermometer?.temperature),
             valor(s?.pressuresensor?.pressureleftfoot), valor(s?.pressuresensor?.pressurerightfoot),
             d?.asimetria ?? '-', alertas);
     } catch (err) {

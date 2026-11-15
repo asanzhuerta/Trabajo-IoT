@@ -1,9 +1,0 @@
-{
-  "name":"campograma-iot-mqtt",
-  "version":"1.0.0",
-  "private":true,
-  "description":"Campograma IoT con MQTT TCP 1883 y WebSocket local, sin dependencias externas",
-  "main":"server.js",
-  "scripts":{"start":"node server.js"},
-  "engines":{"node":">=18"}
-}

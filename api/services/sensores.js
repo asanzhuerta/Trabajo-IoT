@@ -22,7 +22,7 @@ const sensores = {
     impacto: function (s) { return valor(s?.accelerometer?.impact); },                     // g
     giro: function (s) { return valor(s?.giroscope?.changeinposition); },                  // grados, con signo
     pulso: function (s) { return valor(s?.pulsemeter?.pulse); },                           // lpm
-    temperatura: function (s) { return valor(s?.termometer?.temperature); },               // °C
+    temperatura: function (s) { return valor(s?.thermometer?.temperature); },              // °C
     pieIzquierdo: function (s) { return valor(s?.pressuresensor?.pressureleftfoot); },     // %
     pieDerecho: function (s) { return valor(s?.pressuresensor?.pressurerightfoot); },      // %
 

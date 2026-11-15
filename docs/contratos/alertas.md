@@ -47,7 +47,6 @@
 |---|---|---|---|
 | `CALOR_AMBAR` | Temperatura interna ≥ `tempAmbar` | `tempAmbar` = 39 °C | aviso |
 | `CALOR_ROJA` | Temperatura interna ≥ `tempRoja` | `tempRoja` = 40 °C | critica |
-| *(ajuste por clima)* | Si el WBGT ≥ `wbgtAlto`, los dos umbrales de calor bajan `ajusteCalor` | `wbgtAlto` = 28 °C, `ajusteCalor` = 0,3 °C | — |
 | `FC_ALTA` | FC > `fcAltaPct` % de la FCmáx durante más de `fcAltaSeg` | `fcAltaPct` = 92, `fcAltaSeg` = 60 s | aviso |
 | `FC_DESACOPLE` | FC > `desacoplePct` % de la FCmáx con velocidad < `desacopleVel` durante `desacopleSeg` | `desacoplePct` = 85, `desacopleVel` = 7 km/h, `desacopleSeg` = 30 s | aviso |
 | `RECUPERACION_LENTA` | Tras un esfuerzo (velocidad de >19,8 a <7 km/h), la FC baja ≤ `recuperacionLpm` en los 60 s siguientes | `recuperacionLpm` = 12 | aviso |
@@ -62,8 +61,6 @@
 - **Calor:**
   - En partidos con calor, el pico medio de temperatura interna fue de 39,2 °C (rango 37,9–40,1 °C).
   - Por encima de 39 °C empeora el sprint repetido, y 40 °C es el criterio clínico de golpe de calor.
-  - FIFA obliga a pausas de hidratación con WBGT ≥32 °C, y FIFPRO las pide desde 28 °C.
-  - El ajuste de 0,3 °C es una decisión nuestra, no un valor publicado.
 - **Recuperación de la FC:** una caída de ≤12 lpm en el primer minuto tras el esfuerzo se asoció a más mortalidad en una cohorte clínica de 2.428 adultos (Cole et al., 1999). Aquí es un indicador, no un diagnóstico.
 - **Aceleraciones:** ±3 m/s² mantenidos 0,5 s es el umbral habitual de alta intensidad (STATSports, SciSports). En partidos de academia de élite se han registrado hasta 46 aceleraciones y 73 desaceleraciones de alta intensidad; de ahí el valor de 120 por sesión. Contamos las de **más** de 3 m/s²: el simulador de A limita la frenada a 3,0 m/s² justos y frena siempre a tope, y con "3 o más" cada parada contaba (más de 300 por partido y `SOBRECARGA` en todos a partir del minuto 33).
 - **Asimetría:** no hay un umbral fijo validado, por eso se compara con la línea base de cada jugador. El valor de 15 puntos es nuestro: con 10, el simulador de A pasaba del umbral de vez en cuando al moverse de lado (en 2 horas simuladas, la media de un minuto llegó a 17,4 puntos). Con 15 puntos y 45 s de datos como mínimo, no hubo ninguna alerta falsa en tres partidos simulados de 2 horas.
@@ -75,7 +72,6 @@
 - Cole et al. (1999), recuperación de la FC: https://pubmed.ncbi.nlm.nih.gov/10536127/
 - Temperatura interna en futbolistas: https://opus.lib.uts.edu.au/bitstream/10453/191965/2/PIIS1440244025005377.pdf
 - Revisión sobre temperatura interna en competición: https://www.termedia.pl/Core-body-temperature-responses-during-competitive-sporting-events-a-narrative-review,78,50091,1,1.html
-- FIFPRO, calor extremo: https://www.fifpro.org/articles/2021/07/extreme-weather-in-football
 - STATSports, aceleraciones: https://statsports.com/the-locker/maximum-acceleration-and-decelerations-significance-for-an-athletes-physical-development
 - Glosario de SciSports: https://support.scisports.com/en/articles/4476826-physical-variables-glossary
 - Plantillas instrumentadas y asimetría: https://pmc.ncbi.nlm.nih.gov/articles/PMC9208063

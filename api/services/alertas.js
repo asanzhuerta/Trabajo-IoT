@@ -47,7 +47,6 @@ async function evaluarJugador(jugadorId, perfil) {
         e: e,
         perfil: perfil,
         pauta: perfiles.pauta(jugadorId),
-        clima: perfiles.clima(),
         ahora: ahora
     });
     const nuevas = candidatas.filter(function (c) { return puedeLanzarse(e, c.codigo, ahora); });

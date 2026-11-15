@@ -8,7 +8,7 @@ Una plataforma **smart health** que vigila en tiempo real la salud de 11 jugador
 
 ```
 [Node-RED · Simulador wearables]  11 jugadores (ID seudónimo, sin nombres)
-     │ MQTT con usuario + ACL   <id>/sensors/{gps|accelerometer|giroscope|pulsemeter|termometer|pressuresensor}
+     │ MQTT con usuario + ACL   <id>/sensors/{gps|accelerometer|giroscope|pulsemeter|thermometer|pressuresensor}
      ▼
 [Mosquitto] ◄──────── sensors/<equipo>/alertas ───────────┐
      │ suscripción +/sensors/#                             │
@@ -24,8 +24,8 @@ Una plataforma **smart health** que vigila en tiempo real la salud de 11 jugador
 
 [Node-RED · Dashboard 2.0 "vista médica"]  semáforo por jugador, confirmar alertas,
                                            formulario de pauta (POST)
-[Open-Meteo] ─► Node-RED ─► POST /api/clima   (WBGT estimado con temperatura y humedad)
-[Telegram/email] ◄── alertas críticas (opcional)
+[Dashboard de simulación (A)] ─► POST /api/simulador/... ─► MQTT control/# ─► mqtt in del simulador
+                                   (fase de juego y escenarios de salud: golpe de calor, incidente…)
 ```
 
 **Qué cubre de la rúbrica:**
@@ -44,7 +44,7 @@ Cada bloque tiene un dueño. Los dos bloques solo se comunican a través de los 
 | | **Persona A — Edge y visualización** | **Persona B — Backend y datos** |
 |---|---|---|
 | Dueño de | `mosquitto/`, `node_red/` | `api/`, `docker-compose.yml` |
-| Tareas | Mosquitto con usuarios y ACL, simulador de wearables y escenarios, pasarela MQTT→REST, Dashboard 2.0 "vista médica", Open-Meteo/WBGT, Telegram (opcional) | Express REST, MongoDB, motor de alertas, WebSockets, web con ficha del jugador y campo 2D, FHIR, Swagger y Postman, ACWR |
+| Tareas | Mosquitto con usuarios y ACL, simulador de wearables y escenarios, pasarela MQTT→REST, Dashboard 2.0 "vista médica", `mqtt in` de control en el simulador (fase y escenarios de salud) | Express REST, MongoDB, motor de alertas, WebSockets, web con ficha del jugador y campo 2D, FHIR, Swagger y Postman, ACWR |
 | Informe | Simulación, MQTT, flujos de Node-RED, dashboard, seguridad del broker | API, alertas, base de datos, WebSockets, FHIR, web, seguridad de la API |
 
 Juntos: contratos, introducción, arquitectura, conclusiones, vídeo y TikTok.
@@ -72,9 +72,9 @@ Trabajo-IoT/
 ├── valores.json            # ejemplo de la estructura de los sensores (A)
 ├── api/                    # Express (B)
 │   ├── server.js  servers/{http-server,websocket}.js  mqtt/publisher.js
-│   ├── routers/{telemetria,jugadores,alertas,pautas,sesiones,clima,fhir}.js
+│   ├── routers/{telemetria,jugadores,alertas,sesiones,simulador,fhir}.js
 │   ├── services/{metricas,alertas,acwr}.js   models/ (Mongoose)
-│   ├── public/  (web: ficha del jugador + campo 2D)   openapi.yaml
+│   ├── public/  (web: campograma)   openapi.yaml
 ├── docs/
 │   ├── contratos/{mqtt,api,alertas}.md
 │   └── arquitectura.drawio  postman_collection.json
@@ -92,14 +92,13 @@ Trabajo-IoT/
 
 ### MQTT
 
-- **Telemetría:** `<idJugador>/sensors/<sensor>`, con QoS 0, a 1 Hz. Por ejemplo, `p1/sensors/gps`. Los sensores son `gps`, `accelerometer`, `giroscope`, `pulsemeter`, `termometer` y `pressuresensor`.
+- **Telemetría:** `<idJugador>/sensors/<sensor>`, con QoS 0, a 1 Hz. Por ejemplo, `p1/sensors/gps`. Los sensores son `gps`, `accelerometer`, `giroscope`, `pulsemeter`, `thermometer` y `pressuresensor`.
   - Cada payload es un objeto de medidas `{unit, value}` con la estructura de `valores.json`. Por ejemplo, `p1/sensors/pulsemeter` → `{"pulse": {"unit": "bpm", "value": 150}}`.
-  - El resto del topic, después de `sensors/`, es la ruta dentro del objeto de sensores. Por eso la temperatura va en `p1/sensors/termometer/temperature` con payload `{unit, value}`, y queda en `sensors.termometer.temperature`.
+  - El resto del topic, después de `sensors/`, es la ruta dentro del objeto de sensores. Por ejemplo, la temperatura va en `p1/sensors/thermometer` con payload `{"temperature": {unit, value}}` y queda en `sensors.thermometer.temperature`.
   - La pasarela junta los mensajes de cada jugador en `sensors` sin traducir nada y los manda en el lote de `POST /api/telemetria`. La API trabaja directamente con este formato.
 - **Alertas:** `sensors/<equipo>/alertas` (`sensors/eq1/alertas`), con QoS 1. Las publica la API.
-- **Escenarios** (propuesta, pendiente de A): `sensors/control/escenario`. El dashboard los envía y el simulador los recibe.
-- **Estado del simulador** (propuesta, pendiente de A): LWT en `sensors/sim/estado`, con retain.
-- **Caída de un sensor concreto:** la detecta un watchdog en la pasarela (nodo trigger). El LWT va por conexión, no por jugador, así que no sirve para esto.
+- **Control del simulador:** `control/fase` (la fase de juego, como texto: `ataque_organizado`…), `control/escenario` (`{"jugadorId": "p8", "escenario": "golpe_calor"}`) y `control/reset`, con QoS 1. Los publica la API cuando el dashboard de simulación (lo hace A) llama a `POST /api/simulador/...`; el simulador los recibe con un `mqtt in`.
+- **Caída de un sensor concreto:** la detecta un watchdog en la pasarela (5 s sin datos de un jugador → `sin_senal`).
 - **Identificadores:** son seudónimos, `p1` … `p11`. Nunca van nombres en los topics.
 
 ### REST
@@ -115,9 +114,9 @@ Trabajo-IoT/
 | GET | `/api/alertas` | Alertas (`?estado=activa`) |
 | POST | `/api/alertas/:id/confirmar` | El médico confirma la alerta |
 | POST | `/api/sesiones`, `/api/sesiones/:id/fin` | Inicio y fin de sesión o partido |
-| GET / POST | `/api/clima` | Datos de Open-Meteo y WBGT estimado |
+| GET · POST | `/api/simulador`, `/api/simulador/fase`, `/api/simulador/escenario`, `/api/simulador/reiniciar` | Control del simulador: publica la orden por MQTT en `control/#` |
 | GET | `/fhir/Observation?patient=&code=` | Mediciones en formato FHIR R4 (FC = LOINC 8867-4, temperatura = 8310-5) |
-| WS | mismo puerto que la API | Mensajes `{tipo: "telemetria" \| "alerta", ...}` |
+| WS | mismo puerto que la API | Mensajes `{tipo: "telemetria" \| "alerta" \| "alerta_confirmada" \| "sesion_iniciada" \| "sesion_cerrada" \| "simulador", ...}` |
 
 Documentación: `openapi.yaml` con Swagger UI en `/api-docs` y una colección de Postman.
 
@@ -127,7 +126,7 @@ Cada alerta tiene la forma `{id, jugadorId, codigo, severidad, valor, umbral, ts
 
 | Código | Regla por defecto | Severidad |
 |---|---|---|
-| `CALOR_AMBAR` / `CALOR_ROJA` | Temperatura interna ≥39 / ≥40 °C, más sensible si el WBGT es ≥28 | aviso / crítica |
+| `CALOR_AMBAR` / `CALOR_ROJA` | Temperatura interna ≥39 / ≥40 °C | aviso / crítica |
 | `FC_ALTA` | >92 % de la FCmáx durante más de 60 s | aviso |
 | `FC_DESACOPLE` | FC >85 % de la FCmáx con velocidad <7 km/h durante 30 s | aviso |
 | `RECUPERACION_LENTA` | Caída de ≤12 lpm en los 60 s siguientes al fin de un esfuerzo | aviso |
@@ -138,7 +137,7 @@ Cada alerta tiene la forma `{id, jugadorId, codigo, severidad, valor, umbral, ts
 | `SIN_SENAL` | Watchdog de la pasarela (5 s sin datos) | aviso |
 
 **Base de cada umbral (para el informe):**
-- **Calor:** en partidos con calor el pico medio de temperatura interna es 39,2 °C. Por encima de 39 °C baja el rendimiento en sprint, y 40 °C es el criterio clínico de golpe de calor. FIFA obliga a pausas de hidratación con WBGT ≥32 °C y FIFPRO las pide desde 28 °C.
+- **Calor:** en partidos con calor el pico medio de temperatura interna es 39,2 °C. Por encima de 39 °C baja el rendimiento en sprint, y 40 °C es el criterio clínico de golpe de calor.
 - **Aceleraciones:** ±3 m/s² mantenidos 0,5 s es el umbral habitual de alta intensidad (STATSports, SciSports).
 - **Recuperación de la FC:** una caída de ≤12 lpm en el primer minuto tras el esfuerzo se asoció a más mortalidad en Cole et al. (1999). Era una cohorte clínica, así que aquí es un indicador, no un diagnóstico.
 - **Asimetría:** no hay un umbral fijo validado, por eso se compara con la línea base de cada jugador.
@@ -176,14 +175,17 @@ acl_file mosquitto/acl
 user nodered
 topic readwrite sensors/#
 topic readwrite +/sensors/#
+topic readwrite equipo/#
+topic read control/#
 
-# API: solo publica alertas
+# API: publica alertas y órdenes al simulador
 user api
 topic write sensors/+/alertas
+topic write control/#
 ```
 
 - La línea `+/sensors/#` es la que permite publicar en `p1/sensors/gps`. **Falta en el `acl` que hay ahora en `edge`**: con solo `sensors/#`, el broker rechaza la telemetría del simulador (`Denied PUBLISH`). Está comprobado con un broker de prueba.
-- `sensors/#` cubre las alertas (`sensors/eq1/alertas`), los escenarios y el LWT.
+- `sensors/#` cubre las alertas (`sensors/eq1/alertas`); `equipo/#` es el estado del partido que publica el motor táctico, y `control/#` las órdenes que la API manda al simulador (el usuario `api` puede escribir ahí y `nodered` leerlo).
 
 `mosquitto/passwd` se genera con `mosquitto_passwd`. Aunque solo guarda hashes, **no se sube**: está en `.gitignore` y A se lo pasa a B por privado. Ojo: `-c` crea el fichero de cero y borra lo que hubiera.
 
@@ -240,9 +242,9 @@ La segunda tiene que responder `Connection Refused: not authorised`.
 | **Dom 8** | Repartir los papeles A/B | — |
 | **Lun 9** | **Juntos (unas 2 h):** cerrar los contratos, README, `.gitignore` y comprobar las herramientas de los dos (Node, Node-RED, Mosquitto, Docker). **Después, A:** configuración del Mosquitto nativo en `mosquitto/` (conf, passwd y ACL, siguiendo la sección «Mosquitto nativo») y pasarle a B la contraseña del usuario `api`; `node_red/` como userDir con `@flowfuse/node-red-dashboard` y `credentialSecret` por variable de entorno | **Después, B:** esqueleto de Express con la estructura de clase, `docker-compose` con mongo, `/health`, conexión con Mongoose |
 | **Mar 10** | Simulador v1: máquina de estados por jugador (parado, andando, trote, carrera, sprint); posición en un campo de 105×68 m; distancia; aceleración y giro; FC con retraso respecto al esfuerzo. Publica por MQTT | Modelos (Jugador, Lectura resumida cada 10 s, Evento, Alerta, Pauta, Sesión), seed de los 11 jugadores, `POST /api/telemetria`, CRUD de jugadores |
-| **Mié 11** | Simulador v2: temperatura interna (sube con la carga y el calor), plantillas con línea base y LWT. Pasarela: suscripción `+/sensors/#`, validación, unión por segundo, POST y watchdog | Servicio de métricas (zonas, carrera de alta intensidad, sprints, aceleraciones y desaceleraciones, %FCmáx). Motor de alertas con las 9 reglas, que publica en MQTT y guarda en Mongo |
+| **Mié 11** | Simulador v2: temperatura interna (sube con la carga y el calor), plantillas con línea base. Pasarela: suscripción `+/sensors/#`, validación, unión por segundo, POST y watchdog | Servicio de métricas (zonas, carrera de alta intensidad, sprints, aceleraciones y desaceleraciones, %FCmáx). Motor de alertas con las 9 reglas, que publica en MQTT y guarda en Mongo |
 | **Jue 12** | **Hito 1: el núcleo funciona de extremo a extremo** (simulador → MQTT → pasarela → API → alerta → dashboard). Dashboard 2.0: semáforo por jugador, indicadores, lista de alertas con confirmación (POST) y formulario de pauta | Servidor WebSocket, endpoints de pauta, umbrales y sesiones, `openapi.yaml` con Swagger UI en `/api-docs` |
-| **Vie 13** | Escenarios inyectables desde el dashboard (golpe de calor, asimetría creciente, incidente, sensor caído), flujo de Open-Meteo con WBGT estimado y POST a `/api/clima`, Telegram (opcional) | Web: ficha del jugador con gráficas históricas y campo 2D en vivo por WebSocket; endpoint `/fhir/Observation` |
+| **Vie 13** | Escenarios de salud en el simulador (golpe de calor, asimetría creciente, incidente, sensor caído…) que se activan con un `mqtt in` en `control/#`, desde el dashboard de simulación | Web: ficha del jugador con gráficas históricas y campo 2D en vivo por WebSocket; endpoint `/fhir/Observation` |
 | **Sáb 14** | **Hito 2: extras integrados. Código congelado a las 20:00.** Pulir el dashboard, exportar los flujos y sacar capturas. Empezar el diagrama de arquitectura | ACWR con un histórico de 4 semanas generado, colección de Postman, `docker-compose` final (api y Node-RED), README de arranque |
 | **Dom 15** | **Juntos:** borrador completo del informe (cada uno sus secciones), guion y grabación del vídeo de 5 minutos, guion del TikTok. **Todo listo** | (juntos) |
 | **Lun 16 – Mié 18** | **Margen:** clonar el repo en limpio en el otro portátil y arrancarlo, corregir fallos, repasar el texto, generar el ZIP y el PDF con el nombre que exige el enunciado, subir el vídeo a YouTube como oculto y publicar el TikTok | (juntos) |
@@ -251,7 +253,7 @@ La segunda tiene que responder `Connection Refused: not authorised`.
 
 **Sincronización diaria** de unos 15 minutos por la noche: qué se ha mergeado, qué bloquea y si se mantiene el hito.
 
-**Si algo se retrasa**, se recorta en este orden: Telegram → Open-Meteo → ACWR → FHIR → campo 2D. El núcleo y el Dashboard 2.0 no se tocan, porque son los que aseguran los 7 puntos.
+**Si algo se retrasa**, se recorta en este orden: ACWR → FHIR → campo 2D. El núcleo y el Dashboard 2.0 no se tocan, porque son los que aseguran los 7 puntos.
 
 ## Informe y vídeo
 

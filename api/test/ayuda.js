@@ -18,7 +18,7 @@ function sensores(v = {}) {
         pulsemeter: { pulse: m('bpm', v.fc ?? 140) }
     };
     if (v.impacto !== undefined) s.accelerometer.impact = m('g', v.impacto);
-    if (v.temp !== undefined) s.termometer = { temperature: m('C', v.temp) };
+    if (v.temp !== undefined) s.thermometer = { temperature: m('C', v.temp) };
     if (v.izq !== undefined) {
         s.pressuresensor = { pressureleftfoot: m('%', v.izq), pressurerightfoot: m('%', 100 - v.izq) };
     }

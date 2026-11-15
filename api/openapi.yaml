@@ -32,8 +32,6 @@ tags:
     description: Alertas del motor de reglas y su confirmación por el médico
   - name: Sesiones
     description: Entrenamientos y partidos, con el resumen de cada jugador al cerrarlos
-  - name: Clima
-    description: Condiciones ambientales de Open-Meteo (las manda Node-RED); el WBGT baja los umbrales de calor
   - name: FHIR
     description: Constantes vitales (FC y temperatura) como recursos FHIR R4 Observation
   - name: Utilidad
@@ -73,7 +71,7 @@ paths:
                       impact: { unit: g, value: 1.2 }
                     giroscope: { changeinposition: { unit: degrees, value: -72 } }
                     pulsemeter: { pulse: { unit: bpm, value: 181 } }
-                    termometer: { temperature: { unit: C, value: 38.1 } }
+                    thermometer: { temperature: { unit: C, value: 38.1 } }
                     pressuresensor:
                       pressureleftfoot: { unit: '%', value: 42 }
                       pressurerightfoot: { unit: '%', value: 58 }
@@ -424,47 +422,6 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Error' }
 
-  # ------------------------------------------------------------------ clima
-  /api/clima:
-    get:
-      tags: [Clima]
-      summary: Último registro de clima
-      responses:
-        '200':
-          description: Último registro
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/Clima' }
-        '404':
-          description: Todavía no ha llegado ninguno
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/Error' }
-    post:
-      tags: [Clima]
-      summary: Guardar las condiciones ambientales (Node-RED)
-      description: |
-        Si no viene `wbgt` pero sí `humedad`, la API lo estima con la fórmula de la Oficina de Meteorología de
-        Australia (sombra, sin viento): `WBGT ≈ 0,567·T + 0,393·e + 3,94`, con `e` la presión de vapor en hPa.
-        Entonces `wbgtEstimado` es `true`. Con un WBGT ≥ `wbgtAlto` (28 °C), los umbrales de calor de todos los
-        jugadores bajan `ajusteCalor` (0,3 °C). Se avisa por WebSocket (`clima`).
-      security: [{ clavePasarela: [] }]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: '#/components/schemas/ClimaNuevo' }
-            example: { ts: '2026-11-12T18:30:00.000Z', temp: 31.5, humedad: 55, fuente: open-meteo }
-      responses:
-        '201':
-          description: Registro guardado
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/Clima' }
-        '400': { $ref: '#/components/responses/Invalido' }
-        '401': { $ref: '#/components/responses/SinClave' }
-        '403': { $ref: '#/components/responses/SinPermiso' }
-
   # ------------------------------------------------------------------ FHIR
   /fhir/Observation:
     get:
@@ -542,7 +499,7 @@ components:
       type: apiKey
       in: header
       name: x-api-key
-      description: API_KEY_PASARELA del .env. Solo telemetría (y clima).
+      description: API_KEY_PASARELA del .env. Solo telemetría.
 
   parameters:
     JugadorId:
@@ -641,7 +598,7 @@ components:
           type: object
           properties:
             pulse: { $ref: '#/components/schemas/Medida' }
-        termometer:
+        thermometer:
           type: object
           properties:
             temperature: { $ref: '#/components/schemas/Medida' }
@@ -698,8 +655,6 @@ components:
       properties:
         tempAmbar: { type: number, description: '°C (39)' }
         tempRoja: { type: number, description: '°C (40)' }
-        wbgtAlto: { type: number, description: '°C de WBGT a partir del cual bajan los umbrales de calor (28)' }
-        ajusteCalor: { type: number, description: '°C que bajan (0,3)' }
         fcAltaPct: { type: number, description: '% de la FCmáx (92)' }
         fcAltaSeg: { type: number, description: 's (60)' }
         desacoplePct: { type: number, description: '% de la FCmáx (85)' }
@@ -835,24 +790,6 @@ components:
         franja: { type: string, enum: [baja, optima, alta], nullable: true }
         sesiones7d: { type: integer, example: 4 }
         sesiones28d: { type: integer, example: 16 }
-
-    # --- clima
-    ClimaNuevo:
-      type: object
-      required: [temp]
-      properties:
-        ts: { type: string, format: date-time, description: Por defecto, ahora }
-        temp: { type: number, minimum: -30, maximum: 55, description: °C }
-        humedad: { type: number, minimum: 0, maximum: 100, description: '%' }
-        wbgt: { type: number, minimum: -30, maximum: 50, description: '°C. Si no viene y hay humedad, lo estima la API' }
-        fuente: { type: string, default: open-meteo }
-    Clima:
-      allOf:
-        - type: object
-          properties:
-            id: { type: string }
-            wbgtEstimado: { type: boolean }
-        - $ref: '#/components/schemas/ClimaNuevo'
 
     # --- FHIR (solo los campos que usa la API; el estándar completo está en hl7.org/fhir/R4)
     FhirObservation:

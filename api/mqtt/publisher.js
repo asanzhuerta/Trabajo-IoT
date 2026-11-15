@@ -1,6 +1,8 @@
 // Publicador MQTT (adaptado de mqtt/publisher.js de clase).
-// La API solo publica: las alertas, en sensors/<equipo>/alertas con QoS 1 y sin retain.
-// Se conecta al Mosquitto nativo con el usuario "api", que en la ACL de A solo puede escribir en ese topic.
+// La API solo publica, con QoS 1 y sin retain:
+//   - las alertas, en sensors/<equipo>/alertas (las recibe el dashboard médico);
+//   - las órdenes al simulador, en control/fase, control/escenario y control/reset (ver services/simulador.js).
+// Se conecta al Mosquitto nativo con el usuario "api", que en la ACL solo puede escribir en esos topics.
 // Si el broker se cae, mqtt.js reconecta solo y guarda en cola los mensajes QoS 1 mientras tanto.
 
 const mqtt = require('mqtt');
@@ -20,7 +22,7 @@ function conectar() {
     });
 
     client.on('connect', function () {
-        console.info('MQTT conectado a %s (publica en %s)', config.mqtt.url, TOPIC_ALERTAS);
+        console.info('MQTT conectado a %s (publica en %s y control/#)', config.mqtt.url, TOPIC_ALERTAS);
     });
     client.on('reconnect', function () {
         console.warn('MQTT: reconectando con %s…', config.mqtt.url);
@@ -37,9 +39,20 @@ function publicarAlerta(alerta) {
     });
 }
 
+// Publica y espera la confirmación del broker (PUBACK, QoS 1). Falla si no hay conexión.
+function publicar(topic, mensaje) {
+    return new Promise(function (resolve, reject) {
+        if (!client || !client.connected) return reject(new Error('Sin conexión con Mosquitto'));
+        const datos = typeof mensaje === 'string' ? mensaje : JSON.stringify(mensaje);
+        client.publish(topic, datos, { qos: 1, retain: false }, function (err) {
+            if (err) reject(err); else resolve();
+        });
+    });
+}
+
 function estado() {
     if (!client) return 'disconnected';
     return client.connected ? 'connected' : 'connecting';
 }
 
-module.exports = { conectar, publicarAlerta, estado };
+module.exports = { conectar, publicarAlerta, publicar, estado };

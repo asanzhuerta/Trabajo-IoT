@@ -1,6 +1,6 @@
 // Servidor WebSocket (adaptado de servers/websocket.js de clase).
 // Comparte puerto con Express y solo envía mensajes JSON del servidor a los clientes:
-// { tipo: 'bienvenida' | 'telemetria' | 'alerta' | 'alerta_confirmada', ... }
+// { tipo: 'bienvenida' | 'telemetria' | 'alerta' | 'alerta_confirmada' | 'sesion_iniciada' | 'sesion_cerrada' | 'simulador', ... }
 
 const { WebSocketServer, WebSocket } = require('ws');
 

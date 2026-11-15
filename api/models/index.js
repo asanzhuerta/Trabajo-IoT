@@ -6,6 +6,5 @@ module.exports = {
     Evento: require('./Evento'),
     Alerta: require('./Alerta'),
     Pauta: require('./Pauta'),
-    Sesion: require('./Sesion'),
-    Clima: require('./Clima')
+    Sesion: require('./Sesion')
 };
