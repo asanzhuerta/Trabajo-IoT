@@ -9,7 +9,7 @@
 | Dashboard de simulación y `mqtt in` de `control/#` en el simulador | A | El golpe de calor se lanza desde Swagger (`PUT /api/simulador/jugadores/p8/sensores`), pero el simulador tiene que tener el `mqtt in` sí o sí |
 | Dashboard médico | B (después del de A) | Confirmar y crear la pauta desde Swagger |
 | Campograma, API, Swagger, Postman y FHIR | B | Ya está |
-| Diagrama de arquitectura para la diapositiva | Juntos | `docs/diagramas/api-arquitectura.png` y el diagrama general del informe |
+| Diagrama de arquitectura para la diapositiva | B | **Hecho:** `docs/diagramas/sistema-arquitectura.png`, con el camino del dato numerado del 1 al 8 |
 
 ## 2. Calendario
 
@@ -24,7 +24,7 @@
 | Tiempo | Bloque | Quién | En pantalla | Idea clave |
 |---|---|---|---|---|
 | 0:00–0:30 | **El problema** | A o los dos | Imagen de un partido con calor + título «Smart Health» | En un partido no se ve cuándo un jugador está al límite: golpe de calor, FC disparada, un golpe fuerte, sobrecarga… Queremos que el médico se entere al momento. |
-| 0:30–1:15 | **Cómo está montado** | A | Diagrama de arquitectura, señalando cada pieza al nombrarla | 11 jugadores con 6 sensores simulados en Node-RED → MQTT (Mosquitto) → pasarela → API REST → MongoDB. Las alertas vuelven por MQTT al médico y por WebSocket al campograma. |
+| 0:30–1:15 | **Cómo está montado** | A | `sistema-arquitectura.png`, siguiendo los números del 1 al 8 | 11 jugadores con 6 sensores simulados en Node-RED → MQTT (Mosquitto) → pasarela → API REST → MongoDB. Las alertas vuelven por MQTT al médico y por WebSocket al campograma. |
 | 1:15–1:45 | **El simulador** | A | Campograma con los 11 moviéndose; consola del Subscriber con los topics pasando | Cada jugador publica sus sensores cada segundo y se mueve según la fase de juego (4-2-3-1). |
 | 1:45–2:15 | **Dashboard de simulación** | A | Su dashboard: cambia a «presión alta» (el equipo se adelanta en el campograma) y fuerza 39,4 °C y luego 40,5 °C a p8 | Desde aquí se cambia el comportamiento del simulador para provocar situaciones: la orden pasa por la API y llega al simulador por MQTT. |
 | 2:15–3:35 | **Alertas y médico** | B | Campograma (aro ámbar → rojo), dashboard médico (aviso, confirmar, pauta), `PAUTA_EXCEDIDA` | Ver [guion_video_B.md](guion_video_B.md). |

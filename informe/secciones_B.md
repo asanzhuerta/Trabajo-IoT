@@ -1,6 +1,6 @@
 # Informe: secciones de la Persona B (backend y datos)
 
-> Borrador de las secciones 5, 6 y 7, la parte de la API de la 9 y lo que aporta B a la 10. Las figuras que se citan están en `docs/diagramas/` y en `informe/capturas/`. Los datos salen del código del repo y de las pruebas descritas en la sección 10.
+> Borrador de las secciones 5, 6 y 7, la parte de la API de la 9 y lo que aporta B a la 10. Las figuras que se citan están en `docs/diagramas/` y en `informe/capturas/`. Para las secciones comunes: el diagrama del sistema completo (sección 2) es `docs/diagramas/sistema-arquitectura.png`, y la captura del simulador en Node-RED (sección 4), `informe/capturas/nodered-simulador.png`. Los datos salen del código del repo y de las pruebas descritas en la sección 10.
 
 ---
 
@@ -47,6 +47,8 @@ La API está hecha con **Node.js 24 y Express 5** (carpeta `api/`) y sigue la es
 
 La pasarela de Node-RED junta cada segundo lo que el simulador ha publicado por MQTT y lo manda en un solo `POST`. **La API no traduce nada:** cada bloque de `sensors` es el payload que el simulador publica en `<jugador>/sensors/<sensor>`, con el formato `{unit, value}`.
 
+*Figura 5.3 — La pasarela en Node-RED, con 11 lecturas por lote y la API respondiendo `202`* (`informe/capturas/nodered-pasarela.png`).
+
 ```json
 {
   "ts": "2026-11-12T18:30:05.000Z",
@@ -66,9 +68,9 @@ La validación (`services/validacion.js`) comprueba cada medida, su unidad y su 
 
 ### 5.4 Cómo invocarla
 
-**Desde Swagger UI.** En `/api-docs`, el botón *Authorize* pide la `x-api-key` (la del médico o la de la pasarela, que están en el `.env`) y cada operación se puede probar con *Try it out → Execute*. *Figura 5.3 — Swagger UI* (`informe/capturas/swagger.png`).
+**Desde Swagger UI.** En `/api-docs`, el botón *Authorize* pide la `x-api-key` (la del médico o la de la pasarela, que están en el `.env`) y cada operación se puede probar con *Try it out → Execute*. *Figura 5.4 — Swagger UI* (`informe/capturas/swagger.png`).
 
-**Desde Postman.** `docs/postman_collection.json` tiene 43 peticiones en 10 carpetas (una por recurso más una de errores). Las claves se ponen en el *Current value* de las variables `claveMedico` y `clavePasarela`, así que no se guardan en el archivo. Las peticiones encadenan datos entre sí (al empezar una sesión se guarda su id para cerrarla después) y cada una comprueba su código de respuesta, de modo que la colección entera se puede lanzar con el *Collection Runner*. *Figura 5.4 — Postman* (`informe/capturas/postman.png`).
+**Desde Postman.** `docs/postman_collection.json` tiene 43 peticiones en 10 carpetas (una por recurso más una de errores). Las claves se ponen en el *Current value* de las variables `claveMedico` y `clavePasarela`, así que no se guardan en el archivo. Las peticiones encadenan datos entre sí (al empezar una sesión se guarda su id para cerrarla después) y cada una comprueba su código de respuesta, de modo que la colección entera se puede lanzar con el *Collection Runner*. *Figura 5.5 — Postman* (`informe/capturas/postman.png`).
 
 **Con curl** (en PowerShell, `curl.exe`):
 
@@ -100,6 +102,9 @@ ws.onmessage = function (e) {
 
 **El campograma.** La API sirve una web propia en `/` (`api/public/index.html`), hecha con `fetch` y `WebSocket` como en el ejemplo anterior: los 11 jugadores moviéndose en el campo con su semáforo, sus valores y las alertas activas.
 
+*Figura 5.6 — El campograma con los datos del simulador de A* (`informe/capturas/campograma.png`).
+*Figura 5.7 — El campograma con una alerta crítica: el aro del #10 late en rojo y sus alertas salen en la ficha y en el panel de abajo* (`informe/capturas/campograma-alerta.png`).
+
 ### 5.5 Control del simulador por MQTT
 
 Para la demo hay que poder provocar un golpe de calor o una FC disparada cuando se quiera, sin tocar Node-RED. El camino es el inverso al de la telemetría: **la API publica y el simulador se suscribe.**
@@ -121,7 +126,9 @@ Para la demo hay que poder provocar un golpe de calor o una FC disparada cuando 
 - **Errores:** `400` con la lista de fases válidas o el rango que se ha pasado, `404` si el jugador no es de `p1` a `p11`, `503` si la API no está conectada a Mosquitto y `502` si el broker no confirma.
 - **Sin MongoDB y sin clave.** Estas rutas no tocan datos clínicos, así que no piden clave y funcionan aunque la base de datos esté caída. En producción no existirían: solo sirven para simular.
 
-*Figura 5.5 — Dashboard de simulación* (`informe/capturas/simulacion.png`).
+*Figura 5.8 — En Swagger, la operación para forzar un valor del simulador, con sus ejemplos* (`informe/capturas/swagger-simulador.png`).
+
+*Figura 5.9 — Dashboard de simulación* (`informe/capturas/simulacion.png`).
 
 ---
 
@@ -137,6 +144,8 @@ Cada segundo, por cada jugador del lote:
 4. **Difusión.** Cada alerta nueva se guarda en MongoDB, se publica por MQTT en `sensors/eq1/alertas` con QoS 1 (la recibe el Dashboard 2.0) y se envía por WebSocket a la web.
 
 El **semáforo** de cada jugador sale de sus alertas activas: rojo si alguna es crítica, ámbar si hay algún aviso y verde si no hay ninguna. Las alertas no se cierran solas: siguen activas hasta que el médico las confirma.
+
+*Figura 6.1 — El broker por dentro, con `mosquitto_sub` y el usuario `nodered`: los sensores de p8, las dos alertas de calor que publica la API y una orden al simulador* (`informe/capturas/mosquitto-sub.png`).
 
 ### 6.2 Reglas y umbrales
 

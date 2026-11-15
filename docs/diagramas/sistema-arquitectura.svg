@@ -1,0 +1,182 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 960" width="1600" height="960">
+<defs>
+<marker id="m-2E7D4F" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2E7D4F"/></marker>
+<marker id="m-7346B5" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7346B5"/></marker>
+<marker id="m-2F5DA8" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2F5DA8"/></marker>
+<marker id="m-B3403F" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#B3403F"/></marker>
+<marker id="m-6B7280" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6B7280"/></marker>
+<marker id="m-C27A12" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#C27A12"/></marker>
+</defs>
+<rect width="1600" height="960" fill="#FFFFFF"/>
+<rect x="20" y="110" width="270" height="290" rx="16" fill="#E3F4EA" fill-opacity="0.35" stroke="#2E7D4F" stroke-width="1.4" stroke-dasharray="6 5"/>
+<text x="34" y="132" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="700" fill="#1A4A2E">Node-RED</text>
+<rect x="712" y="110" width="248" height="230" rx="16" fill="#E3F4EA" fill-opacity="0.35" stroke="#2E7D4F" stroke-width="1.4" stroke-dasharray="6 5"/>
+<text x="726" y="132" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="700" fill="#1A4A2E">Node-RED</text>
+<rect x="380" y="560" width="540" height="345" rx="16" fill="#E3F4EA" fill-opacity="0.35" stroke="#2E7D4F" stroke-width="1.4" stroke-dasharray="6 5"/>
+<text x="906" y="582" text-anchor="end" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="700" fill="#1A4A2E">Node-RED · Dashboard 2.0</text>
+<text x="40" y="46" font-family="'Segoe UI', Arial, sans-serif" font-size="26" font-weight="700" fill="#111827">Smart Health · arquitectura del sistema</text>
+<text x="40" y="72" font-family="'Segoe UI', Arial, sans-serif" font-size="14" fill="#6B7280">Cómo viaja un dato desde el wearable simulado hasta el médico, y cómo se controla el simulador. Todo en local: Mosquitto y Node-RED nativos, MongoDB en Docker.</text>
+<rect x="35" y="145" width="240" height="240" rx="12" fill="#E3F4EA" stroke="#2E7D4F" stroke-width="1.8"/>
+<text x="155" y="198" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="700" fill="#1A4A2E">Simulador</text>
+<text x="155" y="214.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#1A4A2E" opacity="0.88">11 jugadores (p1…p11)</text>
+<text x="155" y="231" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#1A4A2E" opacity="0.88">en un 4-2-3-1</text>
+<text x="155" y="247.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#1A4A2E" opacity="0.88"></text>
+<text x="155" y="264" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#1A4A2E" opacity="0.88">6 sensores cada uno,</text>
+<text x="155" y="280.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#1A4A2E" opacity="0.88">cada segundo: GPS, acelerómetro,</text>
+<text x="155" y="297" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#1A4A2E" opacity="0.88">giroscopio, pulso, plantillas</text>
+<text x="155" y="313.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#1A4A2E" opacity="0.88">y termómetro</text>
+<text x="155" y="330" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#1A4A2E" opacity="0.88"></text>
+<text x="155" y="346.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#1A4A2E" opacity="0.88">motor táctico: fases de juego</text>
+<rect x="400" y="150" width="230" height="330" rx="12" fill="#F1E8FB" stroke="#7346B5" stroke-width="1.8"/>
+<text x="515" y="240" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="700" fill="#3E2268">Mosquitto</text>
+<text x="515" y="256.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#3E2268" opacity="0.88">broker MQTT · puerto 1883</text>
+<text x="515" y="273" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#3E2268" opacity="0.88"></text>
+<text x="515" y="289.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#3E2268" opacity="0.88">usuarios con contraseña</text>
+<text x="515" y="306" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#3E2268" opacity="0.88">y ACL:</text>
+<text x="515" y="322.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#3E2268" opacity="0.88"></text>
+<text x="515" y="339" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#3E2268" opacity="0.88">nodered: publica sensores,</text>
+<text x="515" y="355.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#3E2268" opacity="0.88">lee control/#</text>
+<text x="515" y="372" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#3E2268" opacity="0.88"></text>
+<text x="515" y="388.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#3E2268" opacity="0.88">api: solo escribe alertas</text>
+<text x="515" y="405" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#3E2268" opacity="0.88">y control/#</text>
+<rect x="727" y="145" width="218" height="180" rx="12" fill="#E3F4EA" stroke="#2E7D4F" stroke-width="1.8"/>
+<text x="836" y="184" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="700" fill="#1A4A2E">Pasarela</text>
+<text x="836" y="200.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#1A4A2E" opacity="0.88">MQTT → REST</text>
+<text x="836" y="217" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#1A4A2E" opacity="0.88"></text>
+<text x="836" y="233.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#1A4A2E" opacity="0.88">junta los sensores de</text>
+<text x="836" y="250" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#1A4A2E" opacity="0.88">cada jugador: un lote</text>
+<text x="836" y="266.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#1A4A2E" opacity="0.88">por segundo</text>
+<text x="836" y="283" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#1A4A2E" opacity="0.88">watchdog: 5 s sin datos</text>
+<text x="836" y="299.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#1A4A2E" opacity="0.88">→ sin señal</text>
+<rect x="1035" y="140" width="270" height="400" rx="12" fill="#E0ECFF" stroke="#2F5DA8" stroke-width="1.8"/>
+<text x="1170" y="241" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="700" fill="#17325E">API REST</text>
+<text x="1170" y="257.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#17325E" opacity="0.88">Node.js 24 · Express 5</text>
+<text x="1170" y="274" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#17325E" opacity="0.88">puerto 3000</text>
+<text x="1170" y="290.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#17325E" opacity="0.88"></text>
+<text x="1170" y="307" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#17325E" opacity="0.88">valida cada lote</text>
+<text x="1170" y="323.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#17325E" opacity="0.88">estado en vivo de cada jugador</text>
+<text x="1170" y="340" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#17325E" opacity="0.88">resúmenes de 10 s</text>
+<text x="1170" y="356.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#17325E" opacity="0.88">motor de alertas (10 reglas)</text>
+<text x="1170" y="373" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#17325E" opacity="0.88">pautas, sesiones y ACWR</text>
+<text x="1170" y="389.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#17325E" opacity="0.88">control del simulador</text>
+<text x="1170" y="406" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#17325E" opacity="0.88">FHIR (constantes vitales)</text>
+<text x="1170" y="422.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#17325E" opacity="0.88"></text>
+<text x="1170" y="439" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#17325E" opacity="0.88">WebSocket en el mismo puerto</text>
+<text x="1170" y="455.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#17325E" opacity="0.88">Swagger en /api-docs</text>
+<path d="M1105,652 a100,12 0 0,0 200,0 v76 a100,12 0 0,1 -200,0 z" fill="#FDE7E7" stroke="#B3403F" stroke-width="1.8"/>
+<ellipse cx="1205" cy="652" rx="100" ry="12" fill="#FDE7E7" stroke="#B3403F" stroke-width="1.8"/>
+<text x="1205" y="698" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="700" fill="#6A1F1E">MongoDB</text>
+<text x="1205" y="716" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#6A1F1E" opacity="0.88">6 colecciones · resúmenes de 10 s</text>
+<rect x="1395" y="140" width="185" height="100" rx="12" fill="#F3F4F6" stroke="#6B7280" stroke-width="1.8"/>
+<text x="1487.5" y="179" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" fill="#1F2937">Campograma</text>
+<text x="1487.5" y="195.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#1F2937" opacity="0.88">web: los 11 en el campo,</text>
+<text x="1487.5" y="212" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#1F2937" opacity="0.88">semáforo y alertas</text>
+<rect x="1395" y="290" width="185" height="80" rx="12" fill="#F3F4F6" stroke="#6B7280" stroke-width="1.8"/>
+<text x="1487.5" y="327" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" fill="#1F2937">Swagger · Postman</text>
+<text x="1487.5" y="343.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#1F2937" opacity="0.88">prueban toda la API</text>
+<rect x="1395" y="420" width="185" height="80" rx="12" fill="#F3F4F6" stroke="#6B7280" stroke-width="1.8"/>
+<text x="1487.5" y="457" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" fill="#1F2937">Cliente FHIR</text>
+<text x="1487.5" y="473.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#1F2937" opacity="0.88">historia clínica (HL7)</text>
+<rect x="400" y="600" width="500" height="120" rx="12" fill="#E3F4EA" stroke="#2E7D4F" stroke-width="1.8"/>
+<text x="650" y="641" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="700" fill="#1A4A2E">Dashboard médico (B)</text>
+<text x="650" y="657.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#1A4A2E" opacity="0.88">recibe las alertas al momento por MQTT</text>
+<text x="650" y="674" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#1A4A2E" opacity="0.88">confirma alertas, pone pautas, abre y cierra sesiones</text>
+<text x="650" y="690.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#1A4A2E" opacity="0.88">ficha de cada jugador: estado, histórico y ACWR</text>
+<rect x="400" y="770" width="500" height="110" rx="12" fill="#E3F4EA" stroke="#2E7D4F" stroke-width="1.8"/>
+<text x="650" y="814" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="700" fill="#1A4A2E">Dashboard de simulación (A)</text>
+<text x="650" y="830.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#1A4A2E" opacity="0.88">cambia la fase de juego</text>
+<text x="650" y="847" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#1A4A2E" opacity="0.88">fuerza el pulso o la temperatura de un jugador (golpe de calor…)</text>
+<path d="M275,200 L400,200" fill="none" stroke="#2E7D4F" stroke-width="2.2" marker-end="url(#m-2E7D4F)"/>
+<circle cx="337" cy="200" r="12" fill="#FFFFFF" stroke="#2E7D4F" stroke-width="2"/>
+<text x="337" y="204.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="800" fill="#2E7D4F">1</text>
+<text x="337" y="182" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="600" fill="#2E7D4F">pN/sensors/…</text>
+<path d="M400,330 L275,330" fill="none" stroke="#C27A12" stroke-width="2.2" marker-end="url(#m-C27A12)"/>
+<circle cx="337" cy="330" r="12" fill="#FFFFFF" stroke="#C27A12" stroke-width="2"/>
+<text x="337" y="334.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="800" fill="#C27A12">8</text>
+<text x="337" y="356" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="600" fill="#C27A12">control/#</text>
+<path d="M630,215 L727,215" fill="none" stroke="#7346B5" stroke-width="2.2" marker-end="url(#m-7346B5)"/>
+<circle cx="672" cy="215" r="12" fill="#FFFFFF" stroke="#7346B5" stroke-width="2"/>
+<text x="672" y="219.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="800" fill="#7346B5">2</text>
+<text x="670" y="197" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="600" fill="#7346B5">+/sensors/#</text>
+<path d="M945,235 L1035,235" fill="none" stroke="#2E7D4F" stroke-width="2.2" marker-end="url(#m-2E7D4F)"/>
+<circle cx="990" cy="235" r="12" fill="#FFFFFF" stroke="#2E7D4F" stroke-width="2"/>
+<text x="990" y="239.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="800" fill="#2E7D4F">3</text>
+<text x="990" y="212" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="600" fill="#2E7D4F">POST</text>
+<text x="990" y="262" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="600" fill="#2E7D4F">1 lote/s</text>
+<path d="M1205,540 L1205,640" fill="none" stroke="#B3403F" stroke-width="2.2" marker-end="url(#m-B3403F)" marker-start="url(#m-B3403F)"/>
+<circle cx="1205" cy="590" r="12" fill="#FFFFFF" stroke="#B3403F" stroke-width="2"/>
+<text x="1205" y="594.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="800" fill="#B3403F">4</text>
+<text x="1225" y="594" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="600" fill="#B3403F">guarda y consulta</text>
+<path d="M1035,405 L630,405" fill="none" stroke="#B3403F" stroke-width="2.2" marker-end="url(#m-B3403F)"/>
+<circle cx="840" cy="405" r="12" fill="#FFFFFF" stroke="#B3403F" stroke-width="2"/>
+<text x="840" y="409.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="800" fill="#B3403F">5</text>
+<text x="840" y="393" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="600" fill="#B3403F">sensors/eq1/alertas · QoS 1</text>
+<path d="M515,480 L515,600" fill="none" stroke="#B3403F" stroke-width="2.2" marker-end="url(#m-B3403F)"/>
+<text x="527" y="545" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="600" fill="#B3403F">alertas (mqtt in)</text>
+<path d="M1305,170 L1395,170" fill="none" stroke="#2F5DA8" stroke-width="2.2" stroke-dasharray="7 5" marker-end="url(#m-2F5DA8)"/>
+<circle cx="1350" cy="170" r="12" fill="#FFFFFF" stroke="#2F5DA8" stroke-width="2"/>
+<text x="1350" y="174.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="800" fill="#2F5DA8">6</text>
+<text x="1350" y="155" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="600" fill="#2F5DA8">WebSocket</text>
+<path d="M1395,330 L1305,330" fill="none" stroke="#6B7280" stroke-width="2.2" marker-end="url(#m-6B7280)"/>
+<text x="1350" y="320" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="600" fill="#6B7280">REST</text>
+<path d="M1395,460 L1305,460" fill="none" stroke="#6B7280" stroke-width="2.2" marker-end="url(#m-6B7280)"/>
+<text x="1350" y="450" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="600" fill="#6B7280">FHIR R4</text>
+<path d="M900,660 L1060,660 L1060,540" fill="none" stroke="#2F5DA8" stroke-width="2.2" marker-end="url(#m-2F5DA8)"/>
+<circle cx="950" cy="660" r="12" fill="#FFFFFF" stroke="#2F5DA8" stroke-width="2"/>
+<text x="950" y="664.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="800" fill="#2F5DA8">7</text>
+<text x="990" y="688" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="600" fill="#2F5DA8">REST + clave</text>
+<path d="M900,825 L1085,825 L1085,540" fill="none" stroke="#C27A12" stroke-width="2.2" marker-end="url(#m-C27A12)"/>
+<circle cx="950" cy="825" r="12" fill="#FFFFFF" stroke="#C27A12" stroke-width="2"/>
+<text x="950" y="829.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="800" fill="#C27A12">8</text>
+<text x="1000" y="852" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="600" fill="#C27A12">/api/simulador</text>
+<path d="M1035,455 L630,455" fill="none" stroke="#C27A12" stroke-width="2.2" marker-end="url(#m-C27A12)"/>
+<circle cx="840" cy="455" r="12" fill="#FFFFFF" stroke="#C27A12" stroke-width="2"/>
+<text x="840" y="459.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="800" fill="#C27A12">8</text>
+<text x="840" y="478" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="11" font-weight="600" fill="#C27A12">control/# · QoS 1</text>
+<text x="30" y="445" font-family="'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">El camino de un dato</text>
+<circle cx="42" cy="474" r="12" fill="#FFFFFF" stroke="#2E7D4F" stroke-width="2"/>
+<text x="42" y="478.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="800" fill="#2E7D4F">1</text>
+<text x="62" y="478" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="400" fill="#374151">Cada jugador publica sus sensores</text>
+<text x="62" y="494" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="400" fill="#374151">por MQTT, cada segundo.</text>
+<circle cx="42" cy="518" r="12" fill="#FFFFFF" stroke="#7346B5" stroke-width="2"/>
+<text x="42" y="522.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="800" fill="#7346B5">2</text>
+<text x="62" y="522" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="400" fill="#374151">La pasarela se suscribe a todos</text>
+<circle cx="42" cy="554" r="12" fill="#FFFFFF" stroke="#2E7D4F" stroke-width="2"/>
+<text x="42" y="558.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="800" fill="#2E7D4F">3</text>
+<text x="62" y="558" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="400" fill="#374151">y manda un lote por segundo a la API.</text>
+<circle cx="42" cy="590" r="12" fill="#FFFFFF" stroke="#B3403F" stroke-width="2"/>
+<text x="42" y="594.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="800" fill="#B3403F">4</text>
+<text x="62" y="594" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="400" fill="#374151">La API evalúa las reglas y guarda</text>
+<text x="62" y="610" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="400" fill="#374151">resúmenes y alertas en MongoDB.</text>
+<circle cx="42" cy="634" r="12" fill="#FFFFFF" stroke="#B3403F" stroke-width="2"/>
+<text x="42" y="638.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="800" fill="#B3403F">5</text>
+<text x="62" y="638" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="400" fill="#374151">Si salta una alerta, la publica por</text>
+<text x="62" y="654" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="400" fill="#374151">MQTT para el dashboard médico…</text>
+<circle cx="42" cy="678" r="12" fill="#FFFFFF" stroke="#2F5DA8" stroke-width="2"/>
+<text x="42" y="682.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="800" fill="#2F5DA8">6</text>
+<text x="62" y="682" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="400" fill="#374151">…y la manda por WebSocket</text>
+<text x="62" y="698" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="400" fill="#374151">al campograma.</text>
+<circle cx="42" cy="722" r="12" fill="#FFFFFF" stroke="#2F5DA8" stroke-width="2"/>
+<text x="42" y="726.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="800" fill="#2F5DA8">7</text>
+<text x="62" y="726" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="400" fill="#374151">El médico la confirma o pone una</text>
+<text x="62" y="742" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="400" fill="#374151">pauta, por REST.</text>
+<circle cx="42" cy="766" r="12" fill="#FFFFFF" stroke="#C27A12" stroke-width="2"/>
+<text x="42" y="770.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="800" fill="#C27A12">8</text>
+<text x="62" y="770" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="400" fill="#374151">El dashboard de simulación cambia</text>
+<text x="62" y="786" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="400" fill="#374151">el simulador: API → control/# →</text>
+<text x="62" y="802" font-family="'Segoe UI', Arial, sans-serif" font-size="12" font-weight="400" fill="#374151">simulador.</text>
+<rect x="1350" y="780" width="22" height="16" rx="4" fill="#E3F4EA" stroke="#2E7D4F"/>
+<text x="1380" y="793" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#374151">Node-RED</text>
+<rect x="1470" y="780" width="22" height="16" rx="4" fill="#F1E8FB" stroke="#7346B5"/>
+<text x="1500" y="793" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#374151">Broker MQTT</text>
+<rect x="1350" y="808" width="22" height="16" rx="4" fill="#E0ECFF" stroke="#2F5DA8"/>
+<text x="1380" y="821" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#374151">API</text>
+<rect x="1470" y="808" width="22" height="16" rx="4" fill="#FDE7E7" stroke="#B3403F"/>
+<text x="1500" y="821" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#374151">Base de datos</text>
+<rect x="1350" y="836" width="22" height="16" rx="4" fill="#F3F4F6" stroke="#6B7280"/>
+<text x="1380" y="849" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#374151">Clientes</text>
+<line x1="1350" y1="880" x2="1390" y2="880" stroke="#6B7280" stroke-width="2"/>
+<text x="1398" y="884" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#374151">REST y MQTT</text>
+<line x1="1350" y1="906" x2="1390" y2="906" stroke="#2F5DA8" stroke-width="2" stroke-dasharray="7 5"/>
+<text x="1398" y="910" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="400" fill="#374151">WebSocket (tiempo real)</text>
+</svg>
