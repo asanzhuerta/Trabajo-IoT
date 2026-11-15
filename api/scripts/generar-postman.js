@@ -171,7 +171,7 @@ const coleccion = {
                 descripcion: 'Sustituye a la anterior. `hasta` se pone a una semana vista antes de enviarla.' })
         ]),
 
-        carpeta('Alertas', 'Alertas del motor de reglas. Para que haya alguna activa, lanza el fake-gateway con un escenario (p. ej. `--calor p8`).', [
+        carpeta('Alertas', 'Alertas del motor de reglas. Para que haya alguna activa, con el simulador en marcha fuerza un valor desde la carpeta Simulador (p. ej. «Golpe de calor»).', [
             peticion({ nombre: 'Alertas activas', metodo: 'GET', ruta: '/api/alertas', query: [{ key: 'estado', value: 'activa' }],
                 guardar: [
                     'const activas = pm.response.json();',
@@ -196,7 +196,7 @@ const coleccion = {
             peticion({ nombre: 'Listar sesiones', metodo: 'GET', ruta: '/api/sesiones' })
         ]),
 
-        carpeta('FHIR', 'Constantes vitales como recursos FHIR R4. Hacen falta datos: lanza antes el fake-gateway o la pasarela unos segundos.', [
+        carpeta('FHIR', 'Constantes vitales como recursos FHIR R4. Hacen falta datos: deja antes el simulador y la pasarela de Node-RED funcionando unos segundos.', [
             peticion({ nombre: 'FC de un jugador (LOINC 8867-4)', metodo: 'GET', ruta: '/fhir/Observation',
                 query: [{ key: 'patient', value: '{{jugadorId}}' }, { key: 'code', value: '8867-4' }, { key: '_count', value: '5' }],
                 guardar: [
@@ -223,7 +223,27 @@ const coleccion = {
             peticion({ nombre: 'ACWR de un jugador', metodo: 'GET', ruta: '/api/jugadores/{{jugadorId}}/acwr' })
         ]),
 
+        carpeta('Simulador', 'Órdenes al simulador de Node-RED por MQTT (`control/#`): las usa el dashboard de simulación. No piden clave. Necesitan que la API esté conectada a Mosquitto (sin él responden 503) y que el simulador tenga su `mqtt in`.', [
+            peticion({ nombre: 'Estado del simulador', metodo: 'GET', ruta: '/api/simulador',
+                descripcion: 'Fases válidas, rangos de los ajustes, la última fase mandada y los ajustes en vigor.' }),
+            peticion({ nombre: 'Cambiar la fase a presión alta', metodo: 'POST', ruta: '/api/simulador/fase', esperado: 202,
+                cuerpo: { fase: 'presion_alta' }, descripcion: 'Publica `presion_alta` en `control/fase`; el motor táctico cambia la fase de todo el equipo.' }),
+            peticion({ nombre: 'Golpe de calor (40,5 °C durante 60 s)', metodo: 'PUT', ruta: '/api/simulador/jugadores/{{jugadorId}}/sensores', esperado: 202,
+                cuerpo: { temperature: 40.5, durationSeconds: 60 },
+                descripcion: 'Publica el ajuste en `control/jugadores/<id>/sensores`. En unos segundos saltan `CALOR_AMBAR` y `CALOR_ROJA`.' }),
+            peticion({ nombre: 'FC alta (185 lpm hasta quitarla)', metodo: 'PUT', ruta: '/api/simulador/jugadores/{{jugadorId}}/sensores', esperado: 202,
+                cuerpo: { pulse: 185, durationSeconds: 0 },
+                descripcion: 'Con `durationSeconds: 0` dura hasta el DELETE. Sustituye al ajuste anterior del jugador. Pasado un minuto salta `FC_ALTA`.' }),
+            peticion({ nombre: 'Quitar el ajuste', metodo: 'DELETE', ruta: '/api/simulador/jugadores/{{jugadorId}}/sensores', esperado: 202 }),
+            peticion({ nombre: 'Reiniciar el simulador', metodo: 'POST', ruta: '/api/simulador/reiniciar', esperado: 202,
+                descripcion: 'Formación inicial y sin ajustes en ningún jugador.' })
+        ]),
+
         carpeta('Errores (para enseñarlos)', 'Cómo responde la API cuando algo está mal. Cada petición espera su código de error.', [
+            peticion({ nombre: '400: fase que no existe (trae la lista de las válidas)', metodo: 'POST', ruta: '/api/simulador/fase', esperado: 400,
+                cuerpo: { fase: 'contraataque' } }),
+            peticion({ nombre: '400: temperatura forzada fuera de rango', metodo: 'PUT', ruta: '/api/simulador/jugadores/{{jugadorId}}/sensores', esperado: 400,
+                cuerpo: { temperature: 50 } }),
             peticion({ nombre: '401: sin clave', metodo: 'POST', ruta: '/api/sesiones', esperado: 401,
                 cuerpo: { tipo: 'partido', nombre: 'x' } }),
             peticion({ nombre: '403: la pasarela intenta confirmar una alerta', metodo: 'POST', ruta: '/api/alertas/000000000000000000000000/confirmar',

@@ -549,7 +549,7 @@
     },
     {
       "name": "Alertas",
-      "description": "Alertas del motor de reglas. Para que haya alguna activa, lanza el fake-gateway con un escenario (p. ej. `--calor p8`).",
+      "description": "Alertas del motor de reglas. Para que haya alguna activa, con el simulador en marcha fuerza un valor desde la carpeta Simulador (p. ej. «Golpe de calor»).",
       "item": [
         {
           "name": "Alertas activas",
@@ -862,7 +862,7 @@
     },
     {
       "name": "FHIR",
-      "description": "Constantes vitales como recursos FHIR R4. Hacen falta datos: lanza antes el fake-gateway o la pasarela unos segundos.",
+      "description": "Constantes vitales como recursos FHIR R4. Hacen falta datos: deja antes el simulador y la pasarela de Node-RED funcionando unos segundos.",
       "item": [
         {
           "name": "FC de un jugador (LOINC 8867-4)",
@@ -1128,9 +1128,332 @@
       ]
     },
     {
+      "name": "Simulador",
+      "description": "Órdenes al simulador de Node-RED por MQTT (`control/#`): las usa el dashboard de simulación. No piden clave. Necesitan que la API esté conectada a Mosquitto (sin él responden 503) y que el simulador tenga su `mqtt in`.",
+      "item": [
+        {
+          "name": "Estado del simulador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/simulador",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "simulador"
+              ]
+            },
+            "description": "Fases válidas, rangos de los ajustes, la última fase mandada y los ajustes en vigor."
+          }
+        },
+        {
+          "name": "Cambiar la fase a presión alta",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 202', function () { pm.response.to.have.status(202); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/simulador/fase",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "simulador",
+                "fase"
+              ]
+            },
+            "description": "Publica `presion_alta` en `control/fase`; el motor táctico cambia la fase de todo el equipo.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fase\": \"presion_alta\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Golpe de calor (40,5 °C durante 60 s)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 202', function () { pm.response.to.have.status(202); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/simulador/jugadores/{{jugadorId}}/sensores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "simulador",
+                "jugadores",
+                "{{jugadorId}}",
+                "sensores"
+              ]
+            },
+            "description": "Publica el ajuste en `control/jugadores/<id>/sensores`. En unos segundos saltan `CALOR_AMBAR` y `CALOR_ROJA`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"temperature\": 40.5,\n  \"durationSeconds\": 60\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "FC alta (185 lpm hasta quitarla)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 202', function () { pm.response.to.have.status(202); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/simulador/jugadores/{{jugadorId}}/sensores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "simulador",
+                "jugadores",
+                "{{jugadorId}}",
+                "sensores"
+              ]
+            },
+            "description": "Con `durationSeconds: 0` dura hasta el DELETE. Sustituye al ajuste anterior del jugador. Pasado un minuto salta `FC_ALTA`.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pulse\": 185,\n  \"durationSeconds\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Quitar el ajuste",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 202', function () { pm.response.to.have.status(202); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/simulador/jugadores/{{jugadorId}}/sensores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "simulador",
+                "jugadores",
+                "{{jugadorId}}",
+                "sensores"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Reiniciar el simulador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 202', function () { pm.response.to.have.status(202); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/simulador/reiniciar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "simulador",
+                "reiniciar"
+              ]
+            },
+            "description": "Formación inicial y sin ajustes en ningún jugador."
+          }
+        }
+      ]
+    },
+    {
       "name": "Errores (para enseñarlos)",
       "description": "Cómo responde la API cuando algo está mal. Cada petición espera su código de error.",
       "item": [
+        {
+          "name": "400: fase que no existe (trae la lista de las válidas)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', function () { pm.response.to.have.status(400); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/simulador/fase",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "simulador",
+                "fase"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fase\": \"contraataque\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "400: temperatura forzada fuera de rango",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 400', function () { pm.response.to.have.status(400); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/simulador/jugadores/{{jugadorId}}/sensores",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "simulador",
+                "jugadores",
+                "{{jugadorId}}",
+                "sensores"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"temperature\": 50\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
         {
           "name": "401: sin clave",
           "event": [

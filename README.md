@@ -54,35 +54,26 @@ Simulador (Node-RED) ──MQTT──► Mosquitto ──MQTT──► Pasarela 
 
 6. **Node-RED:** ver `node_red/` (lo documenta A).
 
-### Probar la API sin Node-RED
+### Provocar alertas: control del simulador
 
-`fake-gateway` imita a la pasarela: cada segundo manda un lote con los 11 jugadores a `POST /api/telemetria`. Los escenarios se activan por jugador:
+Con todo en marcha, la API puede forzar el pulso o la temperatura que publica un jugador del simulador de A, durante los segundos que se indiquen. La orden va por MQTT (`control/jugadores/<id>/sensores`) y el simulador la recibe con un `mqtt in`. Es lo que usa el dashboard de simulación, y también se puede lanzar desde Swagger (sección *Simulador*) o Postman (carpeta *Simulador*):
 
-```bash
-cd api && npm run fake-gateway -- --calor p8 --asimetria p5 --incidente p3 --sin-senal p10
+```powershell
+# Golpe de calor a p8 durante 60 s: saltan CALOR_AMBAR y CALOR_ROJA
+Invoke-RestMethod -Method Put -Uri http://localhost:3000/api/simulador/jugadores/p8/sensores -ContentType "application/json" -Body '{"temperature": 40.5, "durationSeconds": 60}'
+# Quitarlo antes de tiempo
+Invoke-RestMethod -Method Delete -Uri http://localhost:3000/api/simulador/jugadores/p8/sensores
+# Cambiar la fase de juego de todo el equipo
+Invoke-RestMethod -Method Post -Uri http://localhost:3000/api/simulador/fase -ContentType "application/json" -Body '{"fase": "presion_alta"}'
 ```
 
-| Opción | Qué simula |
-|---|---|
-| `--calor p8` | Temperatura interna que sube de 38,8 a 40,6 °C |
-| `--fc-alta p7` | FC sostenida en torno al 95 % de la FCmáx |
-| `--desacople p6` | FC al 89 % de la FCmáx mientras camina |
-| `--asimetria p5` | El reparto de carga entre pies se desequilibra poco a poco |
-| `--incidente p3` | A los 15 s, impacto de 6,5 g; después se queda inmóvil y la FC cae |
-| `--sin-senal p10` | A los 10 s deja de llegar señal |
-| `--recuperacion p9` | Sprint de 10 s y después camina, pero la FC apenas baja. La alerta salta 60 s después |
-| `--sobrecarga p4` | Arranca y frena sin parar: unas 20 acciones de alta intensidad por minuto |
-| `--duracion 60` | Se para a los 60 s |
-
-Con todos los escenarios menos `--sobrecarga`, en menos de 90 s saltan 9 de las 10 alertas. Para verlas llegar por MQTT:
+Qué ajuste provoca cada alerta, rangos y errores: [contrato de la API](docs/contratos/api.md#control-del-simulador-dashboard-de-simulación--api--mqtt--simulador). Para ver las órdenes y las alertas pasar por el broker:
 
 ```bash
-mosquitto_sub -h localhost -u nodered -P <contraseña-nodered> -t "sensors/#" -v
+mosquitto_sub -h localhost -u nodered -P <contraseña-nodered> -t "control/#" -t "sensors/#" -v
 ```
 
-Con el Mosquitto por defecto (sin la configuración del proyecto) no hacen falta `-u` ni `-P`.
-
-`SOBRECARGA` necesita 120 acciones en la sesión, unos 6 minutos con `--sobrecarga`. Para la demo se baja el umbral del jugador a 20 con `PUT /api/jugadores/p4/umbrales` y `{"sobrecargaAcciones": 20}`, y salta en algo más de un minuto. `npm run seed` vuelve a dejar los umbrales por defecto.
+`SOBRECARGA` necesita 120 acciones de alta intensidad en la sesión. Para la demo se baja el umbral del jugador con `PUT /api/jugadores/p4/umbrales` y `{"sobrecargaAcciones": 20}`. `npm run seed` vuelve a dejar los umbrales por defecto.
 
 ### Tests
 
@@ -101,7 +92,7 @@ cd api && npm test
 | Carpeta | Contenido |
 |---|---|
 | `api/` | API REST en Express, WebSocket, modelos de Mongoose y motor de alertas |
-| `api/public/` | Web propia: plantilla, campo 2D y ficha del jugador |
+| `api/public/` | Web propia: el campograma, servido en `http://localhost:3000` (ver su [README](api/public/README.md)) |
 | `node_red/` | Flujos de Node-RED: simulador y dashboard (`flows.json`, de A) y pasarela MQTT → API (`flows_pasarela.json`) |
 | `mosquitto/` | Configuración del broker, usuarios y ACL |
 | `docs/contratos/` | Contratos entre las dos partes: API, alertas y MQTT |

@@ -214,29 +214,31 @@ Al confirmarla se envía `{"tipo": "alerta_confirmada"}` por WebSocket y el sem�
 
 ## Control del simulador (dashboard de simulación → API → MQTT → simulador)
 
-Sirve para provocar los escenarios de salud y cambiar la fase de juego durante la demo, sin tocar Node-RED a mano.
+Sirve para cambiar la fase de juego y para forzar el pulso o la temperatura de un jugador durante la demo (golpe de calor, FC alta…), sin tocar Node-RED a mano.
 
 - El dashboard de simulación (lo hace A) llama a estos endpoints.
 - La API publica la orden en Mosquitto con QoS 1 y sin retain, con el usuario `api`, que en la ACL solo puede escribir en `control/#` y en las alertas.
-- El simulador de Node-RED la recibe con un `mqtt in` en `control/#` (usuario `nodered`, que en la ACL puede leer `control/#`).
+- El simulador de Node-RED la recibe con un `mqtt in` (usuario `nodered`, que en la ACL puede leer `control/#`).
 - **No piden clave:** solo mueven el simulador y no tocan datos clínicos.
 - **No usan MongoDB,** así que funcionan aunque esté caído.
 
-| Topic | Mensaje | Lo entiende |
+| Topic | Mensaje | En Node-RED |
 |---|---|---|
-| `control/fase` | El código de la fase, como texto: `presion_alta` | El motor táctico de A (ya lo hace) |
-| `control/escenario` | `{"jugadorId": "p8", "escenario": "golpe_calor", "ts": "…"}` | La función de cada jugador del simulador (falta) |
-| `control/reset` | `true` | El motor táctico (formación inicial, ya lo hace) y los jugadores (quitan su escenario, falta) |
+| `control/fase` | El código de la fase, como texto: `presion_alta` | Al motor táctico, que ya lo entiende |
+| `control/reset` | `true` | Al motor táctico (vuelve a la formación inicial, ya lo entiende) |
+| `control/jugadores/<id>/sensores` | `{"pulse": 155, "temperature": 38.2, "durationSeconds": 30, "ts": "…"}` o `{"reset": true}` | A «Guardar ajustes de sensores», que lo guarda en `flow.ajustesSensores`; «Aplicar ajustes de sensores», entre los jugadores y «Convertir a JSON», cambia el valor publicado |
 
 ### `GET /api/simulador`
 ```json
 {
-  "mqtt": "connected", "fase": "presion_alta", "escenarios": { "p8": "golpe_calor" },
+  "mqtt": "connected", "fase": "presion_alta",
+  "ajustes": { "p8": { "temperature": 40.5, "durationSeconds": 60, "hasta": "2026-11-15T18:31:00.000Z" } },
   "fases": [ { "codigo": "ataque_organizado", "nombre": "Ataque organizado" } ],
-  "escenariosDisponibles": [ { "codigo": "golpe_calor", "nombre": "Golpe de calor", "descripcion": "…", "alerta": "CALOR_AMBAR y CALOR_ROJA" } ]
+  "rangos": { "pulse": { "min": 30, "max": 220, "unidad": "bpm" }, "temperature": { "min": 35, "max": 42, "unidad": "C" },
+              "durationSeconds": { "min": 0, "max": 3600, "unidad": "s", "porDefecto": 30 } }
 }
 ```
-- `fase` y `escenarios` son lo último que se mandó desde la API.
+- `fase` y `ajustes` son lo último que se mandó desde la API; los ajustes caducados ya no salen.
 - Si se reinicia Node-RED, el simulador vuelve a lo normal aunque aquí siga apuntado.
 
 ### `POST /api/simulador/fase`
@@ -248,35 +250,48 @@ Sirve para provocar los escenarios de salud y cambiar la fase de juego durante l
 - Fases válidas: `ataque_organizado`, `transicion_defensiva`, `presion_alta`, `defensa_organizada` y `transicion_ofensiva`, las del motor táctico de A.
 - Con otra cosa responde **`400`** con la lista de las válidas.
 
-### `POST /api/simulador/escenario`
+### `PUT /api/simulador/jugadores/:id/sensores`
 ```json
-{ "jugadorId": "p8", "escenario": "golpe_calor" }
+{ "temperature": 40.5, "durationSeconds": 60 }
 ```
-**`202`** con la orden publicada: `{"mensaje", "topic": "control/escenario", "jugadorId", "escenario", "ts"}`.
+**`202`** `{"mensaje": "Orden publicada", "topic": "control/jugadores/p8/sensores", "jugadorId": "p8", "ajuste": {"temperature": 40.5, "durationSeconds": 60}, "hasta": "…"}`.
 
-- Cada jugador tiene un escenario como mucho; uno nuevo sustituye al anterior.
-- `"normal"` se lo quita.
-- **Lo que tiene que hacer el simulador** con ese jugador para que salte la alerta (umbrales por defecto de `alertas.md`):
+El simulador sigue calculando los sensores del jugador, pero publica el pulso o la temperatura que se indiquen; los demás jugadores y sensores no cambian.
 
-| `escenario` | Qué hace el simulador con ese jugador | Alerta |
+| Campo | Rango | Notas |
 |---|---|---|
-| `golpe_calor` | La temperatura interna sube unos 0,05 °C por segundo hasta pasar de 40 °C y se queda ahí | `CALOR_AMBAR` (39 °C) y `CALOR_ROJA` (40 °C) |
-| `fc_alta` | La FC por encima del 92 % de su FCmáx durante más de 60 s | `FC_ALTA` |
-| `desacople` | Camina o trota (menos de 7 km/h) con la FC por encima del 85 % de su FCmáx durante más de 30 s | `FC_DESACOPLE` |
-| `recuperacion_lenta` | Un sprint (más de 19,8 km/h), después camina (menos de 7 km/h) 60 s y la FC baja 12 lpm o menos | `RECUPERACION_LENTA` |
-| `incidente` | Un impacto de más de 4 g (`accelerometer.impact`), después inmóvil (menos de 1 km/h) más de 10 s y la FC cae por debajo de 50 lpm | `INCIDENTE` |
-| `asimetria` | Un pie carga cada vez más que el otro, hasta más de 15 puntos sobre su base, durante más de 45 s | `ASIMETRIA` |
-| `sobrecarga` | Arranca y frena sin parar, con aceleraciones de más de 3 m/s², hasta pasar de 120 en la sesión | `SOBRECARGA` |
-| `sin_senal` | El jugador deja de publicar (la pasarela lo marca a los 5 s) | `SIN_SENAL` |
+| `pulse` | 30 a 220 lpm | |
+| `temperature` | 35 a 42 °C | |
+| `durationSeconds` | 0 a 3600 s (entero) | **30 si no se indica.** `1` es una sola lectura; `0`, hasta que se quite con `DELETE` |
+
+- Hay que mandar `pulse`, `temperature` o los dos (**`400`** si no).
+- Cada `PUT` **sustituye** el ajuste anterior de ese jugador.
+- El id tiene que ser de `p1` a `p11` (**`404`** si no).
+- **Los rangos son los de la validación de la telemetría** (pulso de 20 a 250 y temperatura de 30 a 45), un poco recortados, para que el lote no se rechace y se puedan provocar las alertas. Los límites de la simulación normal (60–180 lpm y 36,2–39 °C) no valen aquí: con 39 °C como máximo nunca saltaría `CALOR_ROJA` (40 °C), ni `INCIDENTE` (FC por debajo de 50). **El nodo «Guardar ajustes de sensores» tiene que aceptar los mismos rangos.**
+- En Node-RED, la caducidad se calcula al recibir la orden: `expiresAt = durationSeconds > 0 ? Date.now() + durationSeconds * 1000 : null`.
+
+**Para provocar cada alerta** (umbrales por defecto de `alertas.md`):
+
+| Alerta | Ajuste | Cuánto tarda |
+|---|---|---|
+| `CALOR_AMBAR` | `{"temperature": 39.4, "durationSeconds": 60}` | Al momento |
+| `CALOR_ROJA` | `{"temperature": 40.5, "durationSeconds": 60}` | Al momento (salta también la ámbar) |
+| `FC_ALTA` | `{"pulse": 185, "durationSeconds": 90}` (más del 92 % de su FCmáx, que está entre 186 y 198) | Unos 60 s |
+| `FC_DESACOPLE` | `{"pulse": 175, "durationSeconds": 60}` a un jugador que camina (menos de 7 km/h), por ejemplo el portero | Unos 30 s |
+| `SIN_SENAL` | No se provoca con un ajuste: hay que parar el `inject` de ese jugador (la pasarela lo marca a los 5 s) | 5 s |
+
+### `DELETE /api/simulador/jugadores/:id/sensores`
+**`202`** `{"mensaje": "Orden publicada", "topic": "control/jugadores/p8/sensores", "jugadorId": "p8"}`. Publica `{"reset": true}`: el jugador vuelve a publicar los valores simulados.
 
 ### `POST /api/simulador/reiniciar`
-**`202`** `{"mensaje": "Orden publicada", "topic": "control/reset"}`. Publica `true` en `control/reset`: el motor táctico vuelve a la formación inicial y los jugadores quitan su escenario.
+**`202`** `{"mensaje": "Orden publicada", "topic": "control/reset"}`. Publica `true` en `control/reset` (el motor táctico vuelve a la formación inicial) y `{"reset": true}` a los 11 jugadores.
 
 ### Errores y avisos
 - **`400`** la orden no es válida.
+- **`404`** el jugador no es de `p1` a `p11`.
 - **`503`** la API no está conectada a Mosquitto.
 - **`502`** el broker no confirmó la publicación.
-- Cada orden publicada se avisa por WebSocket: `{"tipo": "simulador", "fase", "escenarios"}`.
+- Cada orden publicada se avisa por WebSocket: `{"tipo": "simulador", "fase", "ajustes"}`.
 
 ## FHIR
 
@@ -323,7 +338,7 @@ En el mismo puerto que la API (`ws://localhost:3000`). Solo envía, del servidor
 | `alerta_confirmada` | `{ "tipo": "alerta_confirmada", "alertaId": "…" }` | Al momento |
 | `sesion_iniciada` | `{ "tipo": "sesion_iniciada", "sesion": { … } }` | Al empezar una sesión |
 | `sesion_cerrada` | `{ "tipo": "sesion_cerrada", "sesion": { … } }`, con el resumen de cada jugador | Al cerrarla |
-| `simulador` | `{ "tipo": "simulador", "fase": "presion_alta", "escenarios": { "p8": "golpe_calor" } }` | Cada orden al simulador |
+| `simulador` | `{ "tipo": "simulador", "fase": "presion_alta", "ajustes": { "p8": { "temperature": 40.5, "durationSeconds": 60, "hasta": "…" } } }` | Cada orden al simulador |
 
 ## Documentación y pruebas
 
@@ -344,3 +359,4 @@ En el mismo puerto que la API (`ws://localhost:3000`). Solo envía, del servidor
 | Jue 12 nov (noche, 3) | Calibrado con el simulador de 11 jugadores de A: las acciones de alta intensidad son las de **más** de 3 m/s², `asimetriaUmbral` pasa de 10 a 15 puntos y `derivados.asimetria` vale `null` hasta tener 45 s de plantillas. La plantilla del seed sigue el 4-2-3-1 del simulador de A (misma posición para cada id). Nada de esto cambia lo que manda la pasarela |
 | Sáb 15 nov | El sensor de temperatura pasa a llamarse `thermometer` (con h), como lo publica ahora el simulador de A: topic `<id>/sensors/thermometer` con `{"temperature": {unit, value}}`, y en la API `sensors.thermometer.temperature`. La API sirve el campograma en `/` (`api/public/index.html`) |
 | Dom 15 nov | **Se quita el clima:** Open-Meteo sale del proyecto, y con él `POST/GET /api/clima`, el WBGT, el ajuste de los umbrales de calor y el aviso `clima`. **Control del simulador:** `GET /api/simulador` y `POST /api/simulador/{fase,escenario,reiniciar}` publican en `control/#` con QoS 1; aviso `simulador` por WebSocket. Nada de esto cambia lo que manda la pasarela |
+| Dom 15 nov (2) | **Ajuste de sensores, con el diseño de A:** `PUT` y `DELETE /api/simulador/jugadores/:id/sensores` publican en `control/jugadores/<id>/sensores` el pulso o la temperatura que tiene que publicar ese jugador y durante cuánto (`durationSeconds`, 30 s por defecto; 0, hasta quitarlo). Se quitan los escenarios (`POST /api/simulador/escenario`). `reiniciar` también quita los ajustes de los 11. El aviso `simulador` lleva `ajustes`. Documentado en Swagger y en Postman (carpeta Simulador). Se quita el fake-gateway |

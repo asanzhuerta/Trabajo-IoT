@@ -39,13 +39,13 @@ $ComandosIniciales = @{
         "& '$Mosquitto\mosquitto.exe' -c mosquitto/mosquitto.conf -v"
     )
     subscriber = @(
+        "& '$Mosquitto\mosquitto_sub.exe' -h localhost -u `$env:NODERED_MQTT_USER -P `$env:NODERED_MQTT_PASS -t 'control/#' -v",
         "& '$Mosquitto\mosquitto_sub.exe' -h localhost -u `$env:NODERED_MQTT_USER -P `$env:NODERED_MQTT_PASS -t 'equipo/estado' -v",
         "& '$Mosquitto\mosquitto_sub.exe' -h localhost -u `$env:NODERED_MQTT_USER -P `$env:NODERED_MQTT_PASS -t 'p1/sensors/#' -v",
         "& '$Mosquitto\mosquitto_sub.exe' -h localhost -u `$env:NODERED_MQTT_USER -P `$env:NODERED_MQTT_PASS -t 'sensors/eq1/alertas' -v",
         "& '$Mosquitto\mosquitto_sub.exe' -h localhost -u `$env:NODERED_MQTT_USER -P `$env:NODERED_MQTT_PASS -t '#' -v"
     )
     api        = @(
-        'node scripts/fake-gateway.js --calor p8 --incidente p3 --sin-senal p10 --asimetria p5 --fc-alta p7 --desacople p6 --recuperacion p9',
         'node scripts/seed.js --limpiar',
         'node scripts/seed.js',
         'npm test',
@@ -56,6 +56,8 @@ $ComandosIniciales = @{
         'node node_red/arrancar.js'
     )
     mirar      = @(
+        'Invoke-RestMethod -Method Delete -Uri http://localhost:3000/api/simulador/jugadores/p8/sensores',
+        'Invoke-RestMethod -Method Put -Uri http://localhost:3000/api/simulador/jugadores/p8/sensores -ContentType application/json -Body ''{"temperature": 40.5, "durationSeconds": 60}''',
         'Start-Process http://localhost:3000/api-docs',
         'Start-Process http://localhost:3000',
         "Invoke-RestMethod 'http://localhost:3000/api/alertas?estado=activa' | Format-Table jugadorId, codigo, severidad, mensaje",

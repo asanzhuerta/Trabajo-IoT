@@ -1,7 +1,7 @@
 // Publicador MQTT (adaptado de mqtt/publisher.js de clase).
 // La API solo publica, con QoS 1 y sin retain:
 //   - las alertas, en sensors/<equipo>/alertas (las recibe el dashboard médico);
-//   - las órdenes al simulador, en control/fase, control/escenario y control/reset (ver services/simulador.js).
+//   - las órdenes al simulador, en control/fase, control/reset y control/jugadores/<id>/sensores (ver services/simulador.js).
 // Se conecta al Mosquitto nativo con el usuario "api", que en la ACL solo puede escribir en esos topics.
 // Si el broker se cae, mqtt.js reconecta solo y guarda en cola los mensajes QoS 1 mientras tanto.
 

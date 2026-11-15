@@ -95,7 +95,7 @@ test('asimetría: no se calcula hasta tener 45 s de plantillas', function () {
     assert.equal(estado.obtener('p8').derivados.asimetria, 50);
 });
 
-test('asimetría: con plantillas cada 2 s (fake-gateway) también se calcula a los 45 s', function () {
+test('asimetría: con plantillas cada 2 s también se calcula a los 45 s', function () {
     for (let s = 0; s < 45; s++) estado.procesar(lectura(s, s % 2 === 0 ? { izq: 40 } : {}), PERFIL);
     assert.equal(estado.obtener('p8').derivados.asimetria, null);   // 44 s cubiertos
     estado.procesar(lectura(45), PERFIL);                              // esta no trae plantillas

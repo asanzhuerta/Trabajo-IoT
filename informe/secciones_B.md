@@ -11,7 +11,7 @@
 La API está hecha con **Node.js 24 y Express 5** (carpeta `api/`) y sigue la estructura de los ejemplos de clase: `server.js` arranca el servidor HTTP y le ata el servidor WebSocket; `servers/http-server.js` monta los routers; la lógica está en `services/` y los modelos de MongoDB en `models/`.
 
 - **URL base:** `http://localhost:3000`. Peticiones y respuestas en JSON; fechas en ISO 8601 (UTC).
-- **Documentación interactiva:** Swagger UI en `http://localhost:3000/api-docs`, generada a partir de `api/openapi.yaml` (OpenAPI 3.0.3, 16 rutas).
+- **Documentación interactiva:** Swagger UI en `http://localhost:3000/api-docs`, generada a partir de `api/openapi.yaml` (OpenAPI 3.0.3, 20 rutas).
 - **Contrato completo:** `docs/contratos/api.md`.
 
 *Figura 5.1 — Arquitectura de la API por capas* (`docs/diagramas/api-arquitectura.png`).
@@ -34,8 +34,9 @@ La API está hecha con **Node.js 24 y Express 5** (carpeta `api/`) y sigue la es
 | `GET` · `POST` | `/api/sesiones` | — · médico | Lista de sesiones · empezar una |
 | `GET` | `/api/sesiones/:id` | — | Una sesión con su resumen por jugador |
 | `POST` | `/api/sesiones/:id/fin` | médico | Cerrar la sesión y guardar el resumen |
-| `GET` | `/api/simulador` | — | Fases y escenarios válidos y lo último que se mandó al simulador |
-| `POST` | `/api/simulador/fase` · `/escenario` · `/reiniciar` | — | Cambiar la fase de juego, poner un escenario de salud a un jugador o reiniciar el simulador (sección 5.5) |
+| `GET` | `/api/simulador` | — | Fases válidas, rangos y lo último que se mandó al simulador |
+| `POST` | `/api/simulador/fase` · `/reiniciar` | — | Cambiar la fase de juego o reiniciar el simulador (sección 5.5) |
+| `PUT` · `DELETE` | `/api/simulador/jugadores/:id/sensores` | — | Forzar el pulso o la temperatura que publica un jugador, o quitarlo (sección 5.5) |
 | `GET` | `/fhir/Observation?patient=&code=` | — | Constantes vitales en FHIR R4 |
 | `GET` | `/fhir/Observation/:id` | — | Una Observation |
 | `GET` | `/health` | — | Estado de la API, de MongoDB y del broker |
@@ -67,7 +68,7 @@ La validación (`services/validacion.js`) comprueba cada medida, su unidad y su 
 
 **Desde Swagger UI.** En `/api-docs`, el botón *Authorize* pide la `x-api-key` (la del médico o la de la pasarela, que están en el `.env`) y cada operación se puede probar con *Try it out → Execute*. *Figura 5.3 — Swagger UI* (`informe/capturas/swagger.png`).
 
-**Desde Postman.** `docs/postman_collection.json` tiene 35 peticiones en 9 carpetas (una por recurso más una de errores). Las claves se ponen en el *Current value* de las variables `claveMedico` y `clavePasarela`, así que no se guardan en el archivo. Las peticiones encadenan datos entre sí (al empezar una sesión se guarda su id para cerrarla después) y cada una comprueba su código de respuesta, de modo que la colección entera se puede lanzar con el *Collection Runner*. *Figura 5.4 — Postman* (`informe/capturas/postman.png`).
+**Desde Postman.** `docs/postman_collection.json` tiene 43 peticiones en 10 carpetas (una por recurso más una de errores). Las claves se ponen en el *Current value* de las variables `claveMedico` y `clavePasarela`, así que no se guardan en el archivo. Las peticiones encadenan datos entre sí (al empezar una sesión se guarda su id para cerrarla después) y cada una comprueba su código de respuesta, de modo que la colección entera se puede lanzar con el *Collection Runner*. *Figura 5.4 — Postman* (`informe/capturas/postman.png`).
 
 **Con curl** (en PowerShell, `curl.exe`):
 
@@ -101,23 +102,24 @@ ws.onmessage = function (e) {
 
 ### 5.5 Control del simulador por MQTT
 
-Para la demo hay que poder provocar un golpe de calor o un incidente cuando se quiera, sin tocar Node-RED. El camino es el inverso al de la telemetría: **la API publica y el simulador se suscribe.**
+Para la demo hay que poder provocar un golpe de calor o una FC disparada cuando se quiera, sin tocar Node-RED. El camino es el inverso al de la telemetría: **la API publica y el simulador se suscribe.**
 
-1. El dashboard de simulación (de la Persona A) llama a la API: `POST /api/simulador/escenario` con `{"jugadorId": "p8", "escenario": "golpe_calor"}`.
-2. La API valida la orden (`services/simulador.js`) y la publica en Mosquitto con **QoS 1** en `control/escenario`.
-3. El simulador de Node-RED la recibe con un `mqtt in` en `control/#` y cambia el comportamiento de ese jugador (en este caso, su temperatura sube hasta pasar de 40 °C).
-4. La telemetría vuelve por el camino normal y salta la alerta (`CALOR_AMBAR` y después `CALOR_ROJA`).
+1. El dashboard de simulación (de la Persona A) llama a la API: `PUT /api/simulador/jugadores/p8/sensores` con `{"temperature": 40.5, "durationSeconds": 60}`.
+2. La API valida la orden (`services/simulador.js`) y la publica en Mosquitto con **QoS 1** en `control/jugadores/p8/sensores`.
+3. El simulador de Node-RED la recibe con un `mqtt in` y la guarda en el contexto del flujo. Durante 60 s, p8 publica 40,5 °C en su termómetro; el resto de sus sensores y los otros diez jugadores siguen simulándose igual.
+4. La telemetría vuelve por el camino normal y saltan `CALOR_AMBAR` y `CALOR_ROJA`. Pasado el minuto, p8 vuelve solo a su temperatura simulada.
 
 | Topic | Mensaje | Qué hace el simulador |
 |---|---|---|
 | `control/fase` | `presion_alta` | El motor táctico cambia la fase de juego del equipo |
-| `control/escenario` | `{"jugadorId", "escenario", "ts"}` | El jugador sigue ese escenario hasta que llega `normal` |
-| `control/reset` | `true` | Vuelve a la formación inicial y quita los escenarios |
+| `control/jugadores/<id>/sensores` | `{"pulse", "temperature", "durationSeconds", "ts"}` o `{"reset": true}` | Ese jugador publica el pulso o la temperatura indicados durante ese tiempo (`0`, hasta que llegue el `reset`) |
+| `control/reset` | `true` | Vuelve a la formación inicial |
 
+- **Por qué se fuerzan las lecturas y no el estado interno del jugador:** así no hay que tocar las funciones de los 11 jugadores ni el motor táctico. Un nodo intercepta lo que publica cada jugador y cambia solo el valor del sensor ajustado.
 - **Respuesta `202 Accepted`:** la API no espera a que el simulador cambie, solo a que el broker confirme la publicación (PUBACK).
-- **Errores:** `400` con la lista de fases o escenarios válidos, `503` si la API no está conectada a Mosquitto y `502` si el broker no confirma.
-- **Sin MongoDB y sin clave.** Estas rutas no tocan datos clínicos, así que no piden clave y funcionan aunque la base de datos esté caída.
-- **Escenarios:** golpe de calor, FC alta, desacople, recuperación lenta, incidente, asimetría, sobrecarga y sensor caído; cada uno provoca una de las alertas de la sección 6.
+- **Rangos:** de 30 a 220 lpm y de 35 a 42 °C. Caben en la validación de la telemetría (si no, la API rechazaría el lote) y dejan provocar las alertas: con 39 °C como máximo nunca saltaría `CALOR_ROJA`.
+- **Errores:** `400` con la lista de fases válidas o el rango que se ha pasado, `404` si el jugador no es de `p1` a `p11`, `503` si la API no está conectada a Mosquitto y `502` si el broker no confirma.
+- **Sin MongoDB y sin clave.** Estas rutas no tocan datos clínicos, así que no piden clave y funcionan aunque la base de datos esté caída. En producción no existirían: solo sirven para simular.
 
 *Figura 5.5 — Dashboard de simulación* (`informe/capturas/simulacion.png`).
 
@@ -168,7 +170,7 @@ Con el simulador de 11 jugadores de la Persona A, dos reglas saltaban en falso y
 - **`SOBRECARGA`** saltaba en todos los jugadores de campo a partir del minuto 33. El simulador limita la frenada a 3,0 m/s² justos y frena siempre a tope, así que con "3 o más" cada parada contaba como alta intensidad: de 2.811 frenadas altas, 2.787 eran exactamente 3,0. Ahora se cuentan las de **más** de 3 m/s².
 - **`ASIMETRIA`** saltaba al arrancar (con una sola lectura, la "media" es una pisada) y, de vez en cuando, al moverse de lado (la media de un minuto llegó a 17,4 puntos en 2 horas). Ahora hacen falta 45 s de datos y el umbral pasa de 10 a 15 puntos.
 
-Después de los ajustes, en tres partidos simulados de 2 horas con los 11 jugadores no saltó ninguna alerta falsa, y los escenarios de prueba (calor, FC alta, desacople, recuperación lenta, incidente, asimetría, sin señal y pauta excedida) siguen disparando sus alertas.
+Después de los ajustes, en tres partidos simulados de 2 horas con los 11 jugadores no saltó ninguna alerta falsa, y los tests de las 10 reglas siguen pasando.
 
 ---
 
@@ -203,7 +205,7 @@ El servidor WebSocket comparte puerto con la API (`ws://localhost:3000`) y solo 
 | `alerta` | La alerta completa | Al momento |
 | `alerta_confirmada` | Id de la alerta | Al momento |
 | `sesion_iniciada` · `sesion_cerrada` | La sesión (con el resumen al cerrarla) | Al momento |
-| `simulador` | La fase y los escenarios que se acaban de mandar al simulador | Con cada orden |
+| `simulador` | La fase y los valores forzados que se acaban de mandar al simulador | Con cada orden |
 
 REST sirve para consultar y modificar; el WebSocket evita que la web tenga que preguntar cada segundo y hace que una alerta aparezca en cuanto se genera.
 
@@ -249,9 +251,9 @@ Los datos de la plataforma (frecuencia cardiaca, temperatura interna, lesiones y
 
 ## 10. Pruebas (parte de la API)
 
-- **Tests automáticos:** 61 tests con `node:test` (`npm test`) sobre las partes puras: validación del lote, estado en vivo y resúmenes de 10 s, métricas, las 10 reglas y el antirrebote, ACWR, conversión a FHIR y validación de las órdenes al simulador (con `503` si no hay broker).
-- **Colección de Postman:** las 35 peticiones pasan con el *Collection Runner*, incluidos los errores esperados (400, 401, 403, 404 y 409).
-- **Escenarios:** `api/scripts/fake-gateway.js` imita la pasarela con escenarios activables por jugador (golpe de calor, FC alta, desacople, recuperación lenta, incidente, asimetría, sin señal y sobrecarga). En 100 s saltan 9 de las 10 alertas; `SOBRECARGA` necesita más tiempo o bajar su umbral.
+- **Tests automáticos:** 62 tests con `node:test` (`npm test`) sobre las partes puras: validación del lote, estado en vivo y resúmenes de 10 s, métricas, las 10 reglas y el antirrebote, ACWR, conversión a FHIR y validación de las órdenes al simulador (con `503` si no hay broker).
+- **Colección de Postman:** las 43 peticiones pasan con el *Collection Runner* (las del simulador, con Mosquitto en marcha), incluidos los errores esperados (400, 401, 403, 404 y 409).
+- **Control del simulador:** con Mosquitto con usuarios y ACL, un cliente con el usuario `nodered` suscrito a `control/#` (como el `mqtt in` del simulador) recibe cada orden de `/api/simulador` tal cual, sin ninguna denegación de la ACL.
 - **Integración con el simulador de A:** se ejecutó el simulador real de 11 jugadores, segundo a segundo, a través de la pasarela y de la validación y el motor de alertas de la API. En un partido de 90 minutos (356.400 mensajes, 5.400 lotes) la API no rechazó ningún lote. Esta prueba destapó los dos ajustes de la sección 6.4; después de hacerlos, tres partidos de 2 horas sin ninguna alerta falsa.
 - **De extremo a extremo:** Mosquitto con usuarios y ACL → simulador y pasarela en Node-RED → API → MongoDB, comprobado con los 11 jugadores llegando en tiempo real y `/health` con MongoDB y MQTT conectados.
 

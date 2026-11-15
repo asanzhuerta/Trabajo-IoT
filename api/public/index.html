@@ -78,7 +78,7 @@
     <div class="layout">
       <main class="card" aria-label="Mapa en tiempo real de los jugadores">
         <div class="board-head"><div><div class="card-title">Terreno de juego</div><div class="card-sub">Local defendiendo a la izquierda · X 0–105 m · Y 0–68 m</div></div><div class="tools"><label class="tool-chip"><input id="showNames" type="checkbox" checked> Nombres</label><label class="tool-chip"><input id="showTrails" type="checkbox" checked> Rastro del seleccionado</label></div></div>
-        <div class="tactic-strip" aria-live="polite"><div class="tactic-left"><span class="tactic-dot" id="teamDot"></span><div><strong id="teamTitle">Estado del equipo</strong><small id="teamSub">Semáforo según las alertas activas de cada jugador</small></div></div><div class="tactic-extra"><span class="tactic-chip sema-chip"><i style="background:#35ce92"></i><span id="nVerde">0</span> verde</span><span class="tactic-chip sema-chip"><i style="background:#ffb020"></i><span id="nAmbar">0</span> ámbar</span><span class="tactic-chip sema-chip"><i style="background:#ff4d4d"></i><span id="nRojo">0</span> rojo</span><span class="tactic-chip sema-chip"><i style="background:#53697a"></i><span id="nSinSenal">0</span> sin señal</span><span class="tactic-chip" id="simChip" title="Escenarios de salud puestos desde el dashboard de simulación">Simulación: —</span></div></div>
+        <div class="tactic-strip" aria-live="polite"><div class="tactic-left"><span class="tactic-dot" id="teamDot"></span><div><strong id="teamTitle">Estado del equipo</strong><small id="teamSub">Semáforo según las alertas activas de cada jugador</small></div></div><div class="tactic-extra"><span class="tactic-chip sema-chip"><i style="background:#35ce92"></i><span id="nVerde">0</span> verde</span><span class="tactic-chip sema-chip"><i style="background:#ffb020"></i><span id="nAmbar">0</span> ámbar</span><span class="tactic-chip sema-chip"><i style="background:#ff4d4d"></i><span id="nRojo">0</span> rojo</span><span class="tactic-chip sema-chip"><i style="background:#53697a"></i><span id="nSinSenal">0</span> sin señal</span><span class="tactic-chip" id="simChip" title="Pulso y temperatura forzados desde el dashboard de simulación">Simulación: —</span></div></div>
         <div class="pitch-wrap"><div class="pitch-frame">
           <svg id="pitch" viewBox="0 0 1100 740" role="img" aria-label="Campo de fútbol con once marcadores que se actualizan con datos GPS">
             <defs><linearGradient id="lawn" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#155943"/><stop offset="100%" stop-color="#0f4839"/></linearGradient></defs>
@@ -234,19 +234,25 @@
       } catch (e) { /* idem */ }
     }
 
-    // Escenarios de salud activos en el simulador (los pone el dashboard de simulación de A a través de la API)
-    let nombresEscenario = {};
-    function pintarSimulacion(escenarios) {
-      const ids = porId();
-      const lista = Object.entries(escenarios || {}).map(([id, e]) => `#${ids[id] ? ids[id].dorsal : id} ${nombresEscenario[e] || e}`);
-      $('simChip').textContent = lista.length ? 'Simulación: ' + lista.join(' · ') : 'Simulación: sin escenarios';
+    // Pulso y temperatura forzados en el simulador (los pone el dashboard de simulación de A a través de la API)
+    let ajustesSim = {};
+    function pintarSimulacion() {
+      const ids = porId(), ahora = Date.now();
+      const lista = Object.entries(ajustesSim)
+        .filter(([, a]) => !a.hasta || Date.parse(a.hasta) > ahora)
+        .map(([id, a]) => {
+          const valores = [a.pulse != null ? `${a.pulse} lpm` : null, a.temperature != null ? `${fmt(a.temperature)} °C` : null].filter(Boolean).join(' y ');
+          const quedan = a.hasta ? ` (${Math.ceil((Date.parse(a.hasta) - ahora) / 1000)} s)` : '';
+          return `#${ids[id] ? ids[id].dorsal : id} ${valores}${quedan}`;
+        });
+      $('simChip').textContent = lista.length ? 'Forzado: ' + lista.join(' · ') : 'Simulación: sin valores forzados';
     }
 
     async function cargarSalud() {
       try {
         salud = await fetch(API + '/health', {cache:'no-store'}).then(r => r.json());
         const sim = await fetch(API + '/api/simulador').then(r => r.ok ? r.json() : null).catch(() => null);
-        if (sim) { nombresEscenario = Object.fromEntries(sim.escenariosDisponibles.map(e => [e.codigo, e.nombre])); pintarSimulacion(sim.escenarios); }
+        if (sim) ajustesSim = sim.ajustes || {};
       } catch (e) { salud = null; }
     }
 
@@ -262,7 +268,7 @@
         if (m.tipo === 'telemetria') m.jugadores.forEach(aplicarJugador);
         else if (m.tipo === 'alerta') alertas.set(m.alerta.id, m.alerta);
         else if (m.tipo === 'alerta_confirmada') alertas.delete(m.alertaId);
-        else if (m.tipo === 'simulador') pintarSimulacion(m.escenarios);
+        else if (m.tipo === 'simulador') ajustesSim = m.ajustes || {};
       };
       socket.onclose = () => { apiOnline = false; updateStatus(); reconnectTimer = setTimeout(connect, 3000); };
       socket.onerror = () => { apiOnline = false; updateStatus(); };
@@ -321,6 +327,7 @@
     }
 
     function renderUI() {
+      pintarSimulacion();
       const activos = players.filter(fresh);
       $('kActive').textContent = activos.length;
       $('kSpeed').textContent = activos.length ? fmt(activos.reduce((s,p) => s + (p.speed || 0), 0) / activos.length) : '—';

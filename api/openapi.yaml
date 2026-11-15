@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Smart Health · API REST
-  version: 2.2.0
+  version: 2.3.0
   description: |
     API de la plataforma de monitorización de salud de un equipo de fútbol (Practical Assignment IoT 2026/27).
 
@@ -12,6 +12,8 @@ info:
     - **Tiempo real:** además de esta API hay un WebSocket en el mismo puerto (`ws://localhost:3000`) que manda
       la telemetría a 1 Hz, las alertas y los cambios de sesión. No se puede describir en OpenAPI; está en
       `docs/contratos/api.md`.
+    - **Simulador:** las rutas de `/api/simulador` publican órdenes por MQTT (`control/#`) para el simulador de Node-RED:
+      cambiar la fase de juego o forzar el pulso o la temperatura de un jugador. No piden clave: no tocan datos clínicos.
     - **Ids de jugador:** seudónimos `p1`…`p11`, los mismos de los topics del simulador. Nunca nombres.
 
     Contratos completos en `docs/contratos/api.md` y `docs/contratos/alertas.md`.
@@ -34,6 +36,8 @@ tags:
     description: Entrenamientos y partidos, con el resumen de cada jugador al cerrarlos
   - name: FHIR
     description: Constantes vitales (FC y temperatura) como recursos FHIR R4 Observation
+  - name: Simulador
+    description: Control del simulador de Node-RED por MQTT (control/#), para el dashboard de simulación. No pide clave ni usa MongoDB
   - name: Utilidad
 
 paths:
@@ -470,6 +474,132 @@ paths:
               schema: { $ref: '#/components/schemas/FhirOperationOutcome' }
 
   # ------------------------------------------------------------------ utilidad
+  # ------------------------------------------------------------------ simulador
+  /api/simulador:
+    get:
+      tags: [Simulador]
+      summary: Estado del control del simulador
+      description: |
+        Fases válidas, rangos de los ajustes, lo último que se mandó al simulador (fase y ajustes que siguen en vigor)
+        y si la API está conectada a Mosquitto. Si se reinicia Node-RED, el simulador vuelve a lo normal aunque
+        aquí siga apuntado.
+      responses:
+        '200':
+          description: Estado del control
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EstadoSimulador' }
+
+  /api/simulador/fase:
+    post:
+      tags: [Simulador]
+      summary: Cambiar la fase de juego
+      description: |
+        Publica el código de la fase, como texto, en `control/fase` (QoS 1). Lo entiende el motor táctico de A,
+        que cambia la fase de todo el equipo. Responde `202`: la orden está en el broker, no se espera al simulador.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fase]
+              properties:
+                fase: { type: string, enum: [ataque_organizado, transicion_defensiva, presion_alta, defensa_organizada, transicion_ofensiva] }
+            example: { fase: presion_alta }
+      responses:
+        '202':
+          description: Orden publicada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OrdenPublicada' }
+              example: { mensaje: Orden publicada, topic: control/fase, fase: presion_alta }
+        '400':
+          description: Fase no válida (el mensaje trae la lista de las válidas)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example: { error: 'Fase no válida. Las válidas son: ataque_organizado, transicion_defensiva, presion_alta, defensa_organizada, transicion_ofensiva' }
+        '502': { $ref: '#/components/responses/SinPuback' }
+        '503': { $ref: '#/components/responses/SinMqtt' }
+
+  /api/simulador/jugadores/{id}/sensores:
+    parameters: [{ $ref: '#/components/parameters/JugadorId' }]
+    put:
+      tags: [Simulador]
+      summary: Forzar el pulso o la temperatura de un jugador
+      description: |
+        Publica el ajuste en `control/jugadores/<id>/sensores` (QoS 1). El simulador sigue calculando los sensores
+        del jugador, pero publica el pulso o la temperatura que se indiquen durante `durationSeconds`; los demás
+        jugadores y sensores no cambian. Sirve para provocar alertas en la demo: por ejemplo, 40,5 °C da `CALOR_ROJA`.
+
+        - Hay que mandar `pulse`, `temperature` o los dos.
+        - `durationSeconds`: 30 si no se indica; `1` es una sola lectura y `0`, hasta que se quite con `DELETE`.
+        - Cada `PUT` sustituye el ajuste anterior de ese jugador.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AjusteSensores' }
+            examples:
+              golpeDeCalor: { summary: 'Golpe de calor: 40,5 °C durante 60 s', value: { temperature: 40.5, durationSeconds: 60 } }
+              fcAlta: { summary: 'FC alta: 185 lpm durante 90 s', value: { pulse: 185, durationSeconds: 90 } }
+              hastaQuitarlo: { summary: 'Los dos, hasta que se quite', value: { pulse: 155, temperature: 38.2, durationSeconds: 0 } }
+      responses:
+        '202':
+          description: Orden publicada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OrdenPublicada' }
+              example: { mensaje: Orden publicada, topic: control/jugadores/p8/sensores, jugadorId: p8, ajuste: { temperature: 40.5, durationSeconds: 60 }, hasta: '2026-11-15T18:31:00.000Z' }
+        '400':
+          description: Falta pulse y temperature, o un valor está fuera de rango
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example: { error: 'temperature fuera de rango (35 a 42 C)' }
+        '404':
+          description: El id no es de p1 a p11
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+              example: { error: 'No existe el jugador p12 (son p1…p11)' }
+        '502': { $ref: '#/components/responses/SinPuback' }
+        '503': { $ref: '#/components/responses/SinMqtt' }
+    delete:
+      tags: [Simulador]
+      summary: Quitar el ajuste de un jugador
+      description: 'Publica `{"reset": true}` en `control/jugadores/<id>/sensores`. El jugador vuelve a publicar los valores simulados.'
+      responses:
+        '202':
+          description: Orden publicada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OrdenPublicada' }
+              example: { mensaje: Orden publicada, topic: control/jugadores/p8/sensores, jugadorId: p8 }
+        '404':
+          description: El id no es de p1 a p11
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '502': { $ref: '#/components/responses/SinPuback' }
+        '503': { $ref: '#/components/responses/SinMqtt' }
+
+  /api/simulador/reiniciar:
+    post:
+      tags: [Simulador]
+      summary: Reiniciar el simulador
+      description: Publica `true` en `control/reset` (el motor táctico vuelve a la formación inicial) y quita los ajustes de los 11 jugadores.
+      responses:
+        '202':
+          description: Orden publicada
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OrdenPublicada' }
+              example: { mensaje: Orden publicada, topic: control/reset }
+        '502': { $ref: '#/components/responses/SinPuback' }
+        '503': { $ref: '#/components/responses/SinMqtt' }
+
   /health:
     get:
       tags: [Utilidad]
@@ -553,7 +683,61 @@ components:
           schema: { $ref: '#/components/schemas/Error' }
           example: { error: La base de datos no está disponible }
 
+    SinMqtt:
+      description: La API no está conectada a Mosquitto
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: Sin conexión con Mosquitto }
+    SinPuback:
+      description: El broker no confirmó la publicación
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: 'No se pudo publicar la orden: …' }
+
   schemas:
+    AjusteSensores:
+      type: object
+      description: Hay que mandar pulse, temperature o los dos.
+      properties:
+        pulse: { type: number, minimum: 30, maximum: 220, description: lpm, example: 155 }
+        temperature: { type: number, minimum: 35, maximum: 42, description: °C, example: 40.5 }
+        durationSeconds: { type: integer, minimum: 0, maximum: 3600, default: 30, description: 'Segundos; 0 = hasta que se quite con DELETE' }
+    OrdenPublicada:
+      type: object
+      properties:
+        mensaje: { type: string, example: Orden publicada }
+        topic: { type: string, example: control/jugadores/p8/sensores }
+        fase: { type: string }
+        jugadorId: { type: string }
+        ajuste: { $ref: '#/components/schemas/AjusteSensores' }
+        hasta: { type: string, format: date-time, nullable: true, description: 'Cuándo caduca el ajuste (null si es hasta que se quite)' }
+    EstadoSimulador:
+      type: object
+      properties:
+        mqtt: { type: string, enum: [connected, connecting, disconnected] }
+        fase: { type: string, nullable: true, description: La última fase mandada desde la API }
+        ajustes:
+          type: object
+          description: Ajustes en vigor, por jugador
+          additionalProperties:
+            allOf:
+              - { $ref: '#/components/schemas/AjusteSensores' }
+              - type: object
+                properties:
+                  hasta: { type: string, format: date-time, nullable: true }
+          example: { p8: { temperature: 40.5, durationSeconds: 60, hasta: '2026-11-15T18:31:00.000Z' } }
+        fases:
+          type: array
+          items:
+            type: object
+            properties:
+              codigo: { type: string, example: presion_alta }
+              nombre: { type: string, example: Presión alta }
+        rangos:
+          type: object
+          example: { pulse: { min: 30, max: 220, unidad: bpm }, temperature: { min: 35, max: 42, unidad: C }, durationSeconds: { min: 0, max: 3600, unidad: s, porDefecto: 30 } }
     Error:
       type: object
       properties:

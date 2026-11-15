@@ -21,7 +21,7 @@ Se abre una ventana de Windows Terminal con una pestaña de color por cada pieza
 - `.\arrancar-todo.ps1 -Limpiar` vacía antes la base de datos, `-Jugador p8` vigila a p8 en lugar de a p1 y `-SinNavegador` no abre el campograma. Las mismas opciones valen con el `.cmd` desde una consola: `arrancar-todo.cmd -Limpiar`.
 - **Node-RED carga solo los flujos nuevos:** si los del repo son más nuevos que los suyos (por ejemplo, después de traer cambios de A), los carga y guarda los anteriores en `~/.node-red-smarthealth/respaldo-<fecha>/`. Si lo último que hiciste fue un *Deploy* en el editor, se respetan tus cambios.
 - Si el servicio de Windows de Mosquitto está arrancado, lo para (pide permiso de administrador una vez).
-- **Cada pestaña tiene su propio historial**, en `~/.smarthealth/historial/<pestaña>.txt`. Cuando pares lo que se esté ejecutando (`Ctrl+C`), pulsa **↑** y te saldrán los comandos de esa parte: en la de la API, `npm run dev`, `npm test`, el seed y el fake-gateway; en la de Subscriber, las suscripciones a `#`, a las alertas, a `p1` y a `equipo/estado`; en la de Mirar, abrir el campograma y Swagger… Lo que escribas se añade a ese historial. Si el lanzador trae comandos nuevos, se añaden solos sin tocar los tuyos. Para volver al historial inicial, borra la carpeta.
+- **Cada pestaña tiene su propio historial**, en `~/.smarthealth/historial/<pestaña>.txt`. Cuando pares lo que se esté ejecutando (`Ctrl+C`), pulsa **↑** y te saldrán los comandos de esa parte: en la de la API, `npm run dev`, `npm test` y el seed; en la de Subscriber, las suscripciones a `#`, a las alertas, a `p1`, a `equipo/estado` y a `control/#`; en la de Mirar, forzar (y quitar) un golpe de calor a p8, abrir el campograma y Swagger… Lo que escribas se añade a ese historial. Si el lanzador trae comandos nuevos, se añaden solos sin tocar los tuyos. Para volver al historial inicial, borra la carpeta.
 - Todas las pestañas cargan el `.env`, así que puedes usar `$env:NODERED_MQTT_PASS` y similares en los comandos.
 - Para pararlo todo, cierra la ventana. Si quieres, deja el servicio como estaba con `net start mosquitto` (como administrador).
 
@@ -149,24 +149,33 @@ Invoke-RestMethod -Method Post -Uri "http://localhost:3000/api/alertas/<id>/conf
 
 El semáforo del jugador vuelve a verde si no le quedan alertas activas.
 
-## 9. Escenarios con 11 jugadores: fake-gateway (opcional)
+## 9. Provocar alertas: control del simulador
 
-El simulador de A tiene, por ahora, un solo jugador y no tiene escenarios. Para ver todas las alertas, el fake-gateway hace de simulador y pasarela a la vez: cada segundo manda a la API los 11 jugadores, en el formato de A. En otra consola, dentro de `api/`:
+La API puede forzar el pulso o la temperatura que publica un jugador del simulador durante los segundos que se indiquen, y cambiar la fase de juego. La orden va por MQTT a `control/#` y el simulador la recoge con un `mqtt in`. **Hace falta que el simulador de A tenga ese `mqtt in`** (los nodos «Guardar ajustes de sensores» y «Aplicar ajustes de sensores»); mientras no lo tenga, la API publica la orden y no pasa nada más.
+
+Desde Swagger (sección *Simulador*), Postman (carpeta *Simulador*) o PowerShell:
 
 ```powershell
-node scripts/fake-gateway.js --calor p8 --incidente p3 --sin-senal p10 --asimetria p5 --fc-alta p7 --desacople p6 --recuperacion p9
+# Golpe de calor a p8 durante 60 s
+Invoke-RestMethod -Method Put -Uri http://localhost:3000/api/simulador/jugadores/p8/sensores -ContentType "application/json" -Body '{"temperature": 40.5, "durationSeconds": 60}'
+# FC alta a p7 hasta quitarla (durationSeconds 0)
+Invoke-RestMethod -Method Put -Uri http://localhost:3000/api/simulador/jugadores/p7/sensores -ContentType "application/json" -Body '{"pulse": 185, "durationSeconds": 0}'
+Invoke-RestMethod -Method Delete -Uri http://localhost:3000/api/simulador/jugadores/p7/sensores
+# Fase de juego y reinicio
+Invoke-RestMethod -Method Post -Uri http://localhost:3000/api/simulador/fase -ContentType "application/json" -Body '{"fase": "presion_alta"}'
+Invoke-RestMethod -Method Post -Uri http://localhost:3000/api/simulador/reiniciar
 ```
 
-Si a la vez está funcionando el simulador de A, los datos de `p1` llegan por los dos lados. Mejor desactivar uno de los dos.
+En la consola del Subscriber, con `-t "control/#"`, se ven llegar las órdenes. En el campograma, el chip de arriba dice a quién se le está forzando un valor y cuántos segundos le quedan.
 
-| Cuándo | Alerta |
-|---|---|
-| Al momento | `PAUTA_EXCEDIDA` de p5 (está en readaptación y se pasa de su límite) |
-| ~10 s | `SIN_SENAL` de p10 y `CALOR_AMBAR` de p8 |
-| ~30 s | `INCIDENTE` de p3 (impacto fuerte, inmóvil y FC muy baja) |
-| ~60 s | `FC_DESACOPLE` de p6 y `CALOR_ROJA` de p8 |
-| ~90 s | `ASIMETRIA` de p5 (es la media del último minuto, así que tarda más) |
-| ~80 s | `RECUPERACION_LENTA` de p9 y `FC_ALTA` de p7 |
+| Ajuste | Alerta | Cuándo |
+|---|---|---|
+| `{"temperature": 39.4}` | `CALOR_AMBAR` | Al momento |
+| `{"temperature": 40.5}` | `CALOR_ROJA` (y la ámbar) | Al momento |
+| `{"pulse": 185, "durationSeconds": 90}` | `FC_ALTA` | ~60 s |
+| `{"pulse": 175, "durationSeconds": 60}` al portero (camina) | `FC_DESACOPLE` | ~30 s |
+
+Además, `PAUTA_EXCEDIDA` salta sola con p5 (está en readaptación) cuando corre más de lo que permite su pauta.
 
 ## 10. Tests
 

@@ -10,7 +10,7 @@
 - Separa responsabilidades: Node-RED es la capa de edge y la API no depende del formato de cada topic.
 - La pasarela junta 55 topics por segundo en un solo lote: una petición por segundo en vez de 66 mensajes sueltos.
 - El watchdog de "sin señal" está donde están los datos.
-- La API se puede probar sin broker (fake-gateway, Postman).
+- La API se puede probar sin broker (Postman, Swagger).
 
 **¿Por qué QoS 1 en las alertas y QoS 0 en la telemetría?** Una lectura perdida da igual: llega otra en un segundo. Una alerta perdida no: QoS 1 garantiza que llega al menos una vez (puede llegar repetida, y el dashboard la identifica por su id). QoS 2 (exactamente una vez) añade dos idas y vueltas más que aquí no hacen falta.
 
@@ -44,8 +44,10 @@
 - **Calibración:** con el simulador de A, `SOBRECARGA` y `ASIMETRIA` saltaban en falso; se midió en partidos simulados y se ajustó (acciones de más de 3 m/s², asimetría con 15 puntos y 45 s de datos). Detalle en la sección 6.4 del informe.
 - **ACWR:** carga de 7 días entre la media semanal de 28, con los metros a alta intensidad de cada sesión. Franja 0,8–1,3 (Gabbett 2016), discutida (Impellizzeri 2020): sirve para ver picos de carga, no para predecir lesiones.
 - **FHIR:** `Observation` de `vital-signs` con LOINC 8867-4 (FC) y 8310-5 (temperatura), unidades UCUM, en un `Bundle searchset`; errores como `OperationOutcome`. No es un servidor FHIR completo.
-- **Control del simulador:** el dashboard de simulación (lo hace A) llama a `POST /api/simulador/{fase,escenario,reiniciar}`; la API publica la orden en `control/#` con QoS 1 y el simulador la recibe con un `mqtt in`. Responde `202` (la orden está en el broker, no hace falta esperar al simulador), `400` con la lista de valores válidos y `503` sin MQTT. No pide clave ni MongoDB: no toca datos clínicos.
+- **Control del simulador:** el dashboard de simulación (lo hace A) llama a `PUT /api/simulador/jugadores/p8/sensores` con `{"temperature": 40.5, "durationSeconds": 60}` (o a `POST /api/simulador/fase`); la API publica la orden en `control/jugadores/p8/sensores` con QoS 1 y el simulador la recibe con un `mqtt in`. Durante esos 60 s, p8 publica 40,5 °C y salta `CALOR_ROJA`; luego vuelve solo a su valor simulado. Responde `202` (la orden está en el broker, no hace falta esperar al simulador), `400` con el rango o la lista de fases válidas y `503` sin MQTT. No pide clave ni MongoDB: no toca datos clínicos.
+- **¿Por qué se fuerza la lectura y no el estado del jugador?** No hay que tocar las funciones de los 11 jugadores: un nodo cambia el valor del sensor justo antes de publicarlo, y el resto de sensores y jugadores siguen igual.
+- **¿Por qué de 35 a 42 °C y no hasta 39 como la simulación normal?** Con 39 °C de máximo nunca saltaría `CALOR_ROJA` (40 °C); y más allá de 45 °C la validación de la API rechazaría el lote.
 - **¿Por qué la API publica en vez de que el dashboard hable con el broker?** El navegador no habla MQTT por TCP (haría falta MQTT sobre WebSocket y abrir el broker); así la orden se valida en un solo sitio y el broker sigue cerrado con su ACL.
 - **WebSocket:** el mismo puerto que la API; la telemetría a 1 Hz y las alertas al momento, para que la web no tenga que preguntar cada segundo.
 - **Seguridad:** `x-api-key` con dos roles (pasarela y médico) comparadas en tiempo constante; datos de salud (art. 9 del RGPD) con seudónimos y resúmenes. Limitaciones: GET sin clave, sin HTTPS, claves por rol y no por usuario.
-- **Pruebas:** 61 tests con `node:test`, colección de Postman con tests, escenarios con el fake-gateway y el simulador de A pasado por la pasarela y la API.
+- **Pruebas:** 62 tests con `node:test`, colección de Postman con tests (43 peticiones), el simulador de A pasado por la pasarela y la API, y las órdenes de `/api/simulador` comprobadas con Mosquitto y la ACL.

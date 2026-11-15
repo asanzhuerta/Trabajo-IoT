@@ -21,7 +21,7 @@ const VENTANA_ASIMETRIA_MS = 60000;
 // Y hace falta casi un minuto entero de plantillas: con pocos segundos, la "media" es una pisada o un
 // desplazamiento lateral (al arrancar el simulador de A saltaba ASIMETRIA en 10 de 11 jugadores en el
 // segundo 0, y con 20 s todavía en alguno). Se pide tiempo cubierto y no un número de lecturas porque
-// A manda las plantillas cada segundo y el fake-gateway cada 2 s.
+// las plantillas pueden no llegar cada segundo (si se pierde alguna, la ventana sigue valiendo).
 const MIN_TIEMPO_ASIMETRIA_MS = 45000;
 const MIN_LECTURAS_ASIMETRIA = 15;
 const GRACIA_MS = 5000;   // margen antes de cerrar una ventana a la que ya no llegan lecturas

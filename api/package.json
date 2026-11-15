@@ -8,8 +8,7 @@
     "start": "node server.js",
     "dev": "node --watch-path=server.js --watch-path=config.js --watch-path=db.js --watch-path=servers --watch-path=routers --watch-path=services --watch-path=models --watch-path=middleware --watch-path=mqtt server.js",
     "test": "node --test",
-    "seed": "node scripts/seed.js",
-    "fake-gateway": "node scripts/fake-gateway.js"
+    "seed": "node scripts/seed.js"
   },
   "engines": {
     "node": ">=22.9"

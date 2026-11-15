@@ -1,9 +1,10 @@
 // Control del simulador de Node-RED desde la API (lo usa el dashboard de simulación de A).
-// La API publica la orden por MQTT y el simulador la recibe con un mqtt in en control/#:
-//   control/fase       la fase de juego, como texto: "ataque_organizado"…  (la entiende el motor táctico de A)
-//   control/escenario  {"jugadorId": "p8", "escenario": "golpe_calor", "ts": "…"}  ("normal" lo quita)
-//   control/reset      "true": vuelve a la formación inicial (también lo entiende el motor táctico)
-// La API recuerda lo último que mandó para enseñarlo en el dashboard; si se reinicia Node-RED, el simulador
+// La API publica la orden por MQTT (QoS 1, sin retain) y el simulador la recibe con un mqtt in:
+//   control/fase                    la fase de juego, como texto: "presion_alta"     (motor táctico de A)
+//   control/reset                   "true": vuelve a la formación inicial             (motor táctico de A)
+//   control/jugadores/<id>/sensores {"pulse": 155, "temperature": 38.2, "durationSeconds": 30, "ts": "…"}
+//                                   fuerza el pulso o la temperatura que publica ese jugador; {"reset": true} lo quita
+// La API recuerda lo último que mandó para enseñarlo en los dashboards; si se reinicia Node-RED, el simulador
 // vuelve a su comportamiento normal aunque aquí siga apuntado.
 
 const publisher = require('../mqtt/publisher');
@@ -18,24 +19,20 @@ const FASES = {
     transicion_ofensiva: 'Transición ofensiva'
 };
 
-// Cada escenario de salud y la alerta que debería provocar
-const ESCENARIOS = {
-    normal: { nombre: 'Normal', descripcion: 'Quita el escenario: vuelve al comportamiento normal', alerta: null },
-    golpe_calor: { nombre: 'Golpe de calor', descripcion: 'La temperatura interna sube hasta pasar de 40 °C', alerta: 'CALOR_AMBAR y CALOR_ROJA' },
-    fc_alta: { nombre: 'FC alta', descripcion: 'FC sostenida por encima del 92 % de su FCmáx', alerta: 'FC_ALTA' },
-    desacople: { nombre: 'Desacople', descripcion: 'FC por encima del 85 % de la FCmáx caminando', alerta: 'FC_DESACOPLE' },
-    recuperacion_lenta: { nombre: 'Recuperación lenta', descripcion: 'Sprint y después camina, pero la FC apenas baja', alerta: 'RECUPERACION_LENTA' },
-    incidente: { nombre: 'Incidente', descripcion: 'Impacto de más de 4 g, se queda inmóvil y la FC cae', alerta: 'INCIDENTE' },
-    asimetria: { nombre: 'Asimetría', descripcion: 'Carga cada vez más un pie que el otro', alerta: 'ASIMETRIA' },
-    sobrecarga: { nombre: 'Sobrecarga', descripcion: 'Arranca y frena sin parar (más de 3 m/s²)', alerta: 'SOBRECARGA' },
-    sin_senal: { nombre: 'Sensor caído', descripcion: 'El wearable deja de publicar', alerta: 'SIN_SENAL' }
+// Los valores forzados tienen que pasar la validación de la telemetría (pulso de 20 a 250 lpm y temperatura
+// de 30 a 45 °C) y dejar provocar las alertas: CALOR_ROJA a 40 °C, INCIDENTE con la FC por debajo de 50…
+const RANGOS = {
+    pulse: { min: 30, max: 220, unidad: 'bpm' },
+    temperature: { min: 35, max: 42, unidad: 'C' },
+    durationSeconds: { min: 0, max: 3600, unidad: 's', porDefecto: 30 }   // 0 = hasta que se quite
 };
 
-const ID_JUGADOR = /^p(?:[1-9]|1[01])$/;
+const IDS = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8', 'p9', 'p10', 'p11'];
 
-const ultimo = { fase: null, escenarios: {} };   // lo último que se mandó, para el dashboard
+const ultimo = { fase: null, ajustes: {} };   // lo último que se mandó, para los dashboards
 
-// Validaciones puras (test/simulador.test.js)
+// ---------------------------------------------------------------- validaciones (test/simulador.test.js)
+
 function validarFase(fase) {
     if (!Object.prototype.hasOwnProperty.call(FASES, fase)) {
         throw new ErrorHttp(400, 'Fase no válida. Las válidas son: ' + Object.keys(FASES).join(', '));
@@ -43,16 +40,38 @@ function validarFase(fase) {
     return fase;
 }
 
-function validarEscenario(datos) {
-    const { jugadorId, escenario } = datos || {};
-    if (typeof jugadorId !== 'string' || !ID_JUGADOR.test(jugadorId)) {
-        throw new ErrorHttp(400, 'jugadorId debe ser p1…p11');
-    }
-    if (!Object.prototype.hasOwnProperty.call(ESCENARIOS, escenario)) {
-        throw new ErrorHttp(400, 'Escenario no válido. Los válidos son: ' + Object.keys(ESCENARIOS).join(', '));
-    }
-    return { jugadorId: jugadorId, escenario: escenario };
+function validarJugador(id) {
+    if (!IDS.includes(id)) throw new ErrorHttp(404, 'No existe el jugador ' + id + ' (son p1…p11)');
+    return id;
 }
+
+function enRango(nombre, valor, entero) {
+    const r = RANGOS[nombre];
+    if (typeof valor !== 'number' || !Number.isFinite(valor) || (entero && !Number.isInteger(valor))) {
+        throw new ErrorHttp(400, nombre + ' debe ser un número' + (entero ? ' entero' : ''));
+    }
+    if (valor < r.min || valor > r.max) {
+        throw new ErrorHttp(400, nombre + ' fuera de rango (' + r.min + ' a ' + r.max + ' ' + r.unidad + ')');
+    }
+    return valor;
+}
+
+// { pulse?, temperature?, durationSeconds? } → el ajuste que se publica (durationSeconds siempre va)
+function validarAjuste(datos) {
+    const { pulse, temperature, durationSeconds } = datos || {};
+    if (pulse === undefined && temperature === undefined) {
+        throw new ErrorHttp(400, 'Indica pulse, temperature o los dos');
+    }
+    const ajuste = {};
+    if (pulse !== undefined) ajuste.pulse = enRango('pulse', pulse);
+    if (temperature !== undefined) ajuste.temperature = enRango('temperature', temperature);
+    ajuste.durationSeconds = durationSeconds === undefined
+        ? RANGOS.durationSeconds.porDefecto
+        : enRango('durationSeconds', durationSeconds, true);
+    return ajuste;
+}
+
+// ---------------------------------------------------------------- órdenes
 
 async function enviar(topic, mensaje) {
     if (publisher.estado() !== 'connected') throw new ErrorHttp(503, 'Sin conexión con Mosquitto');
@@ -63,8 +82,21 @@ async function enviar(topic, mensaje) {
     }
 }
 
+function topicSensores(id) {
+    return 'control/jugadores/' + id + '/sensores';
+}
+
+// Los ajustes que siguen en vigor (los de duración fija caducan solos también en el simulador)
+function ajustesVigentes() {
+    const ahora = Date.now();
+    for (const [id, a] of Object.entries(ultimo.ajustes)) {
+        if (a.hasta && Date.parse(a.hasta) <= ahora) delete ultimo.ajustes[id];
+    }
+    return ultimo.ajustes;
+}
+
 function avisar() {
-    websocket.sendMessage({ tipo: 'simulador', fase: ultimo.fase, escenarios: ultimo.escenarios });
+    websocket.sendMessage({ tipo: 'simulador', fase: ultimo.fase, ajustes: ajustesVigentes() });
 }
 
 async function cambiarFase(fase) {
@@ -75,20 +107,31 @@ async function cambiarFase(fase) {
     return { mensaje: 'Orden publicada', topic: 'control/fase', fase: fase };
 }
 
-async function cambiarEscenario(datos) {
-    const orden = validarEscenario(datos);
-    const mensaje = { ...orden, ts: new Date().toISOString() };
-    await enviar('control/escenario', mensaje);
-    if (orden.escenario === 'normal') delete ultimo.escenarios[orden.jugadorId];
-    else ultimo.escenarios[orden.jugadorId] = orden.escenario;
+async function ajustarSensores(id, datos) {
+    validarJugador(id);
+    const ajuste = validarAjuste(datos);
+    const ts = new Date();
+    await enviar(topicSensores(id), { ...ajuste, ts: ts.toISOString() });
+    const hasta = ajuste.durationSeconds > 0 ? new Date(ts.getTime() + ajuste.durationSeconds * 1000).toISOString() : null;
+    ultimo.ajustes[id] = { ...ajuste, hasta: hasta };
     avisar();
-    return { mensaje: 'Orden publicada', topic: 'control/escenario', ...mensaje };
+    return { mensaje: 'Orden publicada', topic: topicSensores(id), jugadorId: id, ajuste: ajuste, hasta: hasta };
 }
 
+async function quitarAjuste(id) {
+    validarJugador(id);
+    await enviar(topicSensores(id), { reset: true });
+    delete ultimo.ajustes[id];
+    avisar();
+    return { mensaje: 'Orden publicada', topic: topicSensores(id), jugadorId: id };
+}
+
+// Formación inicial y fuera todos los ajustes (a los 11, por si la API no sabe de alguno)
 async function reiniciar() {
     await enviar('control/reset', 'true');
+    for (const id of IDS) await enviar(topicSensores(id), { reset: true });
     ultimo.fase = null;
-    ultimo.escenarios = {};
+    ultimo.ajustes = {};
     avisar();
     return { mensaje: 'Orden publicada', topic: 'control/reset' };
 }
@@ -97,10 +140,10 @@ function estado() {
     return {
         mqtt: publisher.estado(),
         fase: ultimo.fase,
-        escenarios: ultimo.escenarios,
+        ajustes: ajustesVigentes(),
         fases: Object.entries(FASES).map(function ([codigo, nombre]) { return { codigo: codigo, nombre: nombre }; }),
-        escenariosDisponibles: Object.entries(ESCENARIOS).map(function ([codigo, e]) { return { codigo: codigo, ...e }; })
+        rangos: RANGOS
     };
 }
 
-module.exports = { FASES, ESCENARIOS, validarFase, validarEscenario, cambiarFase, cambiarEscenario, reiniciar, estado };
+module.exports = { FASES, RANGOS, validarFase, validarJugador, validarAjuste, cambiarFase, ajustarSensores, quitarAjuste, reiniciar, estado };

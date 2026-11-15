@@ -35,14 +35,14 @@ Node-RED (simulador, 11 jugadores) --MQTT--> Mosquitto --MQTT--> pasarela (Node-
 | Alertas activas | `GET /api/alertas?estado=activa` al conectar y cada 15 s; mensajes `alerta` y `alerta_confirmada` del WebSocket al momento |
 | Dorsal, posición y si está en readaptación | `GET /api/jugadores` |
 | Estado de MongoDB y MQTT | `GET /health` |
-| Escenarios de salud activos en el simulador | `GET /api/simulador` y el mensaje `simulador` del WebSocket (los pone el dashboard de simulación de A) |
+| Pulso y temperatura forzados en el simulador | `GET /api/simulador` y el mensaje `simulador` del WebSocket (los pone el dashboard de simulación de A) |
 
 Formato de los mensajes y de las rutas: `docs/contratos/api.md` y Swagger (`http://localhost:3000/api-docs`).
 
 ## Qué muestra
 
 - **El campo** (105 × 68 m; X de izquierda a derecha y Y = 0 abajo), con un círculo por jugador del color de su línea y su **dorsal**. Un aro ámbar indica que tiene algún aviso activo y uno rojo que late, una alerta crítica. Los jugadores sin señal o sin datos de los últimos 6 s aparecen atenuados.
-- **El estado del equipo:** cuántos jugadores están en verde, ámbar, rojo o sin señal, y qué escenarios de salud hay puestos en el simulador.
+- **El estado del equipo:** cuántos jugadores están en verde, ámbar, rojo o sin señal, y a quién se le está forzando el pulso o la temperatura desde el dashboard de simulación (y cuántos segundos le quedan).
 - **El jugador seleccionado:** semáforo, si está en readaptación, velocidad y zona, FC con % de la FC máxima y zona, distancia, posición, temperatura interna, curva de velocidad, reparto de carga entre pies con la asimetría del último minuto, aceleración, desaceleración, giro y sus alertas activas.
 - **Las alertas activas** de todo el equipo. Se confirman desde el dashboard de Node-RED o con `POST /api/alertas/:id/confirmar` (Swagger o Postman): la página solo lee, no guarda ninguna clave.
 
