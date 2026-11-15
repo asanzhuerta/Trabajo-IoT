@@ -2,15 +2,15 @@
     {
         "id": "c5d0ee09bf06c64c",
         "type": "tab",
-        "label": "Equipo tactico 4-2-3-1",
+        "label": "Jugadores",
         "disabled": false,
-        "info": "Simulacion coordinada para P1-P11. Motor central + 11 nodos de sensores."
+        "info": "Simulacion coordinada para 11 jugadores. Motor central de comportamiento + 11 nodos de jugadores, cada uno con 6 sensores."
     },
     {
         "id": "e818bfadd76cb866",
         "type": "inject",
         "z": "c5d0ee09bf06c64c",
-        "name": "Reloj comun (cada 1s)",
+        "name": "Inyección (cada 1s)",
         "props": [
             {
                 "p": "payload"
@@ -39,7 +39,7 @@
         "id": "4065e0c7a30acb25",
         "type": "inject",
         "z": "c5d0ee09bf06c64c",
-        "name": "REINICIAR EQUIPO",
+        "name": "Reiniciar equipo",
         "props": [
             {
                 "p": "payload"
@@ -488,7 +488,7 @@
         "id": "e609f7532f1d9771",
         "type": "mqtt out",
         "z": "c5d0ee09bf06c64c",
-        "name": "Publicar 66 sensores/s + equipo/estado",
+        "name": "Publicación MQTT",
         "topic": "",
         "qos": "0",
         "retain": "false",
@@ -500,16 +500,6 @@
         "broker": "86eea92f9a9d4282",
         "x": 1420,
         "y": 700,
-        "wires": []
-    },
-    {
-        "id": "85a86afb99fb2bcd",
-        "type": "comment",
-        "z": "c5d0ee09bf06c64c",
-        "name": "6 sensores por jugador. Desactiva los flujos antiguos; esta pestaña publica 67 mensajes/s.",
-        "info": "",
-        "x": 446,
-        "y": 40,
         "wires": []
     },
     {
