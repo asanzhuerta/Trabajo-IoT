@@ -202,5 +202,90 @@
             "user": "${NODERED_MQTT_USER}",
             "password": "${NODERED_MQTT_PASS}"
         }
+    },
+    {
+        "id": "a1f0c0de00000020",
+        "type": "mqtt in",
+        "z": "a1f0c0de00000001",
+        "name": "Estado táctico del equipo",
+        "topic": "equipo/estado",
+        "qos": "0",
+        "datatype": "json",
+        "broker": "a1f0c0de00000002",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 180,
+        "y": 340,
+        "wires": [
+            [
+                "a1f0c0de00000021"
+            ]
+        ]
+    },
+    {
+        "id": "a1f0c0de00000021",
+        "type": "function",
+        "z": "a1f0c0de00000001",
+        "name": "Enviar táctica a Express",
+        "func": "const clave = env.get('API_KEY_PASARELA');\nif (!clave) { node.error('Falta API_KEY_PASARELA'); return null; }\nmsg.url = (env.get('API_URL') || 'http://localhost:3000') + '/api/equipo/estado';\nmsg.headers = { 'Content-Type': 'application/json', 'x-api-key': clave };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 460,
+        "y": 340,
+        "wires": [
+            [
+                "a1f0c0de00000022"
+            ]
+        ]
+    },
+    {
+        "id": "a1f0c0de00000022",
+        "type": "http request",
+        "z": "a1f0c0de00000001",
+        "name": "POST /api/equipo/estado",
+        "method": "POST",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 730,
+        "y": 340,
+        "wires": [
+            [
+                "a1f0c0de00000023"
+            ]
+        ]
+    },
+    {
+        "id": "a1f0c0de00000023",
+        "type": "function",
+        "z": "a1f0c0de00000001",
+        "name": "Respuesta táctica",
+        "func": "if (msg.statusCode === 202) {\n    node.status({fill:'green',shape:'dot',text:'Táctica enviada'}); return null;\n}\nnode.status({fill:'red',shape:'ring',text:'Error ' + (msg.statusCode || 'de conexión')});\n// No enviar las cabeceras al debug: contienen la clave de la pasarela.\nreturn {payload:msg.payload,statusCode:msg.statusCode};",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 980,
+        "y": 340,
+        "wires": [
+            [
+                "a1f0c0de00000017"
+            ]
+        ]
     }
 ]

@@ -59,9 +59,19 @@ Formato de los mensajes y de las rutas: `docs/contratos/api.md` y Swagger (`http
 2. Si los jugadores están atenuados, comprueba que llegan lecturas: `http://localhost:3000/api/jugadores/p1/estado` tiene que traer `sensors` y un `ts` reciente.
 3. Si no llegan, revisa la cadena: Mosquitto (`mosquitto_sub -h localhost -u nodered -P <contraseña> -t "+/sensors/#" -v`) y la pasarela en el editor de Node-RED (`http://localhost:1880`).
 
-## Qué no muestra (todavía)
+## Estado táctico integrado
 
-- **El balón y la fase de juego.** Los publica el motor táctico del simulador en el topic MQTT `equipo/estado`, que no pasa por la API. La versión anterior, conectada a MQTT, sí los enseñaba. Para recuperarlos, la pasarela tendría que reenviar `equipo/estado` a la API y esta difundirlo por el WebSocket.
+El balón, poseedor, fase, posesión y objetivos del jugador seleccionado llegan por
+`equipo/estado` → pasarela → `POST /api/equipo/estado` → WebSocket (`tipo: tactica`).
+La API valida los datos y conserva la última situación en memoria. `GET /api/equipo/estado`
+devuelve esa situación o `null` antes del primer mensaje. Funciona sin MongoDB.
+Al conectar el WebSocket se envían la táctica y los jugadores disponibles en memoria.
+Tras 6 segundos sin datos tácticos se ocultan el balón y los objetivos para no mostrar una posición antigua como actual.
+
+Para activar esta conexión, reinicia la API y carga los flujos actualizados de la pasarela
+con `node node_red/arrancar.js --reiniciar` desde la raíz. Ese comando respalda primero
+los flujos del editor. Configura `API_KEY_PASARELA` y las credenciales de MQTT en `.env`.
+Abre `http://localhost:3000`; no hace falta arrancar el servidor de la carpeta de Descargas.
 
 ## Privacidad y alcance
 

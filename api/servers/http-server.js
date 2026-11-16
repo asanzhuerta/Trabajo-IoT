@@ -26,6 +26,7 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 
 app.use('/health', healthRoutes);
 app.use('/api/simulador', simuladorRoutes);   // no usa MongoDB: funciona aunque esté caído
+app.use('/api/equipo', require('../routers/equipo')); // estado táctico en memoria
 app.use('/api', requiereMongo);
 app.use('/api/telemetria', telemetriaRoutes);
 app.use('/api/jugadores', jugadoresRoutes);

@@ -41,6 +41,139 @@ tags:
   - name: Utilidad
 
 paths:
+  /api/equipo/estado:
+    get:
+      tags:
+        - Telemetría
+      summary: Última situación táctica en memoria
+      description: No depende de MongoDB. Devuelve null antes del primer mensaje.
+        Revisar timestamp para detectar datos antiguos.
+      responses:
+        "200":
+          description: Estado táctico o null
+          content:
+            application/json:
+              schema:
+                type: object
+                required: &a1
+                  - timestamp
+                  - segundo
+                  - fase
+                  - posesion
+                  - balon
+                properties: &a2
+                  timestamp:
+                    type: string
+                    format: date-time
+                  segundo:
+                    type: integer
+                    minimum: 0
+                  fase:
+                    type: string
+                    enum:
+                      - ataque_organizado
+                      - transicion_defensiva
+                      - presion_alta
+                      - defensa_organizada
+                      - transicion_ofensiva
+                  posesion:
+                    type: string
+                    enum:
+                      - propia
+                      - rival
+                  descripcionFase:
+                    type: string
+                    maxLength: 300
+                  evento:
+                    type: string
+                    maxLength: 300
+                  formacion:
+                    type: string
+                    maxLength: 300
+                  balon:
+                    type: object
+                    required:
+                      - X
+                      - Y
+                    properties:
+                      X:
+                        type: number
+                        minimum: 0
+                        maximum: 105
+                      Y:
+                        type: number
+                        minimum: 0
+                        maximum: 68
+                      poseedor:
+                        type: string
+                        nullable: true
+                        pattern: ^p(?:[1-9]|10|11)$
+                      paseHacia:
+                        type: string
+                        nullable: true
+                        pattern: ^p(?:[1-9]|10|11)$
+                  objetivos:
+                    type: object
+                    description: Claves p1 a p11
+                    additionalProperties:
+                      type: object
+                      required:
+                        - X
+                        - Y
+                      properties:
+                        X:
+                          type: number
+                          minimum: 0
+                          maximum: 105
+                        Y:
+                          type: number
+                          minimum: 0
+                          maximum: 68
+                nullable: true
+    post:
+      tags:
+        - Telemetría
+      summary: Recibir equipo/estado desde la pasarela
+      description: "Guarda en memoria y difunde {tipo: tactica, equipo} por WebSocket.
+        Las coordenadas admiten números o medidas {unit, value}; la respuesta las
+        normaliza a números."
+      security:
+        - clavePasarela: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: &a3
+              type: object
+              required: *a1
+              properties: *a2
+            example:
+              timestamp: 2026-11-16T12:00:00Z
+              segundo: 12
+              fase: ataque_organizado
+              posesion: propia
+              balon:
+                X: 52
+                Y: 34
+                poseedor: p6
+              objetivos:
+                p1:
+                  X: 4
+                  Y: 34
+      responses:
+        "202":
+          description: Aceptado
+          content:
+            application/json:
+              schema: *a3
+        "400":
+          description: Datos no válidos
+        "401":
+          description: Falta clave o clave no válida
+        "403":
+          description: Se requiere la clave de pasarela
+        "409":
+          description: Timestamp anterior al último recibido
   # ------------------------------------------------------------------ telemetría
   /api/telemetria:
     post:

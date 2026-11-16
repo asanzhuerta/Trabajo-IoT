@@ -13,6 +13,10 @@ exports.listen = function (server) {
     wss.on('connection', function (ws, req) {
         console.log('Conexión WS desde %s', req.socket.remoteAddress);
         ws.send(JSON.stringify({ tipo: 'bienvenida', ts: new Date().toISOString() }));
+        const equipo = require('../services/tactica').obtener();
+        if (equipo) ws.send(JSON.stringify({ tipo: 'tactica', equipo }));
+        const jugadores = require('../services/estado').vista();
+        ws.send(JSON.stringify({ tipo: 'telemetria', ts: new Date().toISOString(), jugadores }));
     });
 };
 

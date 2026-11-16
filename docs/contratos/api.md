@@ -360,3 +360,21 @@ En el mismo puerto que la API (`ws://localhost:3000`). Solo envía, del servidor
 | Sáb 15 nov | El sensor de temperatura pasa a llamarse `thermometer` (con h), como lo publica ahora el simulador de A: topic `<id>/sensors/thermometer` con `{"temperature": {unit, value}}`, y en la API `sensors.thermometer.temperature`. La API sirve el campograma en `/` (`api/public/index.html`) |
 | Dom 15 nov | **Se quita el clima:** Open-Meteo sale del proyecto, y con él `POST/GET /api/clima`, el WBGT, el ajuste de los umbrales de calor y el aviso `clima`. **Control del simulador:** `GET /api/simulador` y `POST /api/simulador/{fase,escenario,reiniciar}` publican en `control/#` con QoS 1; aviso `simulador` por WebSocket. Nada de esto cambia lo que manda la pasarela |
 | Dom 15 nov (2) | **Ajuste de sensores, con el diseño de A:** `PUT` y `DELETE /api/simulador/jugadores/:id/sensores` publican en `control/jugadores/<id>/sensores` el pulso o la temperatura que tiene que publicar ese jugador y durante cuánto (`durationSeconds`, 30 s por defecto; 0, hasta quitarlo). Se quitan los escenarios (`POST /api/simulador/escenario`). `reiniciar` también quita los ajustes de los 11. El aviso `simulador` lleva `ajustes`. Documentado en Swagger y en Postman (carpeta Simulador). Se quita el fake-gateway |
+
+
+## Estado táctico del equipo
+
+La pasarela suscribe `equipo/estado` y reenvía cada mensaje mediante
+`POST /api/equipo/estado`, con `x-api-key` de pasarela. No necesita MongoDB.
+La API valida fase, posesión, timestamp, segundo, balón y objetivos p1–p11.
+Las coordenadas X (0–105) e Y (0–68) se normalizan a números. Los campos adicionales se descartan.
+Respuesta: 202 y estado normalizado; 400 para datos inválidos, 401/403 para claves
+incorrectas y 409 si timestamp es anterior al último mensaje.
+
+`GET /api/equipo/estado` devuelve el último estado o `null` antes de recibir datos.
+El estado es volátil y se pierde al reiniciar Express. Su timestamp indica cuándo se generó.
+El WebSocket difunde `{tipo: 'tactica', equipo: {...}}` al actualizarlo y al conectar
+un cliente. Al conectar también envía `{tipo: 'telemetria', ts, jugadores: [...]}`
+con los jugadores disponibles en memoria, sin esperar al próximo lote.
+El campograma oculta balón y objetivos cuando la táctica lleva más de 6 s sin actualizarse.
+El flujo de sensores y las alertas conservan sus contratos actuales.

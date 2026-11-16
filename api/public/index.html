@@ -68,7 +68,7 @@
         <button id="demoBtn" class="btn" type="button" aria-pressed="false">▶ <span>Modo demostración</span></button>
       </div>
     </header>
-    <section class="hero"><div><div class="tiny-label">CONTROL MÉDICO Y DE POSICIONAMIENTO · EQUIPO P1–P11</div><h1>Campograma <span style="color:var(--yellow)">en tiempo real.</span></h1><p>11 jugadores sobre un campo de 105 × 68 m. Posiciones, telemetría, semáforo de salud y alertas que envía la API por WebSocket cada segundo (simulador de Node-RED → MQTT → pasarela → API).</p></div><div class="hero-tag"><strong>FORMACIÓN · 4–2–3–1</strong><div id="lastMessageLabel">Esperando datos de la API...</div></div></section>
+    <section class="hero"><div><div class="tiny-label">CONTROL MÉDICO Y DE POSICIONAMIENTO · EQUIPO P1–P11</div><h1>Campograma <span style="color:var(--yellow)">en tiempo real.</span></h1><p>11 jugadores sobre un campo de 105 × 68 m. Posiciones, balón, fase de juego y estado de salud del equipo, actualizados en directo.</p></div><div class="hero-tag"><strong>FORMACIÓN · 4–2–3–1</strong><div id="lastMessageLabel">Esperando datos de la API...</div></div></section>
     <section class="kpis" aria-label="Indicadores globales">
       <div class="kpi"><div class="caption">JUGADORES CON SEÑAL <span>◉</span></div><div class="number"><span id="kActive">0</span><small> / 11</small></div></div>
       <div class="kpi"><div class="caption">VELOCIDAD MEDIA <span>↗</span></div><div class="number"><span id="kSpeed">—</span><small> km/h</small></div></div>
@@ -79,6 +79,7 @@
       <main class="card" aria-label="Mapa en tiempo real de los jugadores">
         <div class="board-head"><div><div class="card-title">Terreno de juego</div><div class="card-sub">Local defendiendo a la izquierda · X 0–105 m · Y 0–68 m</div></div><div class="tools"><label class="tool-chip"><input id="showNames" type="checkbox" checked> Nombres</label><label class="tool-chip"><input id="showTrails" type="checkbox" checked> Rastro del seleccionado</label></div></div>
         <div class="tactic-strip" aria-live="polite"><div class="tactic-left"><span class="tactic-dot" id="teamDot"></span><div><strong id="teamTitle">Estado del equipo</strong><small id="teamSub">Semáforo según las alertas activas de cada jugador</small></div></div><div class="tactic-extra"><span class="tactic-chip sema-chip"><i style="background:#35ce92"></i><span id="nVerde">0</span> verde</span><span class="tactic-chip sema-chip"><i style="background:#ffb020"></i><span id="nAmbar">0</span> ámbar</span><span class="tactic-chip sema-chip"><i style="background:#ff4d4d"></i><span id="nRojo">0</span> rojo</span><span class="tactic-chip sema-chip"><i style="background:#53697a"></i><span id="nSinSenal">0</span> sin señal</span><span class="tactic-chip" id="simChip" title="Pulso y temperatura forzados desde el dashboard de simulación">Simulación: —</span></div></div>
+        <div class="tactic-strip" aria-live="polite"><div class="tactic-left"><span class="tactic-dot"></span><div><strong id="tacticPhase">Esperando motor táctico</strong><small id="tacticEvent">Esperando datos tácticos</small></div></div><div class="tactic-extra"><span class="tactic-chip" id="tacticPossession">Posesión: —</span><span class="tactic-chip" id="tacticBall">Balón: —</span><span class="tactic-chip" id="tacticClock">Segundo: —</span></div></div>
         <div class="pitch-wrap"><div class="pitch-frame">
           <svg id="pitch" viewBox="0 0 1100 740" role="img" aria-label="Campo de fútbol con once marcadores que se actualizan con datos GPS">
             <defs><linearGradient id="lawn" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#155943"/><stop offset="100%" stop-color="#0f4839"/></linearGradient></defs>
@@ -103,6 +104,7 @@
             <g aria-hidden="true"><text class="field-note" x="44" y="59">DEFENSA ◀</text><text class="field-note" x="1057" y="59" text-anchor="end">▶ ATAQUE</text><text class="field-axis" x="29" y="729">X 0</text><text class="field-axis" x="550" y="729" text-anchor="middle">X 52.5 m</text><text class="field-axis" x="1074" y="729" text-anchor="end">X 105</text></g>
             <g id="pathLayer"></g>
             <g id="markerLayer"></g>
+            <g id="ballMarker" hidden><circle r="12" fill="#071c20" opacity=".4" cy="3"/><circle r="9" fill="white" stroke="#0d1725" stroke-width="2"/><path d="M0 -5 L5 -1 L3 5 L-3 5 L-5 -1 Z" fill="#192333"/><circle r="2.2" cx="-3" cy="-4" fill="#1e293b"/><circle r="2.2" cx="5" cy="2" fill="#1e293b"/></g>
           </svg>
         </div></div>
         <div class="pitch-footer"><div class="legend"><span><i style="background:var(--yellow)"></i>Portero</span><span><i style="background:var(--cyan)"></i>Defensa</span><span><i style="background:var(--blue)"></i>Centrocampo</span><span><i style="background:var(--orange)"></i>Ataque</span><span><i style="background:none;border:2px solid #ffb020"></i>Aviso</span><span><i style="background:none;border:2px solid #ff4d4d"></i>Alerta crítica</span></div><div class="note" id="fieldFooterNote">Puntos atenuados = sin señal o sin datos recientes · número = dorsal</div></div>
@@ -164,6 +166,33 @@
     let players = nuevos();
     const porId = () => Object.fromEntries(players.map(p => [p.id, p]));
     let selected = 'p1';
+    let tactical = null;
+    let ballRender = {x:50,y:34,rx:50,ry:34};
+    function setTactical(data){
+      if(!data || typeof data !== 'object') return;
+      const bx=data.balon?.X,by=data.balon?.Y;
+      if(!Number.isFinite(bx)||!Number.isFinite(by)||bx<0||bx>105||by<0||by>68)return;
+      if (tactical && Date.parse(data.timestamp) < Date.parse(tactical.timestamp)) return;
+      tactical=data;
+      ballRender.x=bx;ballRender.y=by;
+      $('ballMarker').removeAttribute('hidden');
+      $('tacticPhase').textContent=data.descripcionFase||data.fase||'Situación táctica';
+      $('tacticEvent').textContent=data.evento||'Simulación táctica en curso';
+      $('tacticPossession').textContent='Posesión: '+(data.posesion==='propia'?'equipo propio':data.posesion==='rival'?'rival':'—');
+      $('tacticBall').textContent='Balón: '+(data.balon.poseedor?.toUpperCase() || (data.balon.paseHacia ? 'pase a '+data.balon.paseHacia.toUpperCase() : 'rival'))+' · ('+fmt(bx)+', '+fmt(by)+')';
+      $('tacticClock').textContent='Segundo: '+(Number.isFinite(Number(data.segundo))?data.segundo:'—');
+    }
+    function resetTactical(){
+      tactical=null;
+      ballRender={x:50,y:34,rx:50,ry:34};
+      $('ballMarker').setAttribute('hidden','');
+      $('tacticPhase').textContent='Esperando motor táctico';
+      $('tacticEvent').textContent='Esperando datos tácticos';
+      $('tacticPossession').textContent='Posesión: —';
+      $('tacticBall').textContent='Balón: —';
+      $('tacticClock').textContent='Segundo: —';
+    }
+
     let alertas = new Map();       // id → alerta activa
     let demo = false, socket = null, reconnectTimer = null, demoTimer = null, demoStart = 0;
     let apiOnline = false, salud = null, lastTime = 0;
@@ -218,6 +247,7 @@
     async function cargarPerfiles() {
       try {
         const lista = await fetch(API + '/api/jugadores').then(r => r.json());
+        if (demo) return;
         for (const j of lista) {
           const p = porId()[j.id];
           if (!p) continue;
@@ -230,6 +260,7 @@
     async function cargarAlertas() {
       try {
         const lista = await fetch(API + '/api/alertas?estado=activa').then(r => r.json());
+        if (demo) return;
         alertas = new Map(lista.map(a => [a.id, a]));
       } catch (e) { /* idem */ }
     }
@@ -252,11 +283,12 @@
       try {
         salud = await fetch(API + '/health', {cache:'no-store'}).then(r => r.json());
         const sim = await fetch(API + '/api/simulador').then(r => r.ok ? r.json() : null).catch(() => null);
-        if (sim) ajustesSim = sim.ajustes || {};
+        if (sim && !demo) ajustesSim = sim.ajustes || {};
       } catch (e) { salud = null; }
     }
 
     function connect() {
+      if (demo) return;
       clearTimeout(reconnectTimer);
       if (socket) { socket.onclose = null; socket.onerror = null; socket.onmessage = null; try { socket.close(); } catch {} }
       apiOnline = false;
@@ -268,6 +300,7 @@
         if (m.tipo === 'telemetria') m.jugadores.forEach(aplicarJugador);
         else if (m.tipo === 'alerta') alertas.set(m.alerta.id, m.alerta);
         else if (m.tipo === 'alerta_confirmada') alertas.delete(m.alertaId);
+        else if (m.tipo === 'tactica') setTactical(m.equipo);
         else if (m.tipo === 'simulador') ajustesSim = m.ajustes || {};
       };
       socket.onclose = () => { apiOnline = false; updateStatus(); reconnectTimer = setTimeout(connect, 3000); };
@@ -279,6 +312,10 @@
 
     function demoTick() {
       const t = (Date.now() - demoStart) / 1000;
+      setTactical({ timestamp: new Date().toISOString(), segundo: Math.floor(t), fase: 'ataque_organizado',
+        descripcionFase: 'Ataque organizado · demostración', posesion: 'propia', evento: 'Datos de ejemplo',
+        balon: { X: players[5].x, Y: players[5].y, poseedor: 'p6' },
+        objetivos: Object.fromEntries(players.map(p => [p.id, {X:clamp(p.x+5,0,105),Y:p.y}])) });
       for (const p of players) {
         const ampX = p.role === 'gk' ? 4 : p.role === 'df' ? 14 : p.role === 'mf' ? 19 : 13;
         const ampY = p.role === 'gk' ? 5 : p.role === 'df' ? 7 : p.role === 'mf' ? 10 : 8;
@@ -298,9 +335,12 @@
     }
     function startDemo() {
       if (demo) { stopDemo(); return; }
+      clearTimeout(reconnectTimer);
+      if (socket) { socket.onclose = null; socket.onmessage = null; socket.onopen = null; socket.close(); }
+      apiOnline = false; salud = null; ajustesSim = {}; lastTime = 0; resetTactical();
       demo = true; players = nuevos(); alertas = new Map(); demoStart = Date.now(); demoTick(); demoTimer = setInterval(demoTick, 1000); updateStatus(); renderUI();
     }
-    function stopDemo() { demo = false; clearInterval(demoTimer); players = nuevos(); connect(); renderUI(); }
+    function stopDemo() { demo = false; clearInterval(demoTimer); resetTactical(); alertas = new Map(); ajustesSim = {}; lastTime = 0; players = nuevos(); connect(); renderUI(); }
 
     // ---------------------------------------------------------------- pintar
 
@@ -311,7 +351,7 @@
       $('mongoState').textContent = salud ? salud.mongo : '—';
       $('mqttState').textContent = salud ? salud.mqtt : '—';
       $('infoText').textContent = demo ? 'Datos de prueba generados en el navegador; no vienen de la API.' :
-        apiOnline ? 'Recibiendo los 11 jugadores cada segundo por el WebSocket de la API.' : 'Arranca la API (npm run dev en api/) y vuelve a conectar.';
+        apiOnline ? (players.some(fresh) ? 'Recibiendo datos en directo desde la API.' : 'API conectada. Esperando telemetría reciente de los jugadores.') : 'Arranca la API (npm run dev en api/) y vuelve a conectar.';
       $('demoBtn').classList.toggle('on', demo);
       $('demoBtn').setAttribute('aria-pressed', String(demo));
       $('demoBtn').innerHTML = demo ? '■ <span>Detener demostración</span>' : '▶ <span>Modo demostración</span>';
@@ -328,6 +368,11 @@
 
     function renderUI() {
       pintarSimulacion();
+      if (tactical && !demo && Date.now() - Date.parse(tactical.timestamp) > 6000) {
+        resetTactical();
+        $('tacticPhase').textContent = 'Táctica sin señal';
+        $('tacticEvent').textContent = 'No se reciben datos tácticos recientes';
+      }
       const activos = players.filter(fresh);
       $('kActive').textContent = activos.length;
       $('kSpeed').textContent = activos.length ? fmt(activos.reduce((s,p) => s + (p.speed || 0), 0) / activos.length) : '—';
@@ -399,6 +444,14 @@
         g.querySelector('.field-name').style.display = $('showNames').checked ? '' : 'none';
       }
       const pathLayer = $('pathLayer'); pathLayer.replaceChildren();
+      const objetivo = tactical?.objetivos?.[selected];
+      if (objetivo && fresh(p)) {
+        const target = document.createElementNS(svgNS, 'line');
+        const [px, py] = xy(p.x, p.y), [qx, qy] = xy(objetivo.X, objetivo.Y);
+        target.setAttribute('class', 'target-line');
+        for (const [key, val] of Object.entries({x1:px, y1:py, x2:qx, y2:qy})) target.setAttribute(key, val);
+        pathLayer.appendChild(target);
+      }
       if ($('showTrails').checked) {
         const pts = p.trail.slice(-26);
         if (pts.length > 1) {
@@ -422,6 +475,12 @@
       for (const p of players) {
         p.rx += (p.x - p.rx) * a; p.ry += (p.y - p.ry) * a;
         const [px,py] = xy(p.rx,p.ry); markerNodes.get(p.id).setAttribute('transform', `translate(${px.toFixed(2)} ${py.toFixed(2)})`);
+      }
+      if (tactical) {
+        ballRender.rx += (ballRender.x-ballRender.rx)*a;
+        ballRender.ry += (ballRender.y-ballRender.ry)*a;
+        const [bx, by] = xy(ballRender.rx, ballRender.ry);
+        $('ballMarker').setAttribute('transform', `translate(${bx.toFixed(2)} ${by.toFixed(2)})`);
       }
       requestAnimationFrame(paint);
     }
