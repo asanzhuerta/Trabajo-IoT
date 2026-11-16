@@ -508,7 +508,7 @@
         "z": "3e4142ae17a6e168",
         "name": "Cambio de fase",
         "topic": "control/fase",
-        "qos": "0",
+        "qos": "1",
         "datatype": "auto-detect",
         "broker": "86eea92f9a9d4282",
         "nl": false,
@@ -524,12 +524,33 @@
         ]
     },
     {
+        "id": "cc4d67c83bb2b8ba",
+        "type": "mqtt in",
+        "z": "3e4142ae17a6e168",
+        "name": "Reinicio del equipo",
+        "topic": "control/reset",
+        "qos": "1",
+        "datatype": "auto-detect",
+        "broker": "86eea92f9a9d4282",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 120,
+        "y": 390,
+        "wires": [
+            [
+                "fb7c85c12087ec03"
+            ]
+        ]
+    },
+    {
         "id": "ecbf1cf017edd5cc",
         "type": "mqtt in",
         "z": "3e4142ae17a6e168",
         "name": "",
         "topic": "control/jugadores/+/sensores",
-        "qos": "0",
+        "qos": "1",
         "datatype": "auto-detect",
         "broker": "86eea92f9a9d4282",
         "nl": false,
@@ -549,7 +570,7 @@
         "type": "function",
         "z": "3e4142ae17a6e168",
         "name": "Guardar ajustes de sensores",
-        "func": "const DURACION_PREDETERMINADA = 15;\nconst DURACION_MAXIMA = 86400; // 24 horas\n\n//1. Identificar al jugador mediante el topic\nconst coincidencia = String(msg.topic || \"\").match(\n    /^control\\/jugadores\\/(p(?:[1-9]|10|11))\\/sensores$/\n);\n\nif (!coincidencia) {\n    node.warn(\"Topic de control no válido\");\n    return null;\n}\n\nconst jugador = coincidencia[1];\n\n//2. Interpretar el payload JSON\nlet datos = msg.payload;\n\nif (typeof datos === \"string\" ||\n    (typeof Buffer !== \"undefined\" && Buffer.isBuffer(datos))) {\n    try {\n        datos = JSON.parse(String(datos));\n    } catch (error) {\n        node.warn(\"JSON de control no válido\");\n        return null;\n    }\n}\n\nif (!datos || typeof datos !== \"object\" ||\n    Array.isArray(datos)) {\n    node.warn(\"El payload debe ser un objeto JSON\");\n    return null;\n}\n\n//3. Recuperar los ajustes anteriores\nconst ajustes = flow.get(\"ajustesSensores\") || {};\n\n//4. Eliminar los ajustes de un jugador\nif (datos.reset === true) {\n    delete ajustes[jugador];\n    flow.set(\"ajustesSensores\", ajustes);\n\n    node.status({\n        fill: \"grey\",\n        shape: \"dot\",\n        text: jugador.toUpperCase() + \" | simulación normal\"\n    });\n\n    return null;\n}\n\n//5. Validar valores de sensores\nif (datos.pulse === undefined &&\n    datos.temperature === undefined) {\n    node.warn(\"Debes indicar pulso o temperatura\");\n    return null;\n}\n\nif (datos.pulse !== undefined &&\n    (!Number.isFinite(datos.pulse) ||\n     datos.pulse < 60 || datos.pulse > 180)) {\n    node.warn(\"Pulso fuera del rango 60-180 bpm\");\n    return null;\n}\n\nif (datos.temperature !== undefined &&\n    (!Number.isFinite(datos.temperature) ||\n     datos.temperature < 36.2 ||\n     datos.temperature > 41.0)) {\n    node.warn(\"Temperatura fuera del rango 36.2-41.0 C\");\n    return null;\n}\n\n// 6. Determinar la modalidad de duración\nconst modo = datos.mode || \"duration\";\n\nif (![\"duration\", \"once\", \"indefinite\"].includes(modo)) {\n    node.warn(\"Modo de duración no válido\");\n    return null;\n}\n\nlet expira = null;\nlet unaLectura = false;\nlet descripcionDuracion = \"\";\n\nif (modo === \"once\") {\n    unaLectura = true;\n    descripcionDuracion = \"una lectura\";\n\n} else if (modo === \"indefinite\") {\n    expira = null;\n    descripcionDuracion = \"indefinido\";\n\n} else {\n    const duracion = datos.durationSeconds === undefined\n        ? DURACION_PREDETERMINADA\n        : datos.durationSeconds;\n\n    if (!Number.isInteger(duracion) ||\n        duracion < 1 ||\n        duracion > DURACION_MAXIMA) {\n        node.warn(\"durationSeconds debe estar entre 1 y 86400\");\n        return null;\n    }\n\n    expira = Date.now() + duracion * 1000;\n    descripcionDuracion = duracion + \" segundos\";\n}\n\n//7. Conservar otros ajustes vigentes del jugador\nconst ajusteJugador = ajustes[jugador] || {};\n\n//Cada sensor mantiene su propia duración\nif (datos.pulse !== undefined) {\n    ajusteJugador.pulse = {\n        value: datos.pulse,\n        expiresAt: expira,\n        once: unaLectura\n    };\n}\n\nif (datos.temperature !== undefined) {\n    ajusteJugador.temperature = {\n        value: datos.temperature,\n        expiresAt: expira,\n        once: unaLectura\n    };\n}\n\n//8. Guardar en el contexto compartido\najustes[jugador] = ajusteJugador;\n\nflow.set(\"ajustesSensores\", ajustes);\n\n//9. Mostrar información del último ajuste\nnode.status({\n    fill: \"green\",\n    shape: \"dot\",\n    text: jugador.toUpperCase() + \" | \" + descripcionDuracion\n});\n\n//No emitir mensajes: el ajuste queda almacenado\nreturn null;\n",
+        "func": "// Mismos rangos que la API (api/services/simulador.js): si no, el simulador descarta órdenes que la API ya dio por buenas\nconst DURACION_PREDETERMINADA = 30;\nconst DURACION_MAXIMA = 86400; // 24 horas\n\n//1. Identificar al jugador mediante el topic\nconst coincidencia = String(msg.topic || \"\").match(\n    /^control\\/jugadores\\/(p(?:[1-9]|10|11))\\/sensores$/\n);\n\nif (!coincidencia) {\n    node.warn(\"Topic de control no válido\");\n    return null;\n}\n\nconst jugador = coincidencia[1];\n\n//2. Interpretar el payload JSON\nlet datos = msg.payload;\n\nif (typeof datos === \"string\" ||\n    (typeof Buffer !== \"undefined\" && Buffer.isBuffer(datos))) {\n    try {\n        datos = JSON.parse(String(datos));\n    } catch (error) {\n        node.warn(\"JSON de control no válido\");\n        return null;\n    }\n}\n\nif (!datos || typeof datos !== \"object\" ||\n    Array.isArray(datos)) {\n    node.warn(\"El payload debe ser un objeto JSON\");\n    return null;\n}\n\n//3. Recuperar los ajustes anteriores\nconst ajustes = flow.get(\"ajustesSensores\") || {};\n\n//4. Eliminar los ajustes de un jugador\nif (datos.reset === true) {\n    delete ajustes[jugador];\n    flow.set(\"ajustesSensores\", ajustes);\n\n    node.status({\n        fill: \"grey\",\n        shape: \"dot\",\n        text: jugador.toUpperCase() + \" | simulación normal\"\n    });\n\n    return null;\n}\n\n//5. Validar valores de sensores\nif (datos.pulse === undefined &&\n    datos.temperature === undefined) {\n    node.warn(\"Debes indicar pulso o temperatura\");\n    return null;\n}\n\nif (datos.pulse !== undefined &&\n    (!Number.isFinite(datos.pulse) ||\n     datos.pulse < 30 || datos.pulse > 220)) {\n    node.warn(\"Pulso fuera del rango 30-220 bpm\");\n    return null;\n}\n\nif (datos.temperature !== undefined &&\n    (!Number.isFinite(datos.temperature) ||\n     datos.temperature < 35 ||\n     datos.temperature > 42)) {\n    node.warn(\"Temperatura fuera del rango 35-42 C\");\n    return null;\n}\n\n// 6. Determinar la modalidad de duración\n// durationSeconds: 0 es \"hasta que se quite\", como en la API\nconst modo = datos.mode || (datos.durationSeconds === 0 ? \"indefinite\" : \"duration\");\n\nif (![\"duration\", \"once\", \"indefinite\"].includes(modo)) {\n    node.warn(\"Modo de duración no válido\");\n    return null;\n}\n\nlet expira = null;\nlet unaLectura = false;\nlet descripcionDuracion = \"\";\n\nif (modo === \"once\") {\n    unaLectura = true;\n    descripcionDuracion = \"una lectura\";\n\n} else if (modo === \"indefinite\") {\n    expira = null;\n    descripcionDuracion = \"indefinido\";\n\n} else {\n    const duracion = datos.durationSeconds === undefined\n        ? DURACION_PREDETERMINADA\n        : datos.durationSeconds;\n\n    if (!Number.isInteger(duracion) ||\n        duracion < 1 ||\n        duracion > DURACION_MAXIMA) {\n        node.warn(\"durationSeconds debe estar entre 1 y 86400\");\n        return null;\n    }\n\n    expira = Date.now() + duracion * 1000;\n    descripcionDuracion = duracion + \" segundos\";\n}\n\n//7. Conservar otros ajustes vigentes del jugador\nconst ajusteJugador = ajustes[jugador] || {};\n\n//Cada sensor mantiene su propia duración\nif (datos.pulse !== undefined) {\n    ajusteJugador.pulse = {\n        value: datos.pulse,\n        expiresAt: expira,\n        once: unaLectura\n    };\n}\n\nif (datos.temperature !== undefined) {\n    ajusteJugador.temperature = {\n        value: datos.temperature,\n        expiresAt: expira,\n        once: unaLectura\n    };\n}\n\n//8. Guardar en el contexto compartido\najustes[jugador] = ajusteJugador;\n\nflow.set(\"ajustesSensores\", ajustes);\n\n//9. Mostrar información del último ajuste\nnode.status({\n    fill: \"green\",\n    shape: \"dot\",\n    text: jugador.toUpperCase() + \" | \" + descripcionDuracion\n});\n\n//No emitir mensajes: el ajuste queda almacenado\nreturn null;\n",
         "outputs": 1,
         "timeout": 0,
         "noerr": 0,
