@@ -4,22 +4,25 @@
 //   node node_red/arrancar.js --reiniciar   vuelve a cargar los flujos del repo aunque haya cambios hechos en el editor
 //
 // - Usa su propia carpeta de usuario: ~/.node-red-smarthealth
-// - La prepara con el simulador de A (flows.json) y la pasarela (flows_pasarela.json) la primera vez, con --reiniciar
+// - La prepara con el simulador de A (flows.json), la pasarela (flows_pasarela.json) y el dashboard médico de B
+//   (flows_medico.json, en http://localhost:1880/dashboard/medico) la primera vez, con --reiniciar
 //   y cuando los flujos del repo son más nuevos que los de esa carpeta (por ejemplo, al traer cambios de A).
 //   Si lo último fue un Deploy en el editor, se respeta. Antes de sustituirlos, guarda los anteriores en respaldo-<fecha>/.
 // - Lee el .env de la raíz del repo: el usuario de Mosquitto de Node-RED (NODERED_MQTT_USER y NODERED_MQTT_PASS)
-//   y la clave de la API (API_KEY_PASARELA). En los nodos del broker solo se guardan ${NODERED_MQTT_USER}
+//   y las claves de la API (API_KEY_PASARELA para la pasarela y API_KEY_MEDICO para el dashboard médico). En los nodos del broker solo se guardan ${NODERED_MQTT_USER}
 //   y ${NODERED_MQTT_PASS}: las contraseñas no se escriben en ningún archivo.
 // - Editor en http://localhost:1880
 
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { spawn } = require('child_process');
+const { spawn, spawnSync } = require('child_process');
 
 const REPO = path.join(__dirname, '..');
 const USER_DIR = path.join(os.homedir(), '.node-red-smarthealth');
-const FLUJOS = ['flows.json', 'flows_pasarela.json'];
+const FLUJOS = ['flows.json', 'flows_pasarela.json', 'flows_medico.json'];
+// Nodos que no vienen con Node-RED (el dashboard médico usa Dashboard 2.0). Versión fija para que los dos portátiles vean lo mismo.
+const DEPENDENCIAS = { '@flowfuse/node-red-dashboard': '1.34.1' };
 
 const env = path.join(REPO, '.env');
 if (fs.existsSync(env)) {
@@ -77,6 +80,22 @@ function respaldar() {
     }
     console.log('Flujos anteriores guardados en %s', carpeta);
 }
+
+// Instala en la carpeta de Node-RED los nodos que falten o que estén en otra versión
+function instalarDependencias() {
+    fs.mkdirSync(USER_DIR, { recursive: true });
+    const faltan = Object.entries(DEPENDENCIAS).filter(function ([nombre, version]) {
+        const pkg = path.join(USER_DIR, 'node_modules', nombre, 'package.json');
+        return !fs.existsSync(pkg) || JSON.parse(fs.readFileSync(pkg, 'utf8')).version !== version;
+    }).map(function ([nombre, version]) { return nombre + '@' + version; });
+    if (!faltan.length) return;
+    console.log('Instalando en %s: %s', USER_DIR, faltan.join(', '));
+    const r = spawnSync('npm', ['install', '--no-audit', '--no-fund', '--save-exact', '--prefix', '"' + USER_DIR + '"'].concat(faltan),
+        { shell: true, stdio: 'inherit' });
+    if (r.status !== 0) console.warn('No se pudieron instalar los nodos; el dashboard médico no funcionará');
+}
+
+instalarDependencias();
 
 const copia = path.join(USER_DIR, 'flows.json');
 if (!fs.existsSync(copia)) {

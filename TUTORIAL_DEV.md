@@ -111,11 +111,13 @@ node node_red/arrancar.js
 ```
 
 - Arranca un Node-RED **solo para el proyecto**, con su propia carpeta (`~/.node-red-smarthealth`). Así no se mezcla con los ejercicios de clase de tu `~/.node-red`.
-- La primera vez lo prepara con el simulador de A (`flows.json`) y la pasarela (`flows_pasarela.json`). Si después cambian en el repo (al traer cambios de A), los vuelve a cargar solo y guarda los anteriores en `respaldo-<fecha>/`; si lo último fue un *Deploy* en el editor, los respeta. Con `--reiniciar` los carga siempre desde el repo.
-- Lee el `.env`: los nodos del broker usan `${NODERED_MQTT_USER}` y `${NODERED_MQTT_PASS}`, y la pasarela usa `API_KEY_PASARELA`. No hay que escribir ninguna contraseña en el editor.
+- La primera vez lo prepara con el simulador de A (`flows.json`), la pasarela (`flows_pasarela.json`) y el dashboard médico (`flows_medico.json`), e instala Dashboard 2.0 (`@flowfuse/node-red-dashboard`, versión fija) si falta. Si después cambian en el repo (al traer cambios de A), los vuelve a cargar solo y guarda los anteriores en `respaldo-<fecha>/`; si lo último fue un *Deploy* en el editor, los respeta. Con `--reiniciar` los carga siempre desde el repo.
+- Lee el `.env`: los nodos del broker usan `${NODERED_MQTT_USER}` y `${NODERED_MQTT_PASS}`, la pasarela usa `API_KEY_PASARELA` y el dashboard médico `API_KEY_MEDICO`. No hay que escribir ninguna contraseña en el editor.
 - Si ya tienes otro Node-RED abierto en el puerto 1880, ciérralo antes.
 
 En la consola tiene que salir `Connected to broker` dos veces, una por el simulador y otra por la pasarela. El editor está en `http://localhost:1880`.
+
+**Dashboard médico** (`http://localhost:1880/dashboard/medico`): semáforo de los 11 jugadores en directo, alertas activas con el botón *Confirmar*, ficha del jugador seleccionado (% FCmáx, temperatura y FC de los últimos 5 min) y formulario de pauta de readaptación. Lee de la API (WebSocket y GET) y escribe con la clave del médico, que se queda en Node-RED: el navegador no la ve.
 
 Para ver a un jugador tal y como lo ve la API (consola 6, dentro de `api/`):
 

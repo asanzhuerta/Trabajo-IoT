@@ -1,0 +1,983 @@
+[
+    {
+        "id": "b0d1ca0000000001",
+        "type": "tab",
+        "label": "Vista médica (B)",
+        "disabled": false,
+        "info": "Dashboard 2.0 del cuerpo médico en http://localhost:1880/dashboard/medico.\n\n- Lee de la API: WebSocket (telemetría y alertas al momento) y GET /api/alertas, /api/jugadores, /api/jugadores/:id/pauta.\n- Escribe con la clave del médico (API_KEY_MEDICO del .env): confirmar alertas y crear pautas de readaptación.\n- La clave solo vive en Node-RED: el navegador nunca la ve."
+    },
+    {
+        "id": "b0d1ca0000000002",
+        "type": "ui-base",
+        "name": "Smart Health",
+        "path": "/dashboard",
+        "appIcon": "",
+        "includeClientData": true,
+        "acceptsClientConfig": [
+            "ui-notification",
+            "ui-control"
+        ],
+        "showPathInSidebar": false,
+        "headerContent": "page",
+        "navigationStyle": "default",
+        "titleBarStyle": "default",
+        "showReconnectNotification": true,
+        "notificationDisplayTime": 1,
+        "showDisconnectNotification": true,
+        "allowInstall": false
+    },
+    {
+        "id": "b0d1ca0000000003",
+        "type": "ui-theme",
+        "name": "Smart Health",
+        "colors": {
+            "surface": "#0f2a3a",
+            "primary": "#1fa37a",
+            "bgPage": "#eef2f5",
+            "groupBg": "#ffffff",
+            "groupOutline": "#d5dde3"
+        },
+        "sizes": {
+            "density": "default",
+            "pagePadding": "12px",
+            "groupGap": "12px",
+            "groupBorderRadius": "8px",
+            "widgetGap": "12px"
+        }
+    },
+    {
+        "id": "b0d1ca0000000004",
+        "type": "ui-page",
+        "name": "Vista médica",
+        "ui": "b0d1ca0000000002",
+        "path": "/medico",
+        "icon": "medical-bag",
+        "layout": "grid",
+        "theme": "b0d1ca0000000003",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": 0,
+                "cols": 3
+            },
+            {
+                "name": "Tablet",
+                "px": 576,
+                "cols": 6
+            },
+            {
+                "name": "Small Desktop",
+                "px": 768,
+                "cols": 9
+            },
+            {
+                "name": "Desktop",
+                "px": 1024,
+                "cols": 12
+            }
+        ],
+        "tabs": [],
+        "order": 1,
+        "className": "",
+        "visible": "true",
+        "disabled": "false"
+    },
+    {
+        "id": "b0d1ca0000000005",
+        "type": "ui-group",
+        "name": "Equipo · semáforo de salud",
+        "width": 12,
+        "height": 1,
+        "order": 1,
+        "showTitle": true,
+        "className": "",
+        "visible": true,
+        "disabled": false,
+        "groupType": "default",
+        "tab": "",
+        "page": "b0d1ca0000000004"
+    },
+    {
+        "id": "b0d1ca0000000006",
+        "type": "ui-group",
+        "name": "Alertas activas",
+        "width": 7,
+        "height": 1,
+        "order": 2,
+        "showTitle": true,
+        "className": "",
+        "visible": true,
+        "disabled": false,
+        "groupType": "default",
+        "tab": "",
+        "page": "b0d1ca0000000004"
+    },
+    {
+        "id": "b0d1ca0000000007",
+        "type": "ui-group",
+        "name": "Jugador seleccionado",
+        "width": 5,
+        "height": 1,
+        "order": 3,
+        "showTitle": true,
+        "className": "",
+        "visible": true,
+        "disabled": false,
+        "groupType": "default",
+        "tab": "",
+        "page": "b0d1ca0000000004"
+    },
+    {
+        "id": "b0d1ca0000000008",
+        "type": "ui-group",
+        "name": "Pauta de readaptación",
+        "width": 5,
+        "height": 1,
+        "order": 4,
+        "showTitle": true,
+        "className": "",
+        "visible": true,
+        "disabled": false,
+        "groupType": "default",
+        "tab": "",
+        "page": "b0d1ca0000000004"
+    },
+    {
+        "id": "b0d1ca0000000009",
+        "type": "ui-group",
+        "name": "Frecuencia cardiaca del seleccionado (últimos 5 min)",
+        "width": 7,
+        "height": 1,
+        "order": 5,
+        "showTitle": true,
+        "className": "",
+        "visible": true,
+        "disabled": false,
+        "groupType": "default",
+        "tab": "",
+        "page": "b0d1ca0000000004"
+    },
+    {
+        "id": "b0d1ca000000000a",
+        "type": "websocket-client",
+        "path": "ws://localhost:3000",
+        "tls": "",
+        "wholemsg": "false",
+        "hb": "0",
+        "subprotocol": "",
+        "headers": []
+    },
+    {
+        "id": "b0d1ca000000000b",
+        "type": "ui-notification",
+        "ui": "b0d1ca0000000002",
+        "position": "top right",
+        "colorDefault": true,
+        "color": null,
+        "displayTime": "4",
+        "showCountdown": true,
+        "outputs": 0,
+        "allowDismiss": true,
+        "dismissText": "Cerrar",
+        "allowConfirm": false,
+        "confirmText": "@flowfuse/node-red-dashboard/ui-notification:ui-notification.label.defaultConfirmText",
+        "raw": false,
+        "className": "",
+        "name": "Aviso al médico",
+        "z": "b0d1ca0000000001",
+        "x": 1380,
+        "y": 300,
+        "wires": []
+    },
+    {
+        "id": "b0d1ca000000000c",
+        "type": "inject",
+        "z": "b0d1ca0000000001",
+        "name": "Al arrancar y cada 30 s",
+        "props": [],
+        "repeat": "30",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "2",
+        "topic": "",
+        "x": 150,
+        "y": 60,
+        "wires": [
+            [
+                "b0d1ca000000000d",
+                "b0d1ca0000000010"
+            ]
+        ]
+    },
+    {
+        "id": "b0d1ca000000000d",
+        "type": "function",
+        "z": "b0d1ca0000000001",
+        "name": "GET /api/jugadores",
+        "func": "const api = env.get('API_URL') || 'http://localhost:3000';\nmsg.method = 'GET';\nmsg.url = api + '/api/jugadores';\nmsg.headers = { 'Content-Type': 'application/json' };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 380,
+        "y": 60,
+        "wires": [
+            [
+                "b0d1ca000000000e"
+            ]
+        ]
+    },
+    {
+        "id": "b0d1ca000000000e",
+        "type": "http request",
+        "z": "b0d1ca0000000001",
+        "name": "Perfiles",
+        "method": "use",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 580,
+        "y": 60,
+        "wires": [
+            [
+                "b0d1ca000000000f"
+            ]
+        ]
+    },
+    {
+        "id": "b0d1ca000000000f",
+        "type": "function",
+        "z": "b0d1ca0000000001",
+        "name": "Guardar perfiles y opciones",
+        "func": "if (msg.statusCode !== 200 || !Array.isArray(msg.payload)) { node.status({fill:'red',shape:'ring',text:'API sin responder'}); return null; }\nconst perfiles = {};\nfor (const j of msg.payload) perfiles[j.id] = j;\nflow.set('perfiles', perfiles);\nnode.status({fill:'green',shape:'dot',text: msg.payload.length + ' jugadores'});\nconst etiqueta = j => 'P' + j.id.slice(1) + ' · dorsal ' + j.dorsal + ' · ' + j.posicion + (j.enReadaptacion ? ' · readaptación' : '');\nconst opciones = msg.payload.map(j => ({ value: j.id, label: etiqueta(j) }));\n// La primera vez se selecciona p1 para que la ficha no salga vacía\n// Con las opciones va el valor actual, para que el desplegable no se quede en blanco al refrescarlas\nconst actual = flow.get('seleccionado');\nreturn [{ options: opciones, payload: actual || 'p1' }, actual ? null : { topic: 'inicio', payload: 'p1' }];",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 820,
+        "y": 60,
+        "wires": [
+            [
+                "b0d1ca0000000017"
+            ],
+            [
+                "b0d1ca0000000018"
+            ]
+        ]
+    },
+    {
+        "id": "b0d1ca0000000010",
+        "type": "function",
+        "z": "b0d1ca0000000001",
+        "name": "GET /api/alertas?estado=activa",
+        "func": "const api = env.get('API_URL') || 'http://localhost:3000';\nmsg.method = 'GET';\nmsg.url = api + '/api/alertas?estado=activa';\nmsg.headers = { 'Content-Type': 'application/json' };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 380,
+        "y": 140,
+        "wires": [
+            [
+                "b0d1ca0000000011"
+            ]
+        ]
+    },
+    {
+        "id": "b0d1ca0000000011",
+        "type": "http request",
+        "z": "b0d1ca0000000001",
+        "name": "Alertas activas",
+        "method": "use",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 600,
+        "y": 140,
+        "wires": [
+            [
+                "b0d1ca0000000012"
+            ]
+        ]
+    },
+    {
+        "id": "b0d1ca0000000012",
+        "type": "function",
+        "z": "b0d1ca0000000001",
+        "name": "Guardar y ordenar alertas",
+        "func": "if (msg.statusCode !== 200 || !Array.isArray(msg.payload)) { node.status({fill:'red',shape:'ring',text:'API sin responder'}); return null; }\nconst peso = a => (a.severidad === 'critica' ? 0 : 1);\nconst lista = msg.payload.slice().sort((a, b) => peso(a) - peso(b) || Date.parse(b.ts) - Date.parse(a.ts));\nflow.set('alertas', lista);\nnode.status({fill: lista.some(a => a.severidad === 'critica') ? 'red' : lista.length ? 'yellow' : 'green', shape:'dot', text: lista.length + ' activas'});\nreturn { payload: lista };",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 840,
+        "y": 140,
+        "wires": [
+            [
+                "b0d1ca0000000015",
+                "b0d1ca000000001e"
+            ]
+        ]
+    },
+    {
+        "id": "b0d1ca0000000013",
+        "type": "websocket in",
+        "z": "b0d1ca0000000001",
+        "name": "WebSocket de la API",
+        "server": "",
+        "client": "b0d1ca000000000a",
+        "x": 150,
+        "y": 240,
+        "wires": [
+            [
+                "b0d1ca0000000014"
+            ]
+        ]
+    },
+    {
+        "id": "b0d1ca0000000014",
+        "type": "function",
+        "z": "b0d1ca0000000001",
+        "name": "Repartir mensajes de la API",
+        "func": "// Salidas: 1 equipo · 2 refrescar alertas · 3 jugador seleccionado\nlet m;\ntry { m = typeof msg.payload === 'string' ? JSON.parse(msg.payload) : msg.payload; } catch (e) { return null; }\nif (!m || !m.tipo) return null;\nif (m.tipo === 'telemetria') {\n    flow.set('vista', m.jugadores);\n    node.status({fill:'green',shape:'dot',text:'telemetría ' + new Date(m.ts).toLocaleTimeString('es-ES')});\n    const sel = flow.get('seleccionado');\n    const j = m.jugadores.find(x => x.jugadorId === sel);\n    return [{ topic: 'equipo' }, null, j ? { topic: 'jugador', jugador: j } : null];\n}\nif (m.tipo === 'alerta' || m.tipo === 'alerta_confirmada') return [null, { topic: m.tipo }, null];\nreturn null;",
+        "outputs": 3,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 400,
+        "y": 240,
+        "wires": [
+            [
+                "b0d1ca0000000015"
+            ],
+            [
+                "b0d1ca0000000010"
+            ],
+            [
+                "b0d1ca0000000019"
+            ]
+        ]
+    },
+    {
+        "id": "b0d1ca0000000015",
+        "type": "function",
+        "z": "b0d1ca0000000001",
+        "name": "Tarjetas del equipo",
+        "func": "const vista = flow.get('vista') || [];\nconst perfiles = flow.get('perfiles') || {};\nconst alertas = flow.get('alertas') || [];\nconst ahora = Date.now();\nconst v = (s, a, b) => s && s[a] && s[a][b] ? s[a][b].value : null;\nconst tarjetas = Object.keys(perfiles).map(idj => {\n    const p = perfiles[idj];\n    const j = vista.find(x => x.jugadorId === idj) || {};\n    const sinSenal = !j.ts || j.estado === 'sin_senal' || ahora - Date.parse(j.ts) > 5000;\n    const suyas = alertas.filter(a => a.jugadorId === idj);\n    // El semáforo sale de las alertas activas (lo calcula la API); sin señal se pinta gris aparte\n    let color = suyas.some(a => a.severidad === 'critica') ? 'rojo' : suyas.length ? 'ambar' : (j.semaforo || 'verde');\n    return {\n        id: idj, dorsal: p.dorsal, posicion: p.posicion, readaptacion: !!p.enReadaptacion,\n        color, sinSenal,\n        fc: v(j.sensors, 'pulsemeter', 'pulse'),\n        pct: j.derivados ? j.derivados.pctFcMax : null,\n        temp: v(j.sensors, 'thermometer', 'temperature'),\n        vel: j.sensors && j.sensors.gps && j.sensors.gps.speed ? j.sensors.gps.speed.value : null,\n        alertas: suyas.map(a => a.codigo)\n    };\n});\nreturn { payload: { tarjetas, seleccionado: flow.get('seleccionado') || null } };",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 680,
+        "y": 220,
+        "wires": [
+            [
+                "b0d1ca0000000016"
+            ]
+        ]
+    },
+    {
+        "id": "b0d1ca0000000016",
+        "type": "ui-template",
+        "name": "Semáforo del equipo",
+        "order": 1,
+        "width": 12,
+        "height": 0,
+        "head": "",
+        "format": "<template>\n  <div class=\"equipo\">\n    <div v-if=\"!tarjetas.length\" class=\"vacio\">Esperando a la API…</div>\n    <button v-for=\"t in tarjetas\" :key=\"t.id\" type=\"button\" class=\"tarjeta\"\n            :class=\"[t.sinSenal ? 'gris' : t.color, { sel: t.id === seleccionado }]\"\n            @click=\"send({ topic: 'seleccionar', payload: t.id })\"\n            :title=\"t.alertas.length ? t.alertas.join(', ') : 'Sin alertas activas'\">\n      <div class=\"cab\">\n        <span class=\"dorsal\">{{ t.dorsal }}</span>\n        <span class=\"pos\">{{ t.posicion }} · P{{ t.id.slice(1) }}</span>\n        <span v-if=\"t.readaptacion\" class=\"chip\">readapt.</span>\n      </div>\n      <div class=\"datos\" v-if=\"!t.sinSenal\">\n        <span><b>{{ t.fc ?? '—' }}</b> lpm<small v-if=\"t.pct != null\"> {{ Math.round(t.pct) }} %</small></span>\n        <span><b>{{ t.temp != null ? t.temp.toFixed(1) : '—' }}</b> °C</span>\n        <span><b>{{ t.vel != null ? t.vel.toFixed(1) : '—' }}</b> km/h</span>\n      </div>\n      <div class=\"datos\" v-else><span>Sin señal del wearable</span></div>\n      <div class=\"pie\">{{ t.alertas.length ? t.alertas.join(' · ') : 'Sin alertas' }}</div>\n    </button>\n  </div>\n</template>\n<script>\nexport default {\n  computed: {\n    tarjetas () { return (this.msg && this.msg.payload && this.msg.payload.tarjetas) || [] },\n    seleccionado () { return this.msg && this.msg.payload ? this.msg.payload.seleccionado : null }\n  }\n}\n</script>\n<style scoped>\n.equipo { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 10px; width: 100%; }\n.vacio { color: #6b7a86; padding: 12px; }\n.tarjeta { text-align: left; border-radius: 10px; padding: 10px 12px; border: 2px solid transparent; border-left-width: 8px; background: #f6f8fa; cursor: pointer; font: inherit; color: #14232e; }\n.tarjeta.sel { outline: 3px solid #0f2a3a; outline-offset: 1px; }\n.tarjeta.verde { border-left-color: #22a56b; }\n.tarjeta.ambar { border-left-color: #f0a020; background: #fff7e8; }\n.tarjeta.rojo { border-left-color: #e0413a; background: #fdecea; }\n.tarjeta.gris { border-left-color: #8d99a3; background: #eef1f3; color: #66737d; }\n.cab { display: flex; align-items: center; gap: 8px; }\n.dorsal { font-size: 22px; font-weight: 700; min-width: 28px; }\n.pos { font-size: 12px; color: #4f5f6b; }\n.chip { margin-left: auto; font-size: 10px; background: #0f2a3a; color: #fff; border-radius: 8px; padding: 1px 6px; }\n.datos { display: flex; justify-content: space-between; gap: 6px; margin-top: 6px; font-size: 12px; }\n.datos b { font-size: 15px; }\n.datos small { color: #6b7a86; }\n.pie { margin-top: 6px; font-size: 11px; color: #4f5f6b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }\n</style>",
+        "noerr": 0,
+        "storeOutMessages": true,
+        "passthru": false,
+        "resendOnRefresh": true,
+        "templateScope": "local",
+        "className": "",
+        "z": "b0d1ca0000000001",
+        "group": "b0d1ca0000000005",
+        "x": 940,
+        "y": 220,
+        "wires": [
+            [
+                "b0d1ca0000000018"
+            ]
+        ]
+    },
+    {
+        "id": "b0d1ca0000000017",
+        "type": "ui-dropdown",
+        "name": "Elegir jugador",
+        "label": "",
+        "tooltip": "",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "passthru": false,
+        "multiple": false,
+        "chips": false,
+        "clearable": false,
+        "options": [],
+        "payload": "",
+        "topic": "seleccionar",
+        "topicType": "str",
+        "className": "",
+        "typeIsComboBox": false,
+        "msgTrigger": "onChange",
+        "z": "b0d1ca0000000001",
+        "group": "b0d1ca0000000007",
+        "x": 1090,
+        "y": 60,
+        "wires": [
+            [
+                "b0d1ca0000000018"
+            ]
+        ]
+    },
+    {
+        "id": "b0d1ca0000000018",
+        "type": "function",
+        "z": "b0d1ca0000000001",
+        "name": "Seleccionar jugador",
+        "func": "const idj = String(msg.payload || '');\nif (!/^p\\d{1,2}$/.test(idj)) return null;\nconst cambia = flow.get('seleccionado') !== idj;\nflow.set('seleccionado', idj);\nnode.status({fill:'blue',shape:'dot',text: idj.toUpperCase()});\n// 1 dropdown (si se eligió en una tarjeta) · 2 limpiar la gráfica · 3 pedir la pauta · 4 repintar tarjetas\nreturn [cambia ? { payload: idj } : null, cambia ? { payload: [] } : null, { jugadorId: idj }, { topic: 'equipo' }];",
+        "outputs": 4,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1300,
+        "y": 140,
+        "wires": [
+            [
+                "b0d1ca0000000017"
+            ],
+            [
+                "b0d1ca000000001d"
+            ],
+            [
+                "b0d1ca0000000022"
+            ],
+            [
+                "b0d1ca0000000015"
+            ]
+        ]
+    },
+    {
+        "id": "b0d1ca0000000019",
+        "type": "function",
+        "z": "b0d1ca0000000001",
+        "name": "Indicadores del seleccionado",
+        "func": "const j = msg.jugador;\nconst p = (flow.get('perfiles') || {})[j.jugadorId] || {};\nconst v = (a, b) => j.sensors && j.sensors[a] && j.sensors[a][b] ? j.sensors[a][b].value : null;\nconst fc = v('pulsemeter', 'pulse');\nconst temp = v('thermometer', 'temperature');\nconst pct = j.derivados ? j.derivados.pctFcMax : null;\nconst alertas = (flow.get('alertas') || []).filter(a => a.jugadorId === j.jugadorId);\nconst ficha = { payload: { id: j.jugadorId, dorsal: p.dorsal, posicion: p.posicion, fcMax: p.fcMax, semaforo: j.semaforo, estado: j.estado,\n    zonaFc: j.derivados ? j.derivados.zonaFc : null, zonaVel: j.derivados ? j.derivados.zonaVelocidad : null,\n    asimetria: j.derivados ? j.derivados.asimetria : null, alertas: alertas.map(a => ({ codigo: a.codigo, severidad: a.severidad })),\n    pauta: flow.get('pauta') || null } };\nreturn [ficha, pct != null ? { payload: Math.round(pct) } : null, temp != null ? { payload: Number(temp.toFixed(1)) } : null,\n    fc != null ? { topic: 'FC ' + j.jugadorId.toUpperCase(), payload: fc } : null];",
+        "outputs": 4,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 680,
+        "y": 320,
+        "wires": [
+            [
+                "b0d1ca000000001a"
+            ],
+            [
+                "b0d1ca000000001b"
+            ],
+            [
+                "b0d1ca000000001c"
+            ],
+            [
+                "b0d1ca000000001d"
+            ]
+        ]
+    },
+    {
+        "id": "b0d1ca000000001a",
+        "type": "ui-template",
+        "name": "Ficha",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "head": "",
+        "format": "<template>\n  <div class=\"ficha\" v-if=\"f\">\n    <div class=\"linea\">\n      <span class=\"luz\" :class=\"f.estado === 'sin_senal' ? 'gris' : f.semaforo\"></span>\n      <b>P{{ f.id.slice(1) }} · dorsal {{ f.dorsal }} · {{ f.posicion }}</b>\n      <span class=\"zona\">FCmáx {{ f.fcMax }} lpm</span>\n    </div>\n    <div class=\"linea pequena\">Zona FC: {{ f.zonaFc ?? '—' }} · Zona velocidad: {{ f.zonaVel ?? '—' }} · Asimetría: {{ f.asimetria != null ? f.asimetria.toFixed(1) + ' pts' : '—' }}</div>\n    <div class=\"linea pequena\" v-if=\"f.alertas.length\">\n      <span v-for=\"a in f.alertas\" :key=\"a.codigo\" class=\"alerta\" :class=\"a.severidad\">{{ a.codigo }}</span>\n    </div>\n    <div class=\"linea pequena\" v-else>Sin alertas activas</div>\n  </div>\n  <div v-else class=\"pequena\">Elige un jugador en el desplegable o en su tarjeta.</div>\n</template>\n<script>\nexport default { computed: { f () { return this.msg && this.msg.payload && this.msg.payload.id ? this.msg.payload : null } } }\n</script>\n<style scoped>\n.ficha { display: flex; flex-direction: column; gap: 6px; width: 100%; }\n.linea { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }\n.pequena { font-size: 12px; color: #4f5f6b; }\n.zona { margin-left: auto; font-size: 12px; color: #4f5f6b; }\n.luz { width: 14px; height: 14px; border-radius: 50%; display: inline-block; }\n.luz.verde { background: #22a56b; } .luz.ambar { background: #f0a020; } .luz.rojo { background: #e0413a; } .luz.gris { background: #8d99a3; }\n.alerta { border-radius: 8px; padding: 1px 8px; font-size: 11px; background: #fff3d6; color: #7a4d00; }\n.alerta.critica { background: #fdecea; color: #a1231d; }\n</style>",
+        "noerr": 0,
+        "storeOutMessages": true,
+        "passthru": false,
+        "resendOnRefresh": true,
+        "templateScope": "local",
+        "className": "",
+        "z": "b0d1ca0000000001",
+        "group": "b0d1ca0000000007",
+        "x": 940,
+        "y": 300,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "b0d1ca000000001b",
+        "type": "ui-gauge",
+        "name": "% FCmáx",
+        "order": 3,
+        "value": "payload",
+        "valueType": "msg",
+        "width": 3,
+        "height": 3,
+        "gtype": "gauge-half",
+        "gstyle": "rounded",
+        "title": "% FCmáx",
+        "alwaysShowTitle": false,
+        "floatingTitlePosition": "top-left",
+        "units": "%",
+        "icon": "",
+        "prefix": "",
+        "suffix": "",
+        "segments": [
+            {
+                "color": "#22a56b",
+                "from": 50
+            },
+            {
+                "color": "#f0a020",
+                "from": 85
+            },
+            {
+                "color": "#e0413a",
+                "from": 92
+            }
+        ],
+        "min": 50,
+        "max": 100,
+        "sizeThickness": 16,
+        "sizeGap": 4,
+        "sizeKeyThickness": 8,
+        "styleRounded": true,
+        "styleGlow": false,
+        "className": "",
+        "z": "b0d1ca0000000001",
+        "group": "b0d1ca0000000007",
+        "x": 920,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "b0d1ca000000001c",
+        "type": "ui-gauge",
+        "name": "Temperatura interna",
+        "order": 4,
+        "value": "payload",
+        "valueType": "msg",
+        "width": 3,
+        "height": 3,
+        "gtype": "gauge-half",
+        "gstyle": "rounded",
+        "title": "Temperatura",
+        "alwaysShowTitle": false,
+        "floatingTitlePosition": "top-left",
+        "units": "°C",
+        "icon": "",
+        "prefix": "",
+        "suffix": "",
+        "segments": [
+            {
+                "color": "#22a56b",
+                "from": 36
+            },
+            {
+                "color": "#f0a020",
+                "from": 39
+            },
+            {
+                "color": "#e0413a",
+                "from": 40
+            }
+        ],
+        "min": 36,
+        "max": 41,
+        "sizeThickness": 16,
+        "sizeGap": 4,
+        "sizeKeyThickness": 8,
+        "styleRounded": true,
+        "styleGlow": false,
+        "className": "",
+        "z": "b0d1ca0000000001",
+        "group": "b0d1ca0000000007",
+        "x": 940,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "b0d1ca000000001d",
+        "type": "ui-chart",
+        "name": "FC del seleccionado",
+        "label": "",
+        "order": 1,
+        "chartType": "line",
+        "category": "topic",
+        "categoryType": "msg",
+        "xAxisLabel": "",
+        "xAxisProperty": null,
+        "xAxisPropertyType": "timestamp",
+        "xAxisType": "time",
+        "xAxisFormat": "",
+        "xAxisFormatType": "auto",
+        "xmin": "",
+        "xmax": "",
+        "yAxisLabel": "lpm",
+        "yAxisProperty": "payload",
+        "yAxisPropertyType": "msg",
+        "ymin": "40",
+        "ymax": "210",
+        "bins": 10,
+        "action": "append",
+        "stackSeries": false,
+        "pointShape": "circle",
+        "pointRadius": 0,
+        "showLegend": false,
+        "removeOlder": 5,
+        "removeOlderUnit": "60",
+        "removeOlderPoints": "",
+        "colors": [
+            "#0095FF",
+            "#FF0000",
+            "#FF7F0E",
+            "#2CA02C",
+            "#A347E1",
+            "#D62728",
+            "#FF9896",
+            "#9467BD",
+            "#C5B0D5"
+        ],
+        "textColor": [
+            "#666666"
+        ],
+        "textColorDefault": true,
+        "gridColor": [
+            "#e5e5e5"
+        ],
+        "gridColorDefault": true,
+        "width": 7,
+        "height": 5,
+        "className": "",
+        "interpolation": "smooth",
+        "z": "b0d1ca0000000001",
+        "group": "b0d1ca0000000009",
+        "x": 930,
+        "y": 420,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "b0d1ca000000001e",
+        "type": "ui-template",
+        "name": "Lista de alertas",
+        "order": 1,
+        "width": 7,
+        "height": 0,
+        "head": "",
+        "format": "<template>\n  <div class=\"alertas\">\n    <div class=\"medico\">\n      <label>Médico que confirma\n        <input v-model=\"por\" placeholder=\"Nombre o iniciales\" @change=\"guardarPor\" />\n      </label>\n    </div>\n    <div v-if=\"!lista.length\" class=\"vacio\">No hay alertas activas.</div>\n    <div v-for=\"a in lista\" :key=\"a.id\" class=\"fila\" :class=\"a.severidad\">\n      <div class=\"txt\">\n        <b>P{{ a.jugadorId.slice(1) }} · {{ a.codigo }}</b>\n        <span class=\"hora\">{{ hora(a.ts) }}</span>\n        <div class=\"msg\">{{ a.mensaje }}</div>\n        <input v-model=\"notas[a.id]\" class=\"nota\" placeholder=\"Nota (opcional)\" />\n      </div>\n      <v-btn size=\"small\" :color=\"a.severidad === 'critica' ? '#c62828' : '#a35f00'\" :disabled=\"!por.trim() || enviando[a.id]\"\n             @click=\"confirmar(a)\">{{ enviando[a.id] ? 'Enviando…' : 'Confirmar' }}</v-btn>\n    </div>\n  </div>\n</template>\n<script>\nexport default {\n  data () { return { por: '', notas: {}, enviando: {} } },\n  computed: { lista () { return (this.msg && Array.isArray(this.msg.payload)) ? this.msg.payload : [] } },\n  watch: { lista () { this.enviando = {} } },\n  mounted () { try { this.por = localStorage.getItem('smarthealth-medico') || '' } catch (e) {} },\n  methods: {\n    guardarPor () { try { localStorage.setItem('smarthealth-medico', this.por.trim()) } catch (e) {} },\n    hora (ts) { return new Date(ts).toLocaleTimeString('es-ES') },\n    confirmar (a) {\n      this.enviando = { ...this.enviando, [a.id]: true }\n      this.send({ topic: 'confirmar', payload: { id: a.id, por: this.por.trim(), nota: (this.notas[a.id] || '').trim() } })\n    }\n  }\n}\n</script>\n<style scoped>\n.alertas { display: flex; flex-direction: column; gap: 8px; width: 100%; }\n.medico label { display: flex; flex-direction: column; font-size: 12px; color: #4f5f6b; gap: 4px; }\n.medico input, .nota { border: 1px solid #c9d3da; border-radius: 6px; padding: 6px 8px; font: inherit; background: #fff; }\n.vacio { color: #6b7a86; padding: 8px 0; }\n.fila { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; border-left: 6px solid #f0a020; background: #fff7e8; }\n.fila.critica { border-left-color: #e0413a; background: #fdecea; }\n.txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }\n.hora { font-size: 11px; color: #6b7a86; }\n.msg { font-size: 13px; }\n.nota { font-size: 12px; padding: 4px 6px; }\n</style>",
+        "noerr": 0,
+        "storeOutMessages": true,
+        "passthru": false,
+        "resendOnRefresh": true,
+        "templateScope": "local",
+        "className": "",
+        "z": "b0d1ca0000000001",
+        "group": "b0d1ca0000000006",
+        "x": 1100,
+        "y": 140,
+        "wires": [
+            [
+                "b0d1ca000000001f"
+            ]
+        ]
+    },
+    {
+        "id": "b0d1ca000000001f",
+        "type": "function",
+        "z": "b0d1ca0000000001",
+        "name": "POST /api/alertas/:id/confirmar",
+        "func": "const a = msg.payload || {};\nif (!a.id || !a.por) return null;\nconst api = env.get('API_URL') || 'http://localhost:3000';\nconst clave = env.get('API_KEY_MEDICO');\nif (!clave) { node.error('Falta API_KEY_MEDICO en el .env'); return null; }\nmsg.method = 'POST';\nmsg.url = api + '/api/alertas/' + encodeURIComponent(a.id) + '/confirmar';\nmsg.headers = { 'Content-Type': 'application/json', 'x-api-key': clave };\nmsg.payload = { por: a.por };\nif (a.nota) msg.payload.nota = a.nota;\nmsg.accion = 'Alerta confirmada';\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1340,
+        "y": 220,
+        "wires": [
+            [
+                "b0d1ca0000000020"
+            ]
+        ]
+    },
+    {
+        "id": "b0d1ca0000000020",
+        "type": "http request",
+        "z": "b0d1ca0000000001",
+        "name": "Escribir en la API",
+        "method": "use",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 1590,
+        "y": 260,
+        "wires": [
+            [
+                "b0d1ca0000000021"
+            ]
+        ]
+    },
+    {
+        "id": "b0d1ca0000000021",
+        "type": "function",
+        "z": "b0d1ca0000000001",
+        "name": "Resultado de la escritura",
+        "func": "// 1 aviso en el dashboard · 2 refrescar alertas · 3 refrescar pauta\nconst ok = msg.statusCode >= 200 && msg.statusCode < 300;\nconst error = msg.payload && msg.payload.error ? msg.payload.error : ('error ' + (msg.statusCode || 'de conexión'));\nnode.status({fill: ok ? 'green' : 'red', shape:'dot', text: (ok ? msg.accion : error).slice(0, 40)});\n// Sin las cabeceras: llevan la clave del médico\nconst aviso = { payload: ok ? msg.accion : 'No se pudo guardar: ' + error };\nreturn [aviso, { topic: 'refrescar' }, msg.accion === 'Pauta creada' ? { jugadorId: flow.get('seleccionado') } : null];",
+        "outputs": 3,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1360,
+        "y": 340,
+        "wires": [
+            [
+                "b0d1ca000000000b"
+            ],
+            [
+                "b0d1ca0000000010"
+            ],
+            [
+                "b0d1ca0000000022"
+            ]
+        ]
+    },
+    {
+        "id": "b0d1ca0000000022",
+        "type": "function",
+        "z": "b0d1ca0000000001",
+        "name": "GET /api/jugadores/:id/pauta",
+        "func": "const idj = msg.jugadorId;\nif (!idj) return null;\nconst api = env.get('API_URL') || 'http://localhost:3000';\nmsg.method = 'GET';\nmsg.url = api + '/api/jugadores/' + idj + '/pauta';\nmsg.headers = { 'Content-Type': 'application/json' };\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 380,
+        "y": 480,
+        "wires": [
+            [
+                "b0d1ca0000000023"
+            ]
+        ]
+    },
+    {
+        "id": "b0d1ca0000000023",
+        "type": "http request",
+        "z": "b0d1ca0000000001",
+        "name": "Pauta activa",
+        "method": "use",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 600,
+        "y": 480,
+        "wires": [
+            [
+                "b0d1ca0000000024"
+            ]
+        ]
+    },
+    {
+        "id": "b0d1ca0000000024",
+        "type": "function",
+        "z": "b0d1ca0000000001",
+        "name": "Texto de la pauta",
+        "func": "const idj = msg.jugadorId;\nif (idj !== flow.get('seleccionado')) return null;\nconst p = msg.statusCode === 200 ? msg.payload : null;\nflow.set('pauta', p);\nconst lim = [];\nif (p) {\n    if (p.velMax != null) lim.push('velocidad ≤ ' + p.velMax + ' km/h');\n    if (p.cargaMax != null) lim.push('carga ≤ ' + p.cargaMax + ' m de alta intensidad');\n    if (p.asimetriaMax != null) lim.push('asimetría ≤ ' + p.asimetriaMax + ' pts');\n}\nconst texto = p\n    ? 'P' + idj.slice(1) + ': ' + lim.join(' · ') + ' — hasta el ' + new Date(p.hasta).toLocaleDateString('es-ES') + (p.notas ? ' (' + p.notas + ')' : '')\n    : 'P' + idj.slice(1) + ' no tiene ninguna pauta activa.';\nreturn { payload: texto };",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 820,
+        "y": 480,
+        "wires": [
+            [
+                "b0d1ca0000000025"
+            ]
+        ]
+    },
+    {
+        "id": "b0d1ca0000000025",
+        "type": "ui-text",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "name": "Pauta activa",
+        "label": "Pauta activa",
+        "format": "{{msg.payload}}",
+        "layout": "col-center",
+        "style": false,
+        "font": "Helvetica",
+        "fontSize": 16,
+        "color": "#717171",
+        "wrapText": true,
+        "className": "",
+        "value": "payload",
+        "valueType": "msg",
+        "z": "b0d1ca0000000001",
+        "group": "b0d1ca0000000008",
+        "x": 1040,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "b0d1ca0000000026",
+        "type": "ui-form",
+        "name": "Nueva pauta",
+        "label": "Nueva pauta para el jugador seleccionado (sustituye a la activa)",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "options": [
+            {
+                "label": "Velocidad máxima (km/h)",
+                "key": "velMax",
+                "type": "number",
+                "required": false,
+                "rows": null
+            },
+            {
+                "label": "Carga máxima (m de alta intensidad por sesión)",
+                "key": "cargaMax",
+                "type": "number",
+                "required": false,
+                "rows": null
+            },
+            {
+                "label": "Asimetría máxima (puntos)",
+                "key": "asimetriaMax",
+                "type": "number",
+                "required": false,
+                "rows": null
+            },
+            {
+                "label": "En vigor hasta",
+                "key": "hasta",
+                "type": "date",
+                "required": true,
+                "rows": null
+            },
+            {
+                "label": "Notas",
+                "key": "notas",
+                "type": "multiline",
+                "required": false,
+                "rows": 2
+            }
+        ],
+        "formValue": {
+            "velMax": "",
+            "cargaMax": "",
+            "asimetriaMax": "",
+            "hasta": "",
+            "notas": ""
+        },
+        "payload": "",
+        "submit": "Guardar pauta",
+        "cancel": "Limpiar",
+        "resetOnSubmit": true,
+        "topic": "pauta",
+        "topicType": "str",
+        "splitLayout": "",
+        "className": "",
+        "passthru": false,
+        "dropdownOptions": [],
+        "z": "b0d1ca0000000001",
+        "group": "b0d1ca0000000008",
+        "x": 160,
+        "y": 560,
+        "wires": [
+            [
+                "b0d1ca0000000027"
+            ]
+        ]
+    },
+    {
+        "id": "b0d1ca0000000027",
+        "type": "function",
+        "z": "b0d1ca0000000001",
+        "name": "POST /api/jugadores/:id/pauta",
+        "func": "const idj = flow.get('seleccionado');\nconst f = msg.payload || {};\nconst cuerpo = {};\nfor (const k of ['velMax', 'cargaMax', 'asimetriaMax']) {\n    if (f[k] === '' || f[k] == null) continue;\n    const n = Number(f[k]);\n    if (!Number.isFinite(n) || n < 0) return [{ payload: k + ' tiene que ser un número positivo' }, null];\n    cuerpo[k] = n;\n}\nif (!Object.keys(cuerpo).length) return [{ payload: 'Indica al menos un límite: velocidad, carga o asimetría' }, null];\nif (!idj) return [{ payload: 'Elige antes un jugador' }, null];\n// La fecha del formulario (AAAA-MM-DD) vale hasta el final de ese día\nconst hasta = new Date(String(f.hasta) + 'T23:59:59');\nif (Number.isNaN(hasta.getTime())) return [{ payload: 'La fecha no es válida' }, null];\ncuerpo.hasta = hasta.toISOString();\nif (f.notas) cuerpo.notas = String(f.notas).trim();\nconst api = env.get('API_URL') || 'http://localhost:3000';\nconst clave = env.get('API_KEY_MEDICO');\nif (!clave) { node.error('Falta API_KEY_MEDICO en el .env'); return null; }\nmsg.method = 'POST';\nmsg.url = api + '/api/jugadores/' + idj + '/pauta';\nmsg.headers = { 'Content-Type': 'application/json', 'x-api-key': clave };\nmsg.payload = cuerpo;\nmsg.accion = 'Pauta creada';\nreturn [null, msg];",
+        "outputs": 2,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 420,
+        "y": 560,
+        "wires": [
+            [
+                "b0d1ca000000000b"
+            ],
+            [
+                "b0d1ca0000000020"
+            ]
+        ]
+    },
+    {
+        "id": "b0d1ca0000000028",
+        "type": "comment",
+        "z": "b0d1ca0000000001",
+        "name": "Vista médica: http://localhost:1880/dashboard/medico · la clave del médico (API_KEY_MEDICO) no sale de Node-RED",
+        "info": "",
+        "x": 330,
+        "y": 20,
+        "wires": []
+    }
+]
