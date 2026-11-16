@@ -1,0 +1,93 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish,es-tabla]{babel}
+\usepackage[margin=2cm]{geometry}
+\usepackage{longtable,booktabs,array}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{lmodern}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
+\definecolor{voz}{RGB}{20,60,120}
+\newcommand{\voz}[1]{\textcolor{voz}{\itshape «#1»}}
+\newcommand{\rotulo}[1]{\textbf{#1}}
+
+\title{\textbf{Smart Health}\\[2pt]\large Guion del TikTok (45--55 segundos)}
+\author{Alejandro Sanz Huerta \and Manuel García Delgado de Mendoza\\[2pt]
+\small Internet de las Cosas · Curso 2026/2027 · Universidad de Cádiz}
+\date{}
+
+\begin{document}
+\maketitle
+\vspace{-1.5em}
+
+\section*{La idea}
+
+Es la parte opcional de la entrega (+0,5 si la nota es 5 o más): una versión corta y llamativa de la demo. Formato vertical \textbf{9:16 (1080×1920)}, entre \textbf{45 y 55 segundos} y una sola historia: \textbf{la camiseta avisa al médico antes del golpe de calor}. Un jugador se está «cocinando» en pleno partido y nadie lo ve\ldots\ menos nuestro sistema. La tecnología sale de pasada, al final, en ráfaga.
+
+\section*{Guion}
+
+\begin{longtable}{P{1.5cm}P{5cm}P{4.2cm}P{4.6cm}}
+\toprule
+\textbf{Tiempo} & \textbf{Imagen (vertical)} & \textbf{Texto en pantalla} & \textbf{Voz} \\
+\midrule
+\endhead
+0:00--0:03 & Primer plano del campograma, el dorsal 10 (p8) corriendo; zoom rápido hacia él &
+\rotulo{«Este jugador está a punto de sufrir un golpe de calor»} &
+\voz{Este jugador está a punto de sufrir un golpe de calor… y él no lo sabe.} \\
+0:03--0:08 & Los once jugadores moviéndose &
+«11 jugadores · 6 sensores cada uno · datos cada segundo» &
+\voz{Cada jugador lleva sensores: pulso, temperatura, GPS…} \\
+0:08--0:14 & Se lanza la orden que sube la temperatura de p8 &
+«Le subimos la temperatura» &
+\voz{Vamos a subirle la temperatura.} \\
+0:14--0:20 & El aro de p8 pasa a ámbar; contador a 39,4 °C &
+«39 °C → AVISO» &
+\voz{A 39 grados, aviso.} \\
+0:20--0:27 & El aro pasa a rojo y late; notificación en el dashboard médico (con un «ding») &
+\rotulo{«40 °C → ALERTA CRÍTICA»} &
+\voz{A 40, alerta crítica. El médico lo sabe en el mismo segundo.} \\
+0:27--0:35 & El médico confirma y pone la pauta «máx. 20 km/h» &
+«El médico actúa» &
+\voz{Lo confirma y le pone un límite de velocidad.} \\
+0:35--0:42 & p8 corre más de la cuenta → \texttt{PAUTA\_EXCEDIDA} &
+«Y si se pasa… te pillo» &
+\voz{Y si se lo salta… también avisa.} \\
+0:42--0:50 & Ráfaga de 1 s por pantalla: Node-RED, Mosquitto, Swagger, MongoDB, campograma &
+«MQTT · Node-RED · API REST · MongoDB · WebSockets» &
+\voz{Todo con IoT, en tiempo real.} \\
+0:50--0:55 & Campograma con todos en verde y el título &
+\rotulo{«Smart Health · IoT UCA»} & — \\
+\bottomrule
+\end{longtable}
+
+\section*{Cómo grabarlo en vertical}
+
+\begin{itemize}[nosep]
+  \item Reutilizar las tomas 1, 4 y 5 del vídeo largo y la toma 7, que se graba ya con la ventana estrecha.
+  \item Para la toma 7: navegador estrecho (o las herramientas de desarrollo en modo móvil, 390×844) con el campograma centrado en p8.
+  \item En el montaje (CapCut o Clipchamp), lienzo 9:16; el campograma arriba y el dashboard médico abajo.
+  \item \textbf{Zona segura}: nada importante en el 20~\% inferior ni en la franja derecha, donde TikTok pone sus botones.
+\end{itemize}
+
+\section*{Estilo}
+
+\begin{itemize}[nosep]
+  \item \textbf{Gancho en los 3 primeros segundos}: texto grande y zoom al jugador. Si no engancha ahí, se pierde.
+  \item Cortes cada 3--5 s, zooms en el aro del jugador y en el aviso, y subtítulos grandes: mucha gente lo ve sin sonido.
+  \item Sonido: un «ding» o una sirena suave cuando salta la alerta; música de la biblioteca comercial de TikTok, baja si hay voz.
+  \item Ninguna clave, contraseña ni nombre real en pantalla.
+\end{itemize}
+
+\section*{Publicación}
+
+\textbf{Texto:} «¿Y si la camiseta avisara al médico antes de un golpe de calor? Proyecto de IoT: sensores simulados, MQTT, Node-RED y una API que avisa en tiempo real.»
+
+\textbf{Hashtags:} \#IoT \#SmartHealth \#NodeRED \#MQTT \#fútbol \#ingeniería \#UCA
+
+El enlace va en la entrega y en el anexo «Material entregado» del informe, junto al del vídeo de YouTube.
+
+\end{document}

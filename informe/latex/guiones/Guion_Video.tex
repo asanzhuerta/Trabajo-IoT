@@ -1,0 +1,152 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish,es-tabla]{babel}
+\usepackage[margin=2cm]{geometry}
+\usepackage{longtable,booktabs,array}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{lmodern}
+\usepackage{amssymb}
+\sloppy
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4pt}
+\newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
+\definecolor{voz}{RGB}{20,60,120}
+\newcommand{\voz}[1]{\textcolor{voz}{\itshape «#1»}}
+
+\title{\textbf{Smart Health}\\[2pt]\large Guion del vídeo de demostración (5 minutos)}
+\author{Alejandro Sanz Huerta \and Manuel García Delgado de Mendoza\\[2pt]
+\small Internet de las Cosas · Curso 2026/2027 · Universidad de Cádiz}
+\date{}
+
+\begin{document}
+\maketitle
+\vspace{-1.5em}
+
+\section*{Qué se pide y cómo lo enfocamos}
+
+El enunciado pide un vídeo de unos 5 minutos que explique las funcionalidades más importantes del proyecto, \textbf{cómo funciona y sin detalles técnicos}, subido a YouTube como \emph{oculto}. Contamos una sola historia: \textbf{un jugador sufre un golpe de calor en pleno partido y el médico se entera al momento}. Leemos a unas 130 palabras por minuto; si un bloque se alarga, se recorta texto, no se acelera la voz.
+
+\begin{itemize}[nosep]
+  \item \textbf{A} = Manuel García Delgado de Mendoza (simulación, MQTT y Node-RED).
+  \item \textbf{B} = Alejandro Sanz Huerta (API, alertas, base de datos y dashboard médico).
+\end{itemize}
+
+\section*{Escaleta}
+
+\begin{longtable}{P{1.7cm}P{3.2cm}P{1.2cm}P{8.8cm}}
+\toprule
+\textbf{Tiempo} & \textbf{Bloque} & \textbf{Voz} & \textbf{En pantalla} \\
+\midrule
+\endhead
+0:00--0:30 & 1. El problema & A & Imagen de un partido con calor y título «Smart Health» \\
+0:30--1:15 & 2. Cómo está montado & A & Diagrama de arquitectura, recorriendo los números 1 a 8 \\
+1:15--1:45 & 3. El simulador & A & Campograma con los 11 jugadores moviéndose; consola con los topics MQTT pasando \\
+1:45--2:15 & 4. Provocar el golpe de calor & A & Cambio de fase y temperatura forzada a p8 desde Swagger (\texttt{/api/simulador}) \\
+2:15--3:35 & 5. Alertas y médico & B & Campograma (aro ámbar y rojo), dashboard médico, confirmar, pauta, pauta excedida \\
+3:35--4:00 & 6. API abierta y estándar & B & Swagger, Postman \emph{Collection Runner} en verde, respuesta FHIR \\
+4:00--4:35 & 7. Privacidad y seguridad & A + B & Diapositiva con tres puntos \\
+4:35--5:00 & 8. Cierre & Los dos & Campograma en vivo de fondo y lista de tecnologías \\
+\bottomrule
+\end{longtable}
+
+\section*{Guion completo}
+
+\begin{longtable}{P{1.4cm}P{5.2cm}P{9.0cm}}
+\toprule
+\textbf{Tiempo} & \textbf{En pantalla} & \textbf{Qué se dice} \\
+\midrule
+\endhead
+\multicolumn{3}{l}{\textbf{1. El problema} — A} \\
+0:00 & Imagen de un partido con calor; título «Smart Health» &
+\voz{En un partido de verano, un futbolista puede estar al límite sin que nadie se dé cuenta: un golpe de calor, el corazón disparado, un golpe fuerte o simplemente demasiada carga para alguien que vuelve de una lesión. Desde el banquillo eso no se ve. Nuestro proyecto, Smart Health, hace que el médico del equipo se entere en el mismo segundo en que pasa.} \\
+\midrule
+\multicolumn{3}{l}{\textbf{2. Cómo está montado} — A} \\
+0:30 & Diagrama de arquitectura; se resalta cada número según se nombra &
+\voz{Cada uno de los once jugadores lleva un wearable con seis sensores: GPS, acelerómetro, giroscopio, pulsómetro, temperatura interna y plantillas de presión. Como no tenemos los dispositivos, los simulamos en Node-RED. Cada segundo, los sensores publican sus lecturas por MQTT en un broker Mosquitto (1). Otro flujo de Node-RED las recoge (2) y las manda juntas a nuestra API REST (3), que decide si hay algún riesgo y lo guarda todo en MongoDB (4). Si hay una alerta, vuelve por MQTT al dashboard del médico (5) y por WebSocket al campograma (6). El médico responde desde su dashboard (7). Y para la demo, podemos cambiar el simulador a través de la API (8).} \\
+\midrule
+\multicolumn{3}{l}{\textbf{3. El simulador} — A} \\
+1:15 & Campograma con el equipo moviéndose; después, la consola con los topics pasando &
+\voz{Este es el campograma: los once jugadores sobre el campo, en un 4-2-3-1. No se mueven al azar: un motor táctico decide la fase de juego, quién tiene el balón y adónde va cada uno. Y lo que hace cada jugador mueve sus sensores: si esprinta, le sube el pulso y, poco a poco, la temperatura. Aquí se ve lo que llega al broker: seis mensajes por jugador, cada segundo.} \\
+\midrule
+\multicolumn{3}{l}{\textbf{4. Provocar el golpe de calor} — A} \\
+1:45 & Swagger: \texttt{POST /api/\allowbreak simulador/\allowbreak fase} con «presión alta» (el equipo se adelanta en el campograma); después \texttt{PUT /api/\allowbreak simulador/\allowbreak jugadores/\allowbreak p8/\allowbreak sensores} con 39,4 °C y luego 40,5 °C &
+\voz{Para la demostración podemos cambiar lo que pasa en el partido. Si pedimos presión alta, el equipo entero se adelanta. Y ahora, lo importante: vamos a provocarle un golpe de calor al jugador 8. La orden no va directa al simulador: pasa por la API, que la comprueba y la publica por MQTT, y el simulador la recibe. Primero 39,4 grados…} \\
+\midrule
+\multicolumn{3}{l}{\textbf{5. Alertas y médico} — B} \\
+2:15 & Campograma: el aro del dorsal 10 (p8) se pone ámbar &
+\voz{La temperatura del jugador 8 ha pasado de 39 grados. La API recibe un lote por segundo con los once jugadores y les aplica diez reglas a cada uno. Salta el aviso de calor.} \\
+2:30 & El aro pasa a rojo y late; en el dashboard médico aparece la notificación y su tarjeta se pone en rojo &
+\voz{Al llegar a 40 grados ya es una alerta crítica. Se guarda en la base de datos, llega al dashboard del médico por MQTT y al campograma por WebSocket, todo en el mismo segundo.} \\
+2:50 & Dashboard médico: se escribe el nombre del médico y se pulsa «Confirmar» &
+\voz{El médico la confirma. Queda registrado quién y cuándo, y durante un minuto no se repite, para no saturarle de avisos.} \\
+3:05 & Formulario «Nueva pauta» para p8: velocidad máxima 20 km/h &
+\voz{Y le pone una pauta: como máximo 20 kilómetros por hora en lo que queda de sesión.} \\
+3:20 & Salta \texttt{PAUTA\_EXCEDIDA} cuando p8 pasa de 20 km/h &
+\voz{En cuanto la supera, el sistema avisa: pauta excedida, con la velocidad que lleva y su límite.} \\
+\midrule
+\multicolumn{3}{l}{\textbf{6. API abierta y estándar} — B} \\
+3:35 & Swagger con la lista de rutas y \emph{Try it out} en el estado de p8; Postman \emph{Collection Runner} en verde &
+\voz{Todo lo que hemos visto se puede hacer desde fuera: la API está documentada en Swagger y tiene una colección de Postman con 43 peticiones que se comprueban solas.} \\
+3:50 & Respuesta de \texttt{/fhir/\allowbreak Observation?\allowbreak patient=p8} &
+\voz{Y para llevarlo a la historia clínica, las constantes vitales salen en FHIR, el estándar que usan los hospitales.} \\
+\midrule
+\multicolumn{3}{l}{\textbf{7. Privacidad y seguridad} — A (broker) y B (API)} \\
+4:00 & Diapositiva: seudónimos · broker con usuarios y permisos · API con claves por rol &
+A: \voz{Son datos de salud, los más protegidos por el reglamento europeo de protección de datos. Por eso los jugadores solo aparecen como p1 a p11, nunca con su nombre, y el broker no deja entrar a nadie sin usuario: cada uno solo puede leer o escribir donde le toca.}\par
+B: \voz{En la API, solo la clave del médico puede tocar datos clínicos, y esa clave nunca llega al navegador.} \\
+\midrule
+\multicolumn{3}{l}{\textbf{8. Cierre} — los dos} \\
+4:35 & Campograma en vivo de fondo; aparecen los nombres de las tecnologías &
+\voz{En resumen: sensores simulados en Node-RED, MQTT con Mosquitto, una API REST en Express, MongoDB, WebSockets, dos dashboards y FHIR, trabajando juntos para que ningún jugador llegue al límite sin que el médico lo sepa. Esto ha sido Smart Health. ¡Gracias!} \\
+\bottomrule
+\end{longtable}
+
+\section*{Preparación el día de grabar}
+
+\begin{itemize}[nosep]
+  \item Arrancar con \texttt{arrancar-todo.cmd} (vacía la base de datos) y esperar \textbf{1 minuto} antes de la primera toma: la asimetría y el histórico necesitan datos.
+  \item Ventanas preparadas: campograma (\texttt{localhost:3000}), dashboard médico (\texttt{localhost:1880/\allowbreak dashboard/\allowbreak medico}), Swagger con las peticiones ya escritas, consola con \texttt{mosquitto\_sub} en \texttt{sensors/eq1/alertas} y \texttt{control/\#}, y la URL de FHIR.
+  \item \textbf{Ninguna clave en pantalla}: el \emph{Authorize} de Swagger se rellena antes de grabar; no abrir el \texttt{.env}.
+  \item Pantalla a 1920×1080, navegador al 125~\%, notificaciones de Windows desactivadas.
+  \item Antes de cada toma de alertas: \texttt{POST /api/simulador/reiniciar} y confirmar las alertas que queden, para empezar con todos en verde.
+\end{itemize}
+
+\section*{Tomas}
+
+\begin{longtable}{P{0.6cm}P{8.9cm}P{2cm}P{3.4cm}}
+\toprule
+\textbf{\#} & \textbf{Toma} & \textbf{Duración} & \textbf{Para} \\
+\midrule
+\endhead
+1 & Campograma con el equipo moviéndose, sin alertas & 30 s & Vídeo y TikTok \\
+2 & Consola con los topics MQTT pasando & 10 s & Vídeo \\
+3 & Cambio de fase y el equipo adelantándose en el campograma & 20 s & Vídeo \\
+4 & Golpe de calor completo: 39,4 °C (aro ámbar) → 40,5 °C (aro rojo) y aviso en el dashboard médico & 40 s & Vídeo y TikTok \\
+5 & El médico confirma y pone la pauta; salta \texttt{PAUTA\_EXCEDIDA} & 40 s & Vídeo y TikTok \\
+6 & Swagger, Postman \emph{Collection Runner} en verde y FHIR & 30 s & Vídeo \\
+7 & La toma 4 con la ventana estrecha (como un móvil), centrada en p8 & 30 s & TikTok \\
+\bottomrule
+\end{longtable}
+
+Se graba por bloques (si una toma sale mal, se repite solo esa) y la voz aparte, encima del montaje. Herramientas: OBS Studio o la Herramienta Recortes de Windows para grabar; Clipchamp o DaVinci Resolve para montar, con subtítulos revisados a mano.
+
+\section*{Publicación y comprobación final}
+
+\begin{enumerate}[nosep]
+  \item YouTube → \emph{Subir vídeo} → visibilidad \textbf{Oculto}. Título: «Smart Health · Practical Assignment IoT 2026/27», con los nombres y los capítulos en la descripción.
+  \item Abrir el enlace en una ventana de incógnito para comprobar que se ve.
+  \item Poner el enlace en el informe (anexo «Material entregado») y en la entrega.
+\end{enumerate}
+
+\begin{itemize}[nosep]
+  \item[$\square$] Dura 5:00 o menos.
+  \item[$\square$] Se entiende sin saber programar: qué problema resuelve y cómo funciona.
+  \item[$\square$] Salen todas las piezas que puntúan: Express con REST, Mosquitto con MQTT, varios flujos de Node-RED, dashboards y los extras (WebSockets, MongoDB, FHIR).
+  \item[$\square$] No aparece ninguna clave, contraseña ni nombre real.
+  \item[$\square$] Subtítulos revisados y audio claro.
+\end{itemize}
+
+\end{document}
