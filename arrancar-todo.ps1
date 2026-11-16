@@ -3,8 +3,9 @@
 #   Docker / MongoDB · Mosquitto · Subscriber · API · Node-RED · Mirar p1
 #
 # Uso (desde la raíz del repo, o con doble clic en arrancar-todo.cmd):
-#   .\arrancar-todo.ps1              arranca todo
-#   .\arrancar-todo.ps1 -Limpiar     además vacía la base de datos (seed --limpiar) antes de empezar
+#   .\arrancar-todo.ps1              arranca todo con la base de datos vacía (seed --limpiar): sin alertas
+#                                    de la sesión anterior, como los SIN_SENAL que deja al cerrar
+#   .\arrancar-todo.ps1 -Conservar   arranca sin vaciar la base de datos (-Limpiar se sigue aceptando, pero ya es lo normal)
 #   .\arrancar-todo.ps1 -Jugador p8  la última pestaña vigila a p8 en vez de a p1
 #   .\arrancar-todo.ps1 -SinNavegador   no abre el campograma en el navegador
 #
@@ -18,10 +19,12 @@
 
 param(
     [string]$Pieza = '',
-    [switch]$Limpiar,
+    [switch]$Limpiar,      # ya es lo normal; se acepta para no romper los comandos de antes
+    [switch]$Conservar,
     [string]$Jugador = 'p1',
     [switch]$SinNavegador
 )
+$Limpiar = -not $Conservar
 
 $Repo = $PSScriptRoot
 $Mosquitto = 'C:\Program Files\mosquitto'
@@ -196,7 +199,7 @@ if ((Get-Service mosquitto -ErrorAction SilentlyContinue).Status -eq 'Running') 
 
 $script = Join-Path $Repo 'arrancar-todo.ps1'
 $extra = ''
-if ($Limpiar) { $extra = ' -Limpiar' }
+if ($Conservar) { $extra = ' -Conservar' }
 $extraMirar = " -Jugador $Jugador"
 if ($SinNavegador) { $extraMirar += ' -SinNavegador' }
 

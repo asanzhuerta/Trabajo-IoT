@@ -18,14 +18,14 @@ Con el `.env` preparado (paso 2), haz **doble clic en `arrancar-todo.cmd`**, o d
 
 Se abre una ventana de Windows Terminal con una pestaña de color por cada pieza: **Docker / MongoDB**, **Mosquitto**, **Subscriber**, **API**, **Node-RED** y **Mirar p1**. Hace lo mismo que los pasos 3 a 7 y, cuando la API responde, **abre el campograma** (`http://localhost:3000`) en el navegador.
 
-- `.\arrancar-todo.ps1 -Limpiar` vacía antes la base de datos, `-Jugador p8` vigila a p8 en lugar de a p1 y `-SinNavegador` no abre el campograma. Las mismas opciones valen con el `.cmd` desde una consola: `arrancar-todo.cmd -Limpiar`.
+- Siempre vacía antes la base de datos (`seed --limpiar`: vuelve a cargar jugadores, pautas e historial y borra lecturas y alertas); con `-Conservar` la deja como estaba. `-Jugador p8` vigila a p8 en lugar de a p1 y `-SinNavegador` no abre el campograma. Las mismas opciones valen con el `.cmd` desde una consola: `arrancar-todo.cmd -Conservar`.
 - **Node-RED carga solo los flujos nuevos:** si los del repo son más nuevos que los suyos (por ejemplo, después de traer cambios de A), los carga y guarda los anteriores en `~/.node-red-smarthealth/respaldo-<fecha>/`. Si lo último que hiciste fue un *Deploy* en el editor, se respetan tus cambios.
 - Si el servicio de Windows de Mosquitto está arrancado, lo para (pide permiso de administrador una vez).
 - **Cada pestaña tiene su propio historial**, en `~/.smarthealth/historial/<pestaña>.txt`. Cuando pares lo que se esté ejecutando (`Ctrl+C`), pulsa **↑** y te saldrán los comandos de esa parte: en la de la API, `npm run dev`, `npm test` y el seed; en la de Subscriber, las suscripciones a `#`, a las alertas, a `p1`, a `equipo/estado` y a `control/#`; en la de Mirar, forzar (y quitar) un golpe de calor a p8, abrir el campograma y Swagger… Lo que escribas se añade a ese historial. Si el lanzador trae comandos nuevos, se añaden solos sin tocar los tuyos. Para volver al historial inicial, borra la carpeta.
 - Todas las pestañas cargan el `.env`, así que puedes usar `$env:NODERED_MQTT_PASS` y similares en los comandos.
 - Para pararlo todo, cierra la ventana. Si quieres, deja el servicio como estaba con `net start mosquitto` (como administrador).
 
-Al cerrar, la pasarela puede llegar a avisar de que el jugador se ha quedado sin señal antes de pararse ella. Es normal: confirma o borra esa alerta, o arranca la próxima vez con `-Limpiar`.
+Al cerrar, la pasarela puede llegar a avisar de que el jugador se ha quedado sin señal antes de pararse ella. Es normal: el próximo arranque vacía la base de datos y la quita (salvo con `-Conservar`).
 
 ## 0. Requisitos
 
