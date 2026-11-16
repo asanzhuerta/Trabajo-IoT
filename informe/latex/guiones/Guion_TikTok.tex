@@ -2,21 +2,28 @@
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage[spanish,es-tabla]{babel}
-\usepackage[margin=2cm]{geometry}
+\usepackage[margin=1.8cm]{geometry}
 \usepackage{longtable,booktabs,array}
 \usepackage{xcolor}
 \usepackage{enumitem}
+\usepackage{amssymb}
 \usepackage[hidelinks]{hyperref}
 \usepackage{lmodern}
+\sloppy
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{4pt}
 \newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
-\definecolor{voz}{RGB}{20,60,120}
-\newcommand{\voz}[1]{\textcolor{voz}{\itshape «#1»}}
-\newcommand{\rotulo}[1]{\textbf{#1}}
+\definecolor{ale}{RGB}{20,80,160}
+\definecolor{manu}{RGB}{170,60,0}
+\definecolor{gris}{RGB}{90,90,90}
+\newcommand{\ALE}{\textcolor{ale}{\textbf{ALE}}}
+\newcommand{\MANU}{\textcolor{manu}{\textbf{MANU}}}
+\newcommand{\LOSDOS}{\textbf{LOS DOS}}
+\newcommand{\rot}[1]{\textbf{#1}}
+\newcommand{\efe}[1]{\textcolor{gris}{\small #1}}
 
-\title{\textbf{Smart Health}\\[2pt]\large Guion del TikTok (45--55 segundos)}
-\author{Alejandro Sanz Huerta \and Manuel García Delgado de Mendoza\\[2pt]
+\title{\textbf{Smart Health}\\[2pt]\large Guion del TikTok · versión con croma (1:30--1:40)}
+\author{Alejandro Sanz Huerta (\textcolor{ale}{ALE}) \and Manuel García Delgado de Mendoza (\textcolor{manu}{MANU})\\[2pt]
 \small Internet de las Cosas · Curso 2026/2027 · Universidad de Cádiz}
 \date{}
 
@@ -24,70 +31,177 @@
 \maketitle
 \vspace{-1.5em}
 
-\section*{La idea}
+\section*{El concepto}
 
-Es la parte opcional de la entrega (+0,5 si la nota es 5 o más): una versión corta y llamativa de la demo. Formato vertical \textbf{9:16 (1080×1920)}, entre \textbf{45 y 55 segundos} y una sola historia: \textbf{la camiseta avisa al médico antes del golpe de calor}. Un jugador se está «cocinando» en pleno partido y nadie lo ve\ldots\ menos nuestro sistema. La tecnología sale de pasada, al final, en ráfaga.
+Salimos \textbf{los dos delante de un croma}, en vertical, y detrás ponemos las grabaciones de pantalla del sistema: el campograma, el dashboard médico, Node-RED, la consola de MQTT\ldots\ Nos vamos \textbf{pasando las frases como en un ping-pong}, con cortes rápidos, como los vídeos de divulgación que se hacen virales: gancho en el primer segundo, una historia con tensión (el golpe de calor), un giro con humor (el jugador que se salta la pauta) y un final que enlaza con el principio para que el vídeo se vea en bucle.
+
+\begin{itemize}[nosep]
+  \item \textbf{Formato:} vertical 9:16 (1080×1920), entre \textbf{1:30 y 1:40}.
+  \item \textbf{Protagonista:} el jugador \textbf{p8}, dorsal 10, el mediapunta. Le llamamos «el 10» en todo el vídeo.
+  \item \textbf{Tono:} rápido, cercano y con algo de humor, pero explicando de verdad cómo funciona.
+  \item \textbf{Ritmo:} un plano nuevo cada 2--4 segundos. Cada cambio de persona es un corte.
+\end{itemize}
 
 \section*{Guion}
 
-\begin{longtable}{P{1.5cm}P{5cm}P{4.2cm}P{4.6cm}}
+\efe{Columna «Fondo»: lo que se ve detrás de nosotros (la grabación de pantalla puesta con el croma). Columna «Rótulo»: el texto grande que aparece en pantalla, además de los subtítulos.}
+
+{\small
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{P{1.25cm}P{1.35cm}P{5.8cm}P{4.4cm}P{3.1cm}}
 \toprule
-\textbf{Tiempo} & \textbf{Imagen (vertical)} & \textbf{Texto en pantalla} & \textbf{Voz} \\
+\textbf{Tiempo} & \textbf{Quién} & \textbf{Qué dice} & \textbf{Fondo y efectos} & \textbf{Rótulo} \\
 \midrule
 \endhead
-0:00--0:03 & Primer plano del campograma, el dorsal 10 (p8) corriendo; zoom rápido hacia él &
-\rotulo{«Este jugador está a punto de sufrir un golpe de calor»} &
-\voz{Este jugador está a punto de sufrir un golpe de calor… y él no lo sabe.} \\
-0:03--0:08 & Los once jugadores moviéndose &
-«11 jugadores · 6 sensores cada uno · datos cada segundo» &
-\voz{Cada jugador lleva sensores: pulso, temperatura, GPS…} \\
-0:08--0:14 & Se lanza la orden que sube la temperatura de p8 &
-«Le subimos la temperatura» &
-\voz{Vamos a subirle la temperatura.} \\
-0:14--0:20 & El aro de p8 pasa a ámbar; contador a 39,4 °C &
-«39 °C → AVISO» &
-\voz{A 39 grados, aviso.} \\
-0:20--0:27 & El aro pasa a rojo y late; notificación en el dashboard médico (con un «ding») &
-\rotulo{«40 °C → ALERTA CRÍTICA»} &
-\voz{A 40, alerta crítica. El médico lo sabe en el mismo segundo.} \\
-0:27--0:35 & El médico confirma y pone la pauta «máx. 20 km/h» &
-«El médico actúa» &
-\voz{Lo confirma y le pone un límite de velocidad.} \\
-0:35--0:42 & p8 corre más de la cuenta → \texttt{PAUTA\_EXCEDIDA} &
-«Y si se pasa… te pillo» &
-\voz{Y si se lo salta… también avisa.} \\
-0:42--0:50 & Ráfaga de 1 s por pantalla: Node-RED, Mosquitto, Swagger, MongoDB, campograma &
-«MQTT · Node-RED · API REST · MongoDB · WebSockets» &
-\voz{Todo con IoT, en tiempo real.} \\
-0:50--0:55 & Campograma con todos en verde y el título &
-\rotulo{«Smart Health · IoT UCA»} & — \\
+
+\multicolumn{5}{l}{\textbf{1. El gancho}} \\
+0:00 & \MANU & «Este jugador va a sufrir un golpe de calor dentro de 30 segundos.» & Zoom rápido al dorsal 10 en el campograma; Manu señala hacia él & \rot{«GOLPE DE CALOR EN 30 s»} + cuenta atrás \\
+0:03 & \ALE & «Y el médico se va a enterar antes que él.» & Corte seco a Ale; de fondo, el dashboard médico & — \\
+0:05 & \LOSDOS & (Se miran) «Quédate.» & Los dos en plano; efecto «whoosh» & — \\
+\midrule
+
+\multicolumn{5}{l}{\textbf{2. Quiénes somos y qué hemos hecho}} \\
+0:07 & \ALE & «Somos Alejandro\ldots» & Plano corto de Ale & Nombre en pantalla \\
+0:08 & \MANU & «\ldots y Manuel, y para la asignatura de Internet de las Cosas hemos convertido a once futbolistas en\ldots» & Campograma con los 11 moviéndose & — \\
+0:13 & \ALE & «\ldots sensores con patas.» & Plano de Ale, serio; sonido de «ba dum tss» & \rot{«SENSORES CON PATAS»} \\
+\midrule
+
+\multicolumn{5}{l}{\textbf{3. Cómo funciona (explicado rápido)}} \\
+0:15 & \MANU & «Cada jugador lleva seis sensores: GPS, pulso, temperatura, acelerómetro, giroscopio y hasta plantillas que miden cuánto pisa con cada pie.» & Los iconos de los 6 sensores van apareciendo uno a uno alrededor de Manu & «6 sensores» \\
+0:22 & \ALE & «¿Y de dónde sacas once futbolistas?» & Plano de Ale con cara de duda & — \\
+0:24 & \MANU & «Me los invento. Los simulo en Node-RED y se mueven como un equipo de verdad: atacan, presionan, se pasan el balón\ldots» & Flujo del simulador en Node-RED y, enseguida, el campograma con el balón moviéndose & «Simulados en Node-RED» \\
+0:30 & \ALE & «Y cada segundo me mandan sesenta y seis mensajes por MQTT.» & Consola de \texttt{mosquitto\_sub} con los mensajes cayendo a toda velocidad & \rot{«66 MENSAJES / SEGUNDO»} \\
+0:34 & \MANU & «Y tu API se los come todos.» & — & — \\
+0:36 & \ALE & «Todos. Y en cada uno comprueba diez reglas para ver si alguien está en peligro.» & Swagger de fondo; zoom a la lista de alertas & «10 reglas de salud» \\
+\midrule
+
+\multicolumn{5}{l}{\textbf{4. El golpe de calor}} \\
+0:41 & \MANU & «Vale, demostración. ¿Le subo la temperatura al 10?» & Manu con la mano sobre un botón imaginario & — \\
+0:43 & \ALE & «Súbesela.» & Plano corto de Ale & — \\
+0:44 & — & (Sin voz: la temperatura sube) & Pantalla completa: el termómetro del 10 sube; música de tensión & Contador «37,5 °C → 39 °C» \\
+0:47 & \MANU & «Treinta y nueve grados\ldots» & El aro del 10 se pone ámbar en el campograma & \rot{«AVISO»} en ámbar \\
+0:49 & \ALE & «Aviso.» & — & — \\
+0:50 & \MANU & «Cuarenta grados\ldots» & El aro se pone rojo y late; sirena suave & \rot{«ALERTA CRÍTICA»} en rojo \\
+0:52 & \ALE & «Y en ese mismo segundo le salta al médico.» & Dashboard médico con la notificación y la tarjeta del 10 en rojo; «ding» & — \\
+\midrule
+
+\multicolumn{5}{l}{\textbf{5. El giro: el jugador que no hace caso}} \\
+0:56 & \MANU & «Y ahora viene lo bueno: el médico le pone un límite. Como mucho, veinte kilómetros por hora.» & Formulario de «Nueva pauta» con 20 km/h & «Máx. 20 km/h» \\
+1:01 & \ALE & «Y como todo futbolista que se precie\ldots» & Ale mira a cámara & — \\
+1:03 & \LOSDOS & «\ldots se la salta.» & El 10 acelerando en el campograma; música cómica & — \\
+1:05 & \ALE & «Pues el sistema le pilla.» & Aparece la alerta \texttt{PAUTA\_EXCEDIDA} en el dashboard; efecto de sello & \rot{«TE PILLÉ»} \\
+\midrule
+
+\multicolumn{5}{l}{\textbf{6. La ráfaga de tecnología}} \\
+1:08 & \MANU & «Todo esto en diez segundos:» & Fondo negro, cronómetro de 10 s en una esquina & Cronómetro \\
+1:10 & \LOSDOS & (Una palabra cada uno, alternando, muy rápido) MANU: «MQTT.» ALE: «API REST.» MANU: «Node-RED.» ALE: «MongoDB.» MANU: «WebSockets.» ALE: «Y FHIR, el estándar de los hospitales.» & Corte en cada palabra; detrás, la pantalla de cada tecnología (Mosquitto, Swagger, Node-RED, la base de datos, el campograma en vivo y la respuesta FHIR) & El nombre de cada tecnología en grande \\
+\midrule
+
+\multicolumn{5}{l}{\textbf{7. La privacidad (con chiste)}} \\
+1:19 & \ALE & «Por cierto, ¿sabes cómo se llama el 10?» & Plano de Ale & — \\
+1:21 & \MANU & «Ni idea. Para el sistema es p8. Son datos de salud: aquí nadie guarda nombres.» & Ficha del jugador con «P8 · dorsal 10» & «Datos de salud = seudónimos» \\
+\midrule
+
+\multicolumn{5}{l}{\textbf{8. Cierre y bucle}} \\
+1:26 & \ALE & «Si fueras el médico, ¿qué más le medirías? Te leemos en comentarios.» & Los dos en plano, campograma de fondo con todos en verde & \rot{«¿Qué más medirías?»} \\
+1:31 & \MANU & «Y ahora vuelve a mirar al 10\ldots» & Zoom al dorsal 10, igual que en el segundo 0 & — \\
+1:33 & \LOSDOS & «\ldots que se está calentando otra vez.» & Corte a negro justo en la última sílaba, para que el vídeo empiece de nuevo & «Smart Health · IoT UCA» \\
+\bottomrule
+\end{longtable}
+}
+
+\efe{Unas 240 palabras habladas: a ritmo de TikTok sale en 1:30--1:40. Si se pasa, se recorta el bloque 3 antes que el golpe de calor.}
+
+\section*{El trabajo que hay que hacer}
+
+\subsection*{1. Grabar las pantallas que van de fondo}
+
+Con todo el sistema arrancado (\texttt{arrancar-todo.cmd}) y \textbf{esperando un minuto} antes de empezar. Se graban en horizontal y a buena resolución, porque luego se recortan y se acercan.
+
+\begin{longtable}{P{0.6cm}P{9.4cm}P{2.2cm}P{2.6cm}}
+\toprule
+\textbf{\#} & \textbf{Grabación de pantalla} & \textbf{Duración} & \textbf{Bloques} \\
+\midrule
+\endhead
+F1 & Campograma con los 11 moviéndose, sin alertas & 30 s & 1, 2, 3, 8 \\
+F2 & Flujo del simulador en Node-RED & 5 s & 3 \\
+F3 & Consola con \texttt{mosquitto\_sub} sobre \texttt{+/sensors/\#} y los mensajes cayendo & 10 s & 3, 6 \\
+F4 & Swagger con la lista de operaciones; zoom a la lista de alertas & 10 s & 3, 6 \\
+F5 & Golpe de calor completo: \texttt{PUT /api/simulador/jugadores/p8/sensores} con 39,4 °C y, a los pocos segundos, 40,5 °C; el aro del 10 pasa a ámbar y a rojo & 40 s & 4 \\
+F6 & Dashboard médico durante el golpe de calor: notificación y tarjeta en rojo & 15 s & 4 \\
+F7 & El médico confirma la alerta y crea la pauta de 20 km/h para p8 & 20 s & 5 \\
+F8 & El 10 corre por encima de 20 km/h y salta \texttt{PAUTA\_EXCEDIDA} & 15 s & 5 \\
+F9 & Respuesta de \texttt{/fhir/Observation?patient=p8} y la base de datos con sus colecciones & 10 s & 6 \\
+F10 & Campograma centrado en el 10 (para el zoom del principio y del final) & 10 s & 1, 8 \\
 \bottomrule
 \end{longtable}
 
-\section*{Cómo grabarlo en vertical}
+Antes de cada toma de alertas: \texttt{POST /api/simulador/reiniciar} y confirmar las alertas que queden, para empezar con todos en verde. \textbf{Ninguna clave ni contraseña en pantalla.}
+
+\subsection*{2. Montar el croma}
 
 \begin{itemize}[nosep]
-  \item Reutilizar las tomas 1, 4 y 5 del vídeo largo y la toma 7, que se graba ya con la ventana estrecha.
-  \item Para la toma 7: navegador estrecho (o las herramientas de desarrollo en modo móvil, 390×844) con el campograma centrado en p8.
-  \item En el montaje (CapCut o Clipchamp), lienzo 9:16; el campograma arriba y el dashboard médico abajo.
-  \item \textbf{Zona segura}: nada importante en el 20~\% inferior ni en la franja derecha, donde TikTok pone sus botones.
+  \item \textbf{Fondo:} tela o cartulina verde lisa, \textbf{sin arrugas}, que ocupe todo el encuadre de los dos. Separarse 1--1,5~m de ella para no proyectar sombra.
+  \item \textbf{Luz:} el croma iluminado de forma uniforme (dos luces o una ventana de frente, nunca a contraluz) y una luz delante de nosotros.
+  \item \textbf{Ropa:} nada verde ni brillante. Mejor colores lisos y distintos entre los dos (por ejemplo, uno claro y otro oscuro).
+  \item \textbf{Cámara:} el móvil en vertical, en trípode, a la altura de los ojos, 1080×1920 a 30 o 60 fps. Dejar aire por encima de la cabeza para los rótulos.
+  \item \textbf{Sonido:} un micrófono de solapa por persona si es posible; si no, el móvil cerca y una habitación con pocos ecos.
 \end{itemize}
 
-\section*{Estilo}
+\subsection*{3. Grabarnos}
 
 \begin{itemize}[nosep]
-  \item \textbf{Gancho en los 3 primeros segundos}: texto grande y zoom al jugador. Si no engancha ahí, se pierde.
-  \item Cortes cada 3--5 s, zooms en el aro del jugador y en el aviso, y subtítulos grandes: mucha gente lo ve sin sonido.
-  \item Sonido: un «ding» o una sirena suave cuando salta la alerta; música de la biblioteca comercial de TikTok, baja si hay voz.
-  \item Ninguna clave, contraseña ni nombre real en pantalla.
+  \item Grabar \textbf{frase a frase}, varias tomas de cada una: es lo que da el ritmo de corte rápido.
+  \item Cada uno graba sus frases \textbf{solo} (plano corto) y las frases de «LOS DOS» juntos (plano abierto).
+  \item Mirar a cámara, hablar un punto más rápido y con más energía de lo normal, y dejar un segundo de silencio antes y después de cada frase para poder cortar.
+  \item Grabar también reacciones sueltas (mirarse, señalar a un lado, cara de sorpresa) para usarlas de transición.
 \end{itemize}
+
+\subsection*{4. Edición}
+
+\begin{enumerate}[nosep]
+  \item En \textbf{CapCut} (gratis): lienzo 9:16. Las grabaciones de pantalla en la pista de fondo y nuestros clips encima, con \emph{Recortar → Croma} (o \emph{Eliminar fondo}).
+  \item Ajustar la intensidad y la sombra del croma hasta que no quede borde verde.
+  \item Cortar cada frase justo al empezar y al terminar de hablar: nada de silencios.
+  \item Acercar las grabaciones de pantalla a lo importante en cada momento (el aro del 10, la notificación, el código de la alerta).
+  \item \textbf{Subtítulos automáticos}, revisados a mano, grandes y en el centro. Rótulos de la tabla en negrita y con color (ámbar para el aviso, rojo para la crítica).
+  \item Sonidos: «whoosh» en los cortes, «ding» en la notificación, sirena suave en la alerta crítica y efecto cómico en el giro. Música de la biblioteca comercial de TikTok, baja.
+  \item \textbf{Zona segura:} nada importante en el 20~\% inferior ni en la franja derecha (botones de TikTok).
+  \item Comprobar que el final corta en seco y que, al volver a empezar, el bucle tiene sentido.
+\end{enumerate}
+
+\subsection*{5. Reparto y calendario}
+
+\begin{longtable}{P{3.6cm}P{5.7cm}P{5.7cm}}
+\toprule
+\textbf{Cuándo} & \textcolor{ale}{\textbf{Alejandro}} & \textcolor{manu}{\textbf{Manuel}} \\
+\midrule
+\endhead
+Martes 17 & Grabar los fondos F4--F9 (API, alertas, dashboard médico y FHIR) & Grabar los fondos F1--F3 y F10 (campograma, Node-RED y MQTT); preparar el croma y la luz \\
+Martes 17 (tarde) & \multicolumn{2}{P{11.4cm}}{\textbf{Juntos:} ensayar el guion en voz alta con cronómetro y grabarnos delante del croma} \\
+Miércoles 18 & Montaje en CapCut y subtítulos & Sonidos, rótulos y revisión del ritmo \\
+Miércoles 18 (noche) & \multicolumn{2}{P{11.4cm}}{\textbf{Juntos:} verlo en el móvil, últimos cambios, publicar y copiar el enlace a la entrega} \\
+\bottomrule
+\end{longtable}
 
 \section*{Publicación}
 
-\textbf{Texto:} «¿Y si la camiseta avisara al médico antes de un golpe de calor? Proyecto de IoT: sensores simulados, MQTT, Node-RED y una API que avisa en tiempo real.»
+\textbf{Texto:} «Le provocamos un golpe de calor a un futbolista\ldots\ y el médico se enteró antes que él. Proyecto de Internet de las Cosas en la UCA: sensores simulados, MQTT, Node-RED y una API que avisa en tiempo real.»
 
-\textbf{Hashtags:} \#IoT \#SmartHealth \#NodeRED \#MQTT \#fútbol \#ingeniería \#UCA
+\textbf{Hashtags:} \#IoT \#SmartHealth \#NodeRED \#MQTT \#fútbol \#ingeniería \#programación \#UCA
 
-El enlace va en la entrega y en el anexo «Material entregado» del informe, junto al del vídeo de YouTube.
+\textbf{Portada:} el fotograma del aro rojo con el rótulo «ALERTA CRÍTICA» y nuestras caras.
+
+\section*{Antes de publicar}
+
+\begin{itemize}[nosep]
+  \item[$\square$] Dura entre 1:30 y 1:40.
+  \item[$\square$] El gancho se entiende en el primer segundo, también sin sonido.
+  \item[$\square$] No queda borde verde alrededor de ninguno de los dos.
+  \item[$\square$] Se ven el golpe de calor, la alerta en el dashboard médico y la pauta excedida.
+  \item[$\square$] No aparece ninguna clave, contraseña ni nombre real de jugador.
+  \item[$\square$] Subtítulos revisados y nada importante tapado por los botones de TikTok.
+  \item[$\square$] El enlace funciona y está puesto en la entrega y en el anexo del informe.
+\end{itemize}
 
 \end{document}
