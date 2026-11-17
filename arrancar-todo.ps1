@@ -7,10 +7,13 @@
 #                                    de la sesión anterior, como los SIN_SENAL que deja al cerrar
 #   .\arrancar-todo.ps1 -Conservar   arranca sin vaciar la base de datos (-Limpiar se sigue aceptando, pero ya es lo normal)
 #   .\arrancar-todo.ps1 -Jugador p8  la última pestaña vigila a p8 en vez de a p1
-#   .\arrancar-todo.ps1 -SinNavegador   no abre el campograma en el navegador
+#   .\arrancar-todo.ps1 -SinNavegador   no abre las páginas en el navegador
 #
 # - Si el servicio de Windows de Mosquitto está arrancado, lo para primero (pide permiso de administrador una vez).
-# - Cuando la API responde, abre el campograma (http://localhost:3000) en el navegador.
+# - Docker Desktop se arranca a mano: si no está listo, la pestaña de Docker espera a que lo abras.
+# - Cuando la API y Node-RED responden, abre en el navegador el campograma (http://localhost:3000), la botonera
+#   de simulación (/control.html), el editor de Node-RED con todos los flujos (http://localhost:1880) y el
+#   dashboard médico (http://localhost:1880/dashboard/medico).
 # - Node-RED carga solo los flujos del repo si son más nuevos que los suyos (ver node_red/arrancar.js).
 # - Cada pestaña tiene su propio historial de comandos (en ~/.smarthealth/historial). Cuando pares lo que se
 #   esté ejecutando (Ctrl+C), pulsa ↑ y salen los comandos de esa parte; lo que escribas se guarda para la próxima vez.
@@ -124,15 +127,14 @@ if ($Pieza) {
 switch ($Pieza) {
     'docker' {
         Titulo 'Docker / MongoDB'
+        # Docker Desktop se arranca a mano; aquí solo se espera a que esté listo
         docker info *> $null
         if ($LASTEXITCODE -ne 0) {
-            Write-Host 'Arrancando Docker Desktop...'
-            Start-Process 'C:\Program Files\Docker\Docker\Docker Desktop.exe'
-            for ($i = 0; $i -lt 60; $i++) {
+            Write-Host 'Docker Desktop no está arrancado: ábrelo y espero a que esté listo...' -ForegroundColor Yellow
+            do {
                 Start-Sleep -Seconds 3
                 docker info *> $null
-                if ($LASTEXITCODE -eq 0) { break }
-            }
+            } while ($LASTEXITCODE -ne 0)
         }
         Set-Location $Repo
         docker compose up -d
@@ -175,15 +177,25 @@ switch ($Pieza) {
     'mirar' {
         Titulo "Estado de $Jugador visto por la API"
         Set-Location (Join-Path $Repo 'api')
-        # Espera a que la API responda (Docker y MongoDB pueden tardar en arrancar) y abre el campograma
-        Write-Host 'Esperando a la API...' -ForegroundColor DarkGray
-        $lista = $false
-        for ($i = 0; $i -lt 60; $i++) {
-            try { Invoke-RestMethod http://localhost:3000/health -TimeoutSec 2 | Out-Null; $lista = $true; break } catch { Start-Sleep -Seconds 2 }
+        # Espera a la API y a Node-RED (Docker y MongoDB pueden tardar en arrancar) y abre las páginas en el navegador
+        function Esperar($nombre, $url) {
+            Write-Host "Esperando a $nombre..." -ForegroundColor DarkGray
+            for ($i = 0; $i -lt 90; $i++) {
+                try { Invoke-WebRequest $url -UseBasicParsing -TimeoutSec 2 | Out-Null; return $true } catch { Start-Sleep -Seconds 2 }
+            }
+            Write-Warning "$nombre no responde en $url"
+            return $false
         }
-        if ($lista -and -not $SinNavegador) {
-            Write-Host 'Abriendo el campograma: http://localhost:3000' -ForegroundColor Cyan
-            Start-Process 'http://localhost:3000'
+        $api = Esperar 'la API' 'http://localhost:3000/health'
+        $nodered = Esperar 'Node-RED' 'http://localhost:1880/dashboard/medico'
+        if (-not $SinNavegador) {
+            $paginas = @()
+            if ($api)     { $paginas += 'http://localhost:3000', 'http://localhost:3000/control.html' }
+            if ($nodered) { $paginas += 'http://localhost:1880', 'http://localhost:1880/dashboard/medico' }
+            foreach ($p in $paginas) {
+                Write-Host "Abriendo $p" -ForegroundColor Cyan
+                Start-Process $p
+            }
         }
         node scripts/vigilar.js $Jugador
         return
@@ -219,4 +231,4 @@ $pestanas = @(
 
 Start-Process wt -ArgumentList ('--window new ' + ($pestanas -join ' ; '))
 Write-Host 'Abierta la ventana de Windows Terminal con todo el proyecto.'
-if (-not $SinNavegador) { Write-Host 'El campograma (http://localhost:3000) se abrirá en el navegador cuando la API esté lista.' }
+if (-not $SinNavegador) { Write-Host 'Cuando la API y Node-RED estén listos se abrirán el campograma, la botonera, el editor de Node-RED y el dashboard médico.' }
