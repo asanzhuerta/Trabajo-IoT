@@ -12,8 +12,8 @@
 # - Si el servicio de Windows de Mosquitto está arrancado, lo para primero (pide permiso de administrador una vez).
 # - Docker Desktop se arranca a mano: si no está listo, la pestaña de Docker espera a que lo abras.
 # - Cuando la API y Node-RED responden, abre en el navegador el campograma (http://localhost:3000), la botonera
-#   de simulación (/control.html), el editor de Node-RED con todos los flujos (http://localhost:1880) y el
-#   dashboard médico (http://localhost:1880/dashboard/medico).
+#   de simulación (/control.html), el dashboard médico (/medico.html) y el editor de Node-RED con todos los
+#   flujos (http://localhost:1880).
 # - Node-RED carga solo los flujos del repo si son más nuevos que los suyos (ver node_red/arrancar.js).
 # - Cada pestaña tiene su propio historial de comandos (en ~/.smarthealth/historial). Cuando pares lo que se
 #   esté ejecutando (Ctrl+C), pulsa ↑ y salen los comandos de esa parte; lo que escribas se guarda para la próxima vez.
@@ -189,11 +189,11 @@ switch ($Pieza) {
             return $false
         }
         $api = Esperar 'la API' 'http://127.0.0.1:3000/health'
-        $nodered = Esperar 'Node-RED' 'http://127.0.0.1:1880/dashboard/medico'
+        $nodered = Esperar 'Node-RED' 'http://127.0.0.1:1880/'
         if (-not $SinNavegador) {
             $paginas = @()
-            if ($api)     { $paginas += 'http://localhost:3000', 'http://localhost:3000/control.html' }
-            if ($nodered) { $paginas += 'http://localhost:1880', 'http://localhost:1880/dashboard/medico' }
+            if ($api)     { $paginas += 'http://localhost:3000', 'http://localhost:3000/control.html', 'http://localhost:3000/medico.html' }
+            if ($nodered) { $paginas += 'http://localhost:1880' }
             foreach ($p in $paginas) {
                 Write-Host "Abriendo $p" -ForegroundColor Cyan
                 Start-Process $p
@@ -233,4 +233,4 @@ $pestanas = @(
 
 Start-Process wt -ArgumentList ('--window new ' + ($pestanas -join ' ; '))
 Write-Host 'Abierta la ventana de Windows Terminal con todo el proyecto.'
-if (-not $SinNavegador) { Write-Host 'Cuando la API y Node-RED estén listos se abrirán el campograma, la botonera, el editor de Node-RED y el dashboard médico.' }
+if (-not $SinNavegador) { Write-Host 'Cuando la API y Node-RED estén listos se abrirán el campograma, la botonera, el dashboard médico y el editor de Node-RED.' }

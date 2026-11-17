@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Dashboard médico · Smart Health</title>
+<link rel="stylesheet" href="control.css"><link rel="stylesheet" href="medico.css"><script src="medico.js" defer></script></head>
+<body><div class="wrap">
+<header><a class="brand" href="/">↗ SMART<span>/HEALTH</span></a><nav><a href="/">Campograma ↗</a><a href="/control.html">Control de sensores ↗</a><a href="/api-docs" target="_blank" rel="noopener">API · Swagger ↗</a><span id="connection" class="badge">Conectando…</span></nav></header>
+<section class="intro"><span class="eyebrow">CUERPO MÉDICO · EQUIPO P1–P11</span><h1>Dashboard <em>médico.</em></h1><p>Semáforo de salud de los once jugadores en directo, alertas para confirmar y pautas de readaptación. Lo que se confirma o se guarda va a la API con la clave del médico.</p></section>
+
+<section class="card access" aria-labelledby="accessTitle">
+  <div><span class="eyebrow">01 / ACCESO DEL MÉDICO</span><h2 id="accessTitle">Quién confirma</h2><p class="hint">La clave solo se guarda en esta pestaña del navegador y solo se envía a la API. Sin ella se puede mirar todo, pero no confirmar ni crear pautas.</p></div>
+  <form id="accessForm" class="access-fields">
+    <label>Nombre o iniciales<input id="doctor" autocomplete="name" placeholder="Dra. Pérez" required></label>
+    <label>Clave del médico<input id="key" type="password" autocomplete="current-password" placeholder="API_KEY_MEDICO" required></label>
+    <button type="submit" class="primary">Guardar</button>
+    <button type="button" id="logout" class="danger">Olvidar</button>
+  </form>
+  <p id="accessState" class="hint access-state">Sin clave: solo lectura.</p>
+</section>
+
+<div class="section-title"><h2>Equipo <span id="teamCount">—</span></h2><span>Semáforo según las alertas activas · pulsa un jugador para ver su ficha</span></div>
+<section id="team" class="team" aria-label="Semáforo del equipo"></section>
+
+<div class="grid main">
+  <section class="card" aria-labelledby="alertsTitle">
+    <div class="section-title"><h2 id="alertsTitle">Alertas activas <span id="alertCount">0</span></h2><span>Primero las críticas</span></div>
+    <div id="alerts" class="alerts"><p class="hint">Cargando alertas…</p></div>
+  </section>
+  <section class="card" aria-labelledby="playerTitle">
+    <span class="eyebrow">JUGADOR SELECCIONADO</span>
+    <h2 id="playerTitle" class="player-title">—</h2>
+    <p id="playerInfo" class="hint">Elige un jugador en el equipo.</p>
+    <div id="playerAlerts" class="chips"></div>
+    <div class="meters">
+      <div class="meter"><small>% FCmáx</small><strong id="pctValue">—</strong><div class="bar" data-min="50" data-max="100"><i id="pctBar"></i><b style="left:70%"></b><b style="left:84%"></b></div><span class="scale"><span>50</span><span>avisos a 85 y 92 %</span><span>100</span></span></div>
+      <div class="meter"><small>Temperatura interna</small><strong id="tempValue">—</strong><div class="bar" data-min="36" data-max="41"><i id="tempBar"></i><b style="left:60%"></b><b style="left:80%"></b></div><span class="scale"><span>36</span><span>avisos a 39 y 40 °C</span><span>41</span></span></div>
+    </div>
+    <div class="chart-head"><span class="eyebrow">FRECUENCIA CARDIACA · ÚLTIMOS 5 MIN</span><span id="hrNow" class="hint">—</span></div>
+    <svg id="hrChart" class="chart" viewBox="0 0 600 200" preserveAspectRatio="none" role="img" aria-label="Frecuencia cardiaca del jugador seleccionado en los últimos 5 minutos"></svg>
+  </section>
+</div>
+
+<section class="card guideline" aria-labelledby="guidelineTitle">
+  <div class="section-title"><h2 id="guidelineTitle">Pauta de readaptación <span id="guidelinePlayer">—</span></h2><span>Una nueva pauta sustituye a la activa</span></div>
+  <p id="guidelineNow" class="current">—</p>
+  <form id="guidelineForm" class="guideline-fields">
+    <label>Velocidad máxima (km/h)<input id="velMax" type="number" min="0" max="45" step="0.1"></label>
+    <label>Carga máxima (m alta intensidad)<input id="cargaMax" type="number" min="0" step="1"></label>
+    <label>Asimetría máxima (puntos)<input id="asimetriaMax" type="number" min="0" max="100" step="0.1"></label>
+    <label>En vigor hasta<input id="hasta" type="date" required></label>
+    <label class="wide">Notas<input id="notas" maxlength="300" placeholder="Vuelta progresiva tras…"></label>
+    <button type="submit" class="primary">Guardar pauta</button>
+  </form>
+</section>
+
+<div id="toasts" class="toasts" role="status" aria-live="polite"></div>
+<footer>SMART/HEALTH · Dashboard médico <a href="/api-docs">Consultar API ↗</a></footer>
+</div></body></html>

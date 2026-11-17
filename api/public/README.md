@@ -44,7 +44,7 @@ Formato de los mensajes y de las rutas: `docs/contratos/api.md` y Swagger (`http
 - **El campo** (105 × 68 m; X de izquierda a derecha y Y = 0 abajo), con un círculo por jugador del color de su línea y su **dorsal**. Un aro ámbar indica que tiene algún aviso activo y uno rojo que late, una alerta crítica. Los jugadores sin señal o sin datos de los últimos 6 s aparecen atenuados.
 - **El estado del equipo:** cuántos jugadores están en verde, ámbar, rojo o sin señal, y a quién se le está forzando el pulso o la temperatura desde el dashboard de simulación (y cuántos segundos le quedan).
 - **El jugador seleccionado:** semáforo, si está en readaptación, velocidad y zona, FC con % de la FC máxima y zona, distancia, posición, temperatura interna, curva de velocidad, reparto de carga entre pies con la asimetría del último minuto, aceleración, desaceleración, giro y sus alertas activas.
-- **Las alertas activas** de todo el equipo. Se confirman desde el dashboard de Node-RED o con `POST /api/alertas/:id/confirmar` (Swagger o Postman): la página solo lee, no guarda ninguna clave.
+- **Las alertas activas** de todo el equipo. Se confirman desde el dashboard médico (`/medico.html`) o con `POST /api/alertas/:id/confirmar` (Swagger o Postman): la página solo lee, no guarda ninguna clave.
 
 ## Controles
 

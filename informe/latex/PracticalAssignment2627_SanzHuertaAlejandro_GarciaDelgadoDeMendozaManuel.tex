@@ -89,7 +89,7 @@ Escuela Superior de Ingeniería, Universidad de Cádiz, Cádiz (España)}
 \maketitle
 %
 \begin{abstract}
-Este trabajo presenta \emph{Smart Health}, una plataforma IoT que vigila en tiempo real la salud de los once jugadores de un equipo de fútbol y avisa al cuerpo médico cuando aparece un riesgo, como un golpe de calor o una frecuencia cardiaca disparada. Cada jugador lleva un \emph{wearable} simulado en Node-RED con seis sensores (GPS, acelerómetro, giroscopio, pulsómetro, termómetro de temperatura interna y plantillas de presión), coordinados por un motor táctico que reproduce un partido en un 4-2-3-1. Las lecturas viajan por MQTT a un broker Mosquitto con usuarios y listas de control de acceso; una pasarela en Node-RED las agrupa en un lote por segundo y las envía a una API REST hecha con Node.js y Express. La API valida los datos, mantiene el estado en vivo de cada jugador, evalúa diez reglas de alerta con umbrales justificados en la literatura, guarda resúmenes en MongoDB y difunde las alertas por MQTT (QoS 1) y por WebSocket. El cuerpo médico trabaja con un \emph{dashboard} de Node-RED Dashboard 2.0 desde el que confirma alertas y fija pautas de readaptación, y con un campograma web que muestra a los once jugadores sobre el campo. Como elementos adicionales se incluyen WebSockets, base de datos con colección \emph{time-series}, exposición de constantes vitales en HL7 FHIR R4, documentación OpenAPI con Swagger, una colección de Postman y el control remoto del simulador desde la API.
+Este trabajo presenta \emph{Smart Health}, una plataforma IoT que vigila en tiempo real la salud de los once jugadores de un equipo de fútbol y avisa al cuerpo médico cuando aparece un riesgo, como un golpe de calor o una frecuencia cardiaca disparada. Cada jugador lleva un \emph{wearable} simulado en Node-RED con seis sensores (GPS, acelerómetro, giroscopio, pulsómetro, termómetro de temperatura interna y plantillas de presión), coordinados por un motor táctico que reproduce un partido en un 4-2-3-1. Las lecturas viajan por MQTT a un broker Mosquitto con usuarios y listas de control de acceso; una pasarela en Node-RED las agrupa en un lote por segundo y las envía a una API REST hecha con Node.js y Express. La API valida los datos, mantiene el estado en vivo de cada jugador, evalúa diez reglas de alerta con umbrales justificados en la literatura, guarda resúmenes en MongoDB y difunde las alertas por MQTT (QoS 1) y por WebSocket. El cuerpo médico trabaja con un \emph{dashboard} web, servido por la propia API, desde el que confirma alertas y fija pautas de readaptación, y con un campograma que muestra a los once jugadores sobre el campo. Como elementos adicionales se incluyen WebSockets, base de datos con colección \emph{time-series}, exposición de constantes vitales en HL7 FHIR R4, documentación OpenAPI con Swagger, una colección de Postman y el control remoto del simulador desde la API.
 
 \keywords{Internet de las Cosas \and MQTT \and Node-RED \and API REST \and Smart Health \and Wearables}
 \end{abstract}
@@ -106,7 +106,7 @@ El objetivo del proyecto es llevar esos datos al cuerpo médico \textbf{en tiemp
   \item un \textbf{servidor web en Node.js} con una API REST (operaciones GET y POST, además de PUT y DELETE);
   \item un \textbf{broker MQTT} (Mosquitto) por el que viajan las lecturas, las alertas y las órdenes al simulador;
   \item \textbf{varios flujos de Node-RED} que simulan los sensores, hacen de pasarela hacia la API y sirven el \emph{dashboard} médico;
-  \item un \textbf{dashboard} (Node-RED Dashboard 2.0) y una web propia que muestran las alertas;
+  \item un \textbf{dashboard} médico, un campograma y una botonera de simulación, páginas web servidas por la API que muestran las alertas en tiempo real;
   \item y, como extras, \textbf{WebSockets}, una \textbf{base de datos} MongoDB, el estándar sanitario \textbf{HL7 FHIR}, documentación \textbf{OpenAPI/Swagger} y una colección de \textbf{Postman}.
 \end{itemize}
 
@@ -124,7 +124,7 @@ El trabajo se ha hecho en pareja, con dos bloques que solo se comunican a travé
 \toprule
  & \textbf{Manuel García Delgado de Mendoza} (edge y simulación) & \textbf{Alejandro Sanz Huerta} (backend y datos) \\
 \midrule
-Responsable de & \ruta{mosquitto/}, \ruta{node\_red/flows.json}, \ruta{api/public/control.*} &\ruta{api/}, \ruta{docker-compose.yml}, \ruta{node\_red/flows\_pasarela.json}, \ruta{node\_red/flows\_medico.json} \\
+Responsable de & \ruta{mosquitto/}, \ruta{node\_red/flows.json}, \ruta{api/public/control.*} &\ruta{api/}, \ruta{docker-compose.yml}, \ruta{node\_red/flows\_pasarela.json}, \ruta{api/public/medico.*} \\
 Tareas & Mosquitto con usuarios y ACL, simulador táctico de los 11 jugadores, control del simulador por MQTT (\texttt{mqtt in}), botonera de simulación, diseño del campograma, balón y fase de juego en el campograma &API REST, MongoDB, motor de alertas, WebSocket, FHIR, Swagger y Postman, ACWR, pasarela MQTT$\rightarrow$API, dashboard médico, integración del campograma con la API \\
 \midrule
 En común & \multicolumn{2}{l}{Contratos, arquitectura, informe, vídeo y TikTok.} \\
@@ -164,7 +164,7 @@ API REST & Node.js 24, Express 5 & Validación, estado en vivo, motor de alertas
 Tiempo real & \texttt{ws} 8 & WebSocket en el mismo puerto que la API \\
 MQTT en la API & \texttt{mqtt.js} 5 & Publica alertas y órdenes al simulador (QoS 1) \\
 Base de datos & MongoDB 8, Mongoose 9 & 6 colecciones; lecturas en colección \emph{time-series} \\
-Dashboard médico & Dashboard 2.0 & \texttt{@flowfuse/node-red-dashboard}, en \texttt{/dashboard/medico} \\
+Dashboard médico & HTML, CSS y JavaScript & Página de la API en \texttt{/medico.html}, con \texttt{fetch} y \texttt{WebSocket} \\
 Web & HTML, CSS y JS & Campograma servido por la API en \texttt{/} \\
 Documentación & OpenAPI 3.0.3 & Swagger UI en \texttt{/api-docs} y colección de Postman \\
 Interoperabilidad & HL7 FHIR R4 & \texttt{Observation} con códigos LOINC y unidades UCUM \\
@@ -304,7 +304,7 @@ Se fuerza la lectura y no el estado interno del jugador para no tocar las funcio
 \section{Flujos de Node-RED}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-El proyecto tiene tres flujos (pestañas) en el mismo Node-RED. Las credenciales del broker no aparecen en los nodos: se leen del \texttt{.env} mediante \texttt{\$\{NODERED\_MQTT\_USER\}} y \texttt{\$\{NODERED\_MQTT\_PASS\}} al arrancar con \ruta{node\_red/arrancar.js}.
+El proyecto tiene dos flujos (pestañas) en el mismo Node-RED. Las credenciales del broker no aparecen en los nodos: se leen del \texttt{.env} mediante \texttt{\$\{NODERED\_MQTT\_USER\}} y \texttt{\$\{NODERED\_MQTT\_PASS\}} al arrancar con \ruta{node\_red/arrancar.js}.
 
 \subsection{Flujo \emph{Jugadores}: el simulador}
 
@@ -344,25 +344,7 @@ La pasarela (Fig.~\ref{fig:nr-pasarela}) se suscribe a \topic{+/sensors/\#} y gu
 \label{fig:nr-pasarela}
 \end{figure}
 
-\subsection{Flujo \emph{Vista médica}: el dashboard}
-
-El tercer flujo (Fig.~\ref{fig:nr-medico}) sirve el \emph{dashboard} médico, descrito en la Sección~\ref{sec:dashboards}. Todo lo hace contra la API:
-
-\begin{itemize}
-  \item al arrancar y cada 30~s, \texttt{GET /api/jugadores} y \texttt{GET /api/alertas?estado=activa};
-  \item un \texttt{websocket in} conectado a la API recibe la telemetría (1~Hz) y las alertas al momento, y \emph{Repartir mensajes de la API} los envía a las tarjetas, la ficha, los indicadores y la gráfica;
-  \item los botones \emph{Confirmar} y el formulario \emph{Nueva pauta} hacen \texttt{POST /api/alertas/:id/confirmar} y \texttt{POST /api/jugadores/:id/pauta} con la clave del médico, que se lee del \texttt{.env} en Node-RED y \textbf{nunca llega al navegador};
-  \item un \texttt{ui-notification} avisa al médico de cada alerta nueva (las críticas, como ``ALERTA CRÍTICA'') y del resultado de cada confirmación o pauta.
-\end{itemize}
-
-\begin{figure}[!htbp]
-\centering
-\includegraphics[width=\textwidth]{nr-medico.png}
-\caption{Flujo de la vista médica: peticiones REST a la API, \texttt{websocket in} y nodos de Dashboard 2.0 (\texttt{ui-template}, \texttt{ui-dropdown}, \texttt{ui-gauge}, \texttt{ui-chart}, \texttt{ui-form}, \texttt{ui-text} y \texttt{ui-notification}).}
-\label{fig:nr-medico}
-\end{figure}
-
-En total los tres flujos usan los nodos \texttt{inject}, \texttt{function}, \texttt{switch}, \texttt{json}, \texttt{mqtt in}, \texttt{mqtt out}, \texttt{http request}, \texttt{websocket in}, \texttt{debug}, \texttt{comment} y nueve tipos de nodos de Dashboard 2.0.
+En total los dos flujos usan los nodos \texttt{inject}, \texttt{function}, \texttt{switch}, \texttt{json}, \texttt{mqtt in}, \texttt{mqtt out}, \texttt{http request}, \texttt{debug} y \texttt{comment}.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{API REST y cómo invocarla}\label{sec:api}
@@ -647,24 +629,24 @@ El paciente es el seudónimo (\texttt{Patient/p8}), cada \texttt{Observation} ti
 \section{Dashboards}\label{sec:dashboards}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-El sistema ofrece tres interfaces: para el cuerpo médico, un \emph{dashboard} hecho con Node-RED Dashboard 2.0 desde el que se actúa y un campograma web que muestra al equipo sobre el campo; y, para preparar la demostración, una botonera de simulación que fuerza valores en el simulador.
+El sistema ofrece tres páginas web, servidas por la API en el puerto 3000 y enlazadas entre sí, con el mismo aspecto: para el cuerpo médico, un \emph{dashboard} desde el que se actúa y un campograma que muestra al equipo sobre el campo; y, para preparar la demostración, una botonera de simulación que fuerza valores en el simulador. Las tres son HTML, CSS y JavaScript sin librerías y leen de la API con \texttt{fetch} y \texttt{WebSocket}.
 
-\subsection{Dashboard médico (Node-RED Dashboard 2.0)}
+\subsection{Dashboard médico}
 
-Disponible en \url{http://localhost:1880/dashboard/medico} (Fig.~\ref{fig:dashboard}). Tiene cinco grupos:
+Disponible en \url{http://localhost:3000/medico.html} (\ruta{api/public/medico.html}; Fig.~\ref{fig:dashboard}). Al abrirla carga los perfiles (\texttt{GET /api/jugadores}) y las alertas activas (\texttt{GET /api/alertas?estado=activa}), y a partir de ahí se actualiza sola con el WebSocket: la telemetría llega cada segundo y cada alerta nueva aparece en el momento con un aviso (``ALERTA CRÍTICA'' si es crítica). Tiene cinco bloques:
 
 \begin{itemize}
-  \item \textbf{Equipo · semáforo de salud.} Una tarjeta por jugador con su dorsal, posición, FC (y \% de la FCmáx), temperatura, velocidad y alertas activas, con el borde del color de su semáforo. Al pulsar una tarjeta se selecciona el jugador.
-  \item \textbf{Alertas activas.} Primero las críticas y, dentro de cada severidad, de la más reciente a la más antigua, con un botón \emph{Confirmar} y una nota opcional por alerta, y el nombre del médico que confirma.
-  \item \textbf{Jugador seleccionado.} Ficha con zona de FC, zona de velocidad, asimetría y alertas, y dos indicadores (\texttt{ui-gauge}) de \% de la FCmáx y temperatura interna con las bandas de los umbrales.
-  \item \textbf{Pauta de readaptación.} Muestra la pauta activa y un formulario para crear una nueva (velocidad máxima, carga máxima, asimetría máxima, vigencia y notas).
-  \item \textbf{Frecuencia cardiaca} del jugador seleccionado en los últimos 5 minutos (\texttt{ui-chart}).
+  \item \textbf{Acceso del médico.} Nombre y clave del médico para poder confirmar y crear pautas; sin ellos la página es de solo lectura (ver Sección~\ref{sec:seguridad}).
+  \item \textbf{Equipo.} Una tarjeta por jugador con su dorsal, posición, FC (y \% de la FCmáx), temperatura, velocidad y alertas activas, con el borde del color de su semáforo (gris si lleva más de 5~s sin señal). Al pulsar una tarjeta se selecciona el jugador.
+  \item \textbf{Alertas activas.} Primero las críticas y, dentro de cada severidad, de la más reciente a la más antigua, con un botón \emph{Confirmar} y una nota opcional por alerta (\texttt{POST /api/alertas/:id/confirmar}).
+  \item \textbf{Jugador seleccionado.} Zona de FC, zona de velocidad, asimetría y alertas; dos medidores de \% de la FCmáx y temperatura interna con las bandas de los umbrales, y la gráfica de su FC en los últimos 5 minutos, que empieza con los resúmenes de 10~s de la API (\texttt{GET /api/jugadores/:id/historico}) y sigue con la telemetría en vivo.
+  \item \textbf{Pauta de readaptación.} La pauta activa del jugador y un formulario para crear una nueva (velocidad máxima, carga máxima, asimetría máxima, vigencia y notas), que hace \texttt{POST /api/jugadores/:id/pauta}.
 \end{itemize}
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=\textwidth,trim=0 430 0 0,clip]{dashboard-medico.png}
-\caption{Dashboard médico durante un golpe de calor provocado en p8 (dorsal 10): su tarjeta está en rojo, las alertas \texttt{CALOR\_ROJA} y \texttt{CALOR\_AMBAR} esperan confirmación y el indicador de temperatura marca 40,5~$^\circ$C. P5, en readaptación, ha superado la carga de su pauta (\texttt{PAUTA\_EXCEDIDA}).}
+\includegraphics[width=0.8\textwidth,trim=0 930 0 0,clip]{dashboard-medico.png}
+\caption{Dashboard médico con golpes de calor provocados en P3, P4 y P8 (dorsal 10): sus tarjetas están en rojo y las alertas \texttt{CALOR\_ROJA} esperan confirmación. Arriba a la derecha, el aviso de una alerta nueva: P5, en readaptación, ha superado la velocidad de su pauta (\texttt{PAUTA\_EXCEDIDA}).}
 \label{fig:dashboard}
 \end{figure}
 
@@ -708,7 +690,7 @@ Una respuesta \texttt{202} solo indica que la orden se publicó en el broker; po
 \end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Privacidad y seguridad}
+\section{Privacidad y seguridad}\label{sec:seguridad}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 La frecuencia cardiaca, la temperatura interna, las lesiones y las pautas son \textbf{datos de salud}, una categoría especial según el artículo~9 del RGPD \cite{rgpd}. Las medidas adoptadas son:
@@ -717,7 +699,8 @@ La frecuencia cardiaca, la temperatura interna, las lesiones y las pautas son \t
   \item \textbf{Seudonimización y minimización.} Los jugadores se identifican solo con \texttt{p1}\ldots\texttt{p11}, en los topics MQTT y en la base de datos; no se guarda ningún nombre. Se guardan resúmenes de 10~s y no la señal completa.
   \item \textbf{Broker cerrado.} Mosquitto no admite conexiones anónimas; cada cliente tiene usuario y contraseña, y la ACL aplica mínimo privilegio: la API solo puede escribir alertas y órdenes al simulador, y no puede leer nada; Node-RED solo puede leer \topic{control/\#}.
   \item \textbf{Autenticación por API key con dos roles} (cabecera \texttt{x-api-key}, \ruta{middleware/clave.js}): la clave de la pasarela solo puede enviar telemetría; la del médico es la única que escribe datos clínicos. Una clave válida usada en una operación que no le corresponde recibe \texttt{403}. Las claves se comparan en tiempo constante (\texttt{crypto.timingSafeEqual} sobre su \emph{hash} SHA-256).
-  \item \textbf{Secretos fuera del repositorio.} Claves de la API y contraseñas de Mosquitto en el \texttt{.env} (incluido en \texttt{.gitignore}); en los flujos de Node-RED solo aparecen variables de entorno, y la clave del médico no sale de Node-RED hacia el navegador.
+  \item \textbf{Secretos fuera del repositorio.} Claves de la API y contraseñas de Mosquitto en el \texttt{.env} (incluido en \texttt{.gitignore}); en los flujos de Node-RED solo aparecen variables de entorno.
+  \item \textbf{La clave del médico no está en el código de la web.} El médico la escribe en el \emph{dashboard}; se guarda solo en esa pestaña (\texttt{sessionStorage}, que se borra al cerrarla), solo se envía a la API en la cabecera \texttt{x-api-key} y el botón \emph{Olvidar} la quita. Sin ella la página solo puede leer.
   \item \textbf{Validación estricta de la entrada} (tipos, unidades, rangos y tamaño del lote) y errores sin detalles internos.
 \end{itemize}
 
@@ -754,7 +737,7 @@ El vídeo sigue el escenario que motiva el proyecto:
 \section{Conclusiones}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Se ha construido una plataforma IoT completa que integra todas las piezas pedidas (servidor Express con API REST, broker Mosquitto con MQTT, varios flujos de Node-RED y un \emph{dashboard}) y añade WebSockets, base de datos, un \emph{dashboard} avanzado con Dashboard 2.0, un campograma web, el estándar FHIR y documentación OpenAPI con su colección de Postman.
+Se ha construido una plataforma IoT completa que integra todas las piezas pedidas (servidor Express con API REST, broker Mosquitto con MQTT, varios flujos de Node-RED y un \emph{dashboard}) y añade WebSockets, base de datos, tres páginas web en tiempo real (\emph{dashboard} médico, campograma y botonera de simulación), el estándar FHIR y documentación OpenAPI con su colección de Postman.
 
 Las principales lecciones del trabajo son:
 
@@ -827,8 +810,8 @@ Core body temperature responses during competitive sporting events: a narrative 
 \textbf{Carpeta} & \textbf{Contenido} \\
 \midrule
 \ruta{api/} & API REST en Express, WebSocket, modelos de Mongoose, motor de alertas y tests \\
-\ruta{api/public/} & Campograma (\url{http://localhost:3000}) y botonera de simulación (\texttt{/control.html}) \\
-\ruta{node\_red/} & Flujos: simulador (\texttt{flows.json}), pasarela (\texttt{flows\_pasarela.json}) y dashboard médico (\texttt{flows\_medico.json}); lanzador \texttt{arrancar.js} \\
+\ruta{api/public/} & Campograma (\url{http://localhost:3000}), \emph{dashboard} médico (\texttt{/medico.html}) y botonera de simulación (\texttt{/control.html}) \\
+\ruta{node\_red/} & Flujos: simulador (\texttt{flows.json}) y pasarela (\texttt{flows\_pasarela.json}); lanzador \texttt{arrancar.js} \\
 \ruta{mosquitto/} & Configuración del broker y ACL \\
 \ruta{docs/} & Contratos, diagramas y colección de Postman \\
 \ruta{arrancar-todo.cmd} & Lanzador de todo el sistema en Windows Terminal \\
@@ -842,7 +825,7 @@ Core body temperature responses during competitive sporting events: a narrative 
 
 \textbf{Requisitos:} Node.js 24, Docker Desktop (solo para MongoDB), Mosquitto 2.1 y Node-RED 5.
 
-\textbf{Arranque rápido.} En Windows, un doble clic en \texttt{arrancar-todo.cmd} abre Windows Terminal con una pestaña por pieza (Docker Desktop se abre antes a mano) y, cuando la API y Node-RED están listos, abre en el navegador el campograma, la botonera de simulación, el editor de Node-RED y el \emph{dashboard} médico. Cada arranque vacía la base de datos y carga los datos iniciales; con \texttt{-Conservar} no.
+\textbf{Arranque rápido.} En Windows, un doble clic en \texttt{arrancar-todo.cmd} abre Windows Terminal con una pestaña por pieza (Docker Desktop se abre antes a mano) y, cuando la API y Node-RED están listos, abre en el navegador el campograma, la botonera de simulación, el \emph{dashboard} médico y el editor de Node-RED. Cada arranque vacía la base de datos y carga los datos iniciales; con \texttt{-Conservar} no.
 
 \textbf{Arranque paso a paso}, desde la raíz del repositorio:
 
@@ -863,6 +846,6 @@ node node_red/arrancar.js
 cd api && npm test
 \end{lstlisting}
 
-\textbf{Direcciones:} campograma en \url{http://localhost:3000}, botonera de simulación en \url{http://localhost:3000/control.html}, Swagger en \url{http://localhost:3000/api-docs}, estado en \url{http://localhost:3000/health}, editor de Node-RED en \url{http://localhost:1880} y \emph{dashboard} médico en \url{http://localhost:1880/dashboard/medico}.
+\textbf{Direcciones:} campograma en \url{http://localhost:3000}, botonera de simulación en \url{http://localhost:3000/control.html}, Swagger en \url{http://localhost:3000/api-docs}, estado en \url{http://localhost:3000/health}, editor de Node-RED en \url{http://localhost:1880} y \emph{dashboard} médico en \url{http://localhost:3000/medico.html}.
 
 \end{document}

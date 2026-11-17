@@ -92,8 +92,8 @@ cd api && npm test
 | Carpeta | Contenido |
 |---|---|
 | `api/` | API REST en Express, WebSocket, modelos de Mongoose y motor de alertas |
-| `api/public/` | Web propia: el campograma, servido en `http://localhost:3000` (ver su [README](api/public/README.md)) |
-| `node_red/` | Flujos de Node-RED: simulador (`flows.json`, de A), pasarela MQTT → API (`flows_pasarela.json`) y dashboard médico en `/dashboard/medico` (`flows_medico.json`, de B) |
+| `api/public/` | Web propia, servida en `http://localhost:3000`: el campograma (ver su [README](api/public/README.md)), la botonera de simulación (`/control.html`) y el dashboard médico (`/medico.html`) |
+| `node_red/` | Flujos de Node-RED: simulador (`flows.json`, de A) y pasarela MQTT → API (`flows_pasarela.json`) |
 | `mosquitto/` | Configuración del broker, usuarios y ACL |
 | `docs/contratos/` | Contratos entre las dos partes: API, alertas y MQTT |
 | `informe/` | Informe y material del vídeo |

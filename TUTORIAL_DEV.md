@@ -16,7 +16,7 @@ Con el `.env` preparado (paso 2), haz **doble clic en `arrancar-todo.cmd`**, o d
 .\arrancar-todo.ps1
 ```
 
-Se abre una ventana de Windows Terminal con una pestaña de color por cada pieza: **Docker / MongoDB**, **Mosquitto**, **Subscriber**, **API**, **Node-RED** y **Mirar p1**. Hace lo mismo que los pasos 3 a 7 y, cuando la API y Node-RED responden, abre en el navegador el **campograma** (`http://localhost:3000`), la **botonera de simulación** (`/control.html`), el **editor de Node-RED** con todos los flujos (`http://localhost:1880`) y el **dashboard médico** (`http://localhost:1880/dashboard/medico`). Docker Desktop se abre a mano: si no está listo, la pestaña de Docker espera.
+Se abre una ventana de Windows Terminal con una pestaña de color por cada pieza: **Docker / MongoDB**, **Mosquitto**, **Subscriber**, **API**, **Node-RED** y **Mirar p1**. Hace lo mismo que los pasos 3 a 7 y, cuando la API y Node-RED responden, abre en el navegador el **campograma** (`http://localhost:3000`), la **botonera de simulación** (`/control.html`), el **dashboard médico** (`/medico.html`) y el **editor de Node-RED** con todos los flujos (`http://localhost:1880`). Docker Desktop se abre a mano: si no está listo, la pestaña de Docker espera.
 
 - Siempre vacía antes la base de datos (`seed --limpiar`: vuelve a cargar jugadores, pautas e historial y borra lecturas y alertas); con `-Conservar` la deja como estaba. `-Jugador p8` vigila a p8 en lugar de a p1 y `-SinNavegador` no abre ninguna página. Las mismas opciones valen con el `.cmd` desde una consola: `arrancar-todo.cmd -Conservar`.
 - **Node-RED carga solo los flujos nuevos:** si los del repo son más nuevos que los suyos (por ejemplo, después de traer cambios de A), los carga y guarda los anteriores en `~/.node-red-smarthealth/respaldo-<fecha>/`. Si lo último que hiciste fue un *Deploy* en el editor, se respetan tus cambios.
@@ -111,13 +111,13 @@ node node_red/arrancar.js
 ```
 
 - Arranca un Node-RED **solo para el proyecto**, con su propia carpeta (`~/.node-red-smarthealth`). Así no se mezcla con los ejercicios de clase de tu `~/.node-red`.
-- La primera vez lo prepara con el simulador de A (`flows.json`), la pasarela (`flows_pasarela.json`) y el dashboard médico (`flows_medico.json`), e instala Dashboard 2.0 (`@flowfuse/node-red-dashboard`, versión fija) si falta. Si después cambian en el repo (al traer cambios de A), los vuelve a cargar solo y guarda los anteriores en `respaldo-<fecha>/`; si lo último fue un *Deploy* en el editor, los respeta. Con `--reiniciar` los carga siempre desde el repo.
-- Lee el `.env`: los nodos del broker usan `${NODERED_MQTT_USER}` y `${NODERED_MQTT_PASS}`, la pasarela usa `API_KEY_PASARELA` y el dashboard médico `API_KEY_MEDICO`. No hay que escribir ninguna contraseña en el editor.
+- La primera vez lo prepara con el simulador de A (`flows.json`) y la pasarela (`flows_pasarela.json`). Si después cambian en el repo (al traer cambios de A), los vuelve a cargar solo y guarda los anteriores en `respaldo-<fecha>/`; si lo último fue un *Deploy* en el editor, los respeta. Con `--reiniciar` los carga siempre desde el repo.
+- Lee el `.env`: los nodos del broker usan `${NODERED_MQTT_USER}` y `${NODERED_MQTT_PASS}`, y la pasarela usa `API_KEY_PASARELA`. No hay que escribir ninguna contraseña en el editor.
 - Si ya tienes otro Node-RED abierto en el puerto 1880, ciérralo antes.
 
 En la consola tiene que salir `Connected to broker` dos veces, una por el simulador y otra por la pasarela. El editor está en `http://localhost:1880`.
 
-**Dashboard médico** (`http://localhost:1880/dashboard/medico`): semáforo de los 11 jugadores en directo, alertas activas con el botón *Confirmar*, ficha del jugador seleccionado (% FCmáx, temperatura y FC de los últimos 5 min) y formulario de pauta de readaptación. Lee de la API (WebSocket y GET) y escribe con la clave del médico, que se queda en Node-RED: el navegador no la ve.
+**Dashboard médico** (`http://localhost:3000/medico.html`, con el mismo aspecto que la botonera): semáforo de los 11 jugadores en directo, alertas activas con el botón *Confirmar*, ficha del jugador seleccionado (% FCmáx, temperatura y FC de los últimos 5 min) y formulario de pauta de readaptación. Lee de la API (WebSocket y GET). Para confirmar y crear pautas, el médico escribe su nombre y la clave `API_KEY_MEDICO` en la página: se guarda solo en esa pestaña (`sessionStorage`) y solo se envía a la API.
 
 Para ver a un jugador tal y como lo ve la API (consola 6, dentro de `api/`):
 
