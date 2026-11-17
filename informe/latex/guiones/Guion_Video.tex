@@ -76,11 +76,11 @@ El enunciado pide un vídeo de unos 5 minutos que explique las funcionalidades m
 \voz{Para la demostración tenemos una botonera que cambia lo que pasa en el partido. Si pedimos presión alta, el equipo entero se adelanta. Y ahora, lo importante: vamos a provocarle un golpe de calor al jugador 8. La orden no va directa al simulador: pasa por la API, que la comprueba y la publica por MQTT, y el simulador la recibe. Primero 39,4 grados…} \\
 \midrule
 \multicolumn{3}{l}{\textbf{5. Alertas y médico} — B} \\
-2:15 & Campograma: el aro del dorsal 10 (p8) se pone ámbar &
+2:15 & Campograma: el aro del dorsal 8 (p8) se pone ámbar &
 \voz{La temperatura del jugador 8 ha pasado de 39 grados. La API recibe un lote por segundo con los once jugadores y les aplica diez reglas a cada uno. Salta el aviso de calor.} \\
 2:30 & El aro pasa a rojo y late; en el dashboard médico aparece la notificación y su tarjeta se pone en rojo &
 \voz{Al llegar a 40 grados ya es una alerta crítica. Se guarda en la base de datos y llega al dashboard del médico y al campograma por WebSocket, todo en el mismo segundo.} \\
-2:50 & Dashboard médico (el nombre y la clave del médico ya están puestos): se pulsa «Enfriar» en la alerta de p8; en la gráfica de temperatura aparece la línea verde y la temperatura baja hasta 37,5 °C &
+2:50 & Dashboard médico (entra ya como médico, sin escribir nada): se pulsa «Enfriar» en la alerta de p8; en la gráfica de temperatura aparece la línea verde y la temperatura baja hasta 37,5 °C &
 \voz{El médico no se limita a darse por enterado: pulsa «Enfriar», como cuando se mete al jugador en agua fría. La temperatura baja poco a poco y, al volver a la normalidad, la alerta se cierra sola, con quién la trató y qué hizo.} \\
 3:05 & Se pulsa la tarjeta de p8 y, en «Pauta de readaptación», velocidad máxima 20 km/h &
 \voz{Y le pone una pauta: como máximo 20 kilómetros por hora en lo que queda de sesión.} \\
@@ -96,7 +96,7 @@ El enunciado pide un vídeo de unos 5 minutos que explique las funcionalidades m
 \multicolumn{3}{l}{\textbf{7. Privacidad y seguridad} — A (broker) y B (API)} \\
 4:00 & Diapositiva: seudónimos · broker con usuarios y permisos · API con claves por rol &
 A: \voz{Son datos de salud, los más protegidos por el reglamento europeo de protección de datos. Por eso los jugadores solo aparecen como p1 a p11, nunca con su nombre, y el broker no deja entrar a nadie sin usuario: cada uno solo puede leer o escribir donde le toca.}\par
-B: \voz{En la API, solo la clave del médico puede tocar datos clínicos. No está escrita en ninguna página: el médico la introduce en su dashboard y solo se guarda mientras tiene la pestaña abierta.} \\
+B: \voz{En la API, solo la clave del médico puede tocar datos clínicos. Su dashboard la recibe ya puesta de la API, así que el médico no escribe nada; por eso esa página nunca se comparte fuera del equipo.} \\
 \midrule
 \multicolumn{3}{l}{\textbf{8. Cierre} — los dos} \\
 4:35 & Campograma en vivo de fondo; aparecen los nombres de las tecnologías &
@@ -109,7 +109,7 @@ B: \voz{En la API, solo la clave del médico puede tocar datos clínicos. No est
 \begin{itemize}[nosep]
   \item Arrancar con \texttt{arrancar-todo.cmd} (vacía la base de datos) y esperar \textbf{1 minuto} antes de la primera toma: la asimetría y el histórico necesitan datos.
   \item Ventanas preparadas (\texttt{arrancar-todo} ya las abre): campograma (\texttt{localhost:3000}), botonera de simulación (\texttt{localhost:3000/\allowbreak control.html}), dashboard médico (\texttt{localhost:3000/\allowbreak medico.html}), Swagger con las peticiones ya escritas, consola con \texttt{mosquitto\_sub} en \texttt{sensors/eq1/alertas} y \texttt{control/\#}, y la URL de FHIR.
-  \item \textbf{Ninguna clave en pantalla}: el \emph{Authorize} de Swagger y el acceso del dashboard médico (nombre y clave) se rellenan antes de grabar; la clave queda como puntos. No abrir el \texttt{.env}.
+  \item \textbf{Ninguna clave en pantalla}: el \emph{Authorize} de Swagger se rellena antes de grabar; el dashboard médico ya trae la clave y no la enseña. No abrir el \texttt{.env}.
   \item Pantalla a 1920×1080, navegador al 125~\%, notificaciones de Windows desactivadas.
   \item Antes de cada toma de alertas: \texttt{POST /api/simulador/reiniciar} y confirmar las alertas que queden, para empezar con todos en verde.
 \end{itemize}

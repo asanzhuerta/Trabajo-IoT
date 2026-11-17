@@ -1,20 +1,9 @@
 <!doctype html>
 <html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Dashboard médico · Smart Health</title>
-<link rel="stylesheet" href="control.css"><link rel="stylesheet" href="medico.css"><script src="medico.js" defer></script></head>
+<link rel="stylesheet" href="control.css"><link rel="stylesheet" href="medico.css"><script src="medico-config.js"></script><script src="medico.js" defer></script></head>
 <body><div class="wrap">
-<header><a class="brand" href="/">↗ SMART<span>/HEALTH</span></a><nav><a href="/">Campograma ↗</a><a href="/control.html">Control de sensores ↗</a><a href="/api-docs" target="_blank" rel="noopener">API · Swagger ↗</a><span id="connection" class="badge">Conectando…</span></nav></header>
-<section class="intro"><span class="eyebrow">CUERPO MÉDICO · EQUIPO P1–P11</span><h1>Dashboard <em>médico.</em></h1><p>Semáforo de salud de los once jugadores en directo, alertas para confirmar y pautas de readaptación. Ante una alerta, el médico interviene (enfriar, reposo) y se ve cómo el valor vuelve a la normalidad; lo que se confirma o se guarda va a la API con la clave del médico.</p></section>
-
-<section class="card access" aria-labelledby="accessTitle">
-  <div><span class="eyebrow">01 / ACCESO DEL MÉDICO</span><h2 id="accessTitle">Quién confirma</h2><p class="hint">La clave solo se guarda en esta pestaña del navegador y solo se envía a la API. Sin ella se puede mirar todo, pero no confirmar ni crear pautas.</p></div>
-  <form id="accessForm" class="access-fields">
-    <label>Nombre o iniciales<input id="doctor" autocomplete="name" placeholder="Dra. Pérez" required></label>
-    <label>Clave del médico<input id="key" type="password" autocomplete="current-password" placeholder="API_KEY_MEDICO" required></label>
-    <button type="submit" class="primary">Guardar</button>
-    <button type="button" id="logout" class="danger">Olvidar</button>
-  </form>
-  <p id="accessState" class="hint access-state">Sin clave: solo lectura.</p>
-</section>
+<header><a class="brand" href="/">↗ SMART<span>/HEALTH</span></a><nav><a href="/">Campograma ↗</a><a href="/control.html">Control de sensores ↗</a><a href="/api-docs" target="_blank" rel="noopener">API · Swagger ↗</a><span id="doctorBadge" class="badge">Médico…</span><span id="connection" class="badge">Conectando…</span></nav></header>
+<section class="intro"><span class="eyebrow">CUERPO MÉDICO · EQUIPO P1–P11</span><h1>Dashboard <em>médico.</em></h1><p>Semáforo de salud de los once jugadores en directo, alertas para confirmar y pautas de readaptación. Ante una alerta, el médico interviene (enfriar, reposo) y se ve cómo el valor vuelve a la normalidad.</p></section>
 
 <div class="section-title"><h2>Equipo <span id="teamCount">—</span></h2><span>Semáforo según las alertas activas · pulsa un jugador para ver su ficha</span></div>
 <section id="team" class="team" aria-label="Semáforo del equipo"></section>

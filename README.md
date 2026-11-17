@@ -47,7 +47,7 @@ Simulador (Node-RED) ──MQTT──► Mosquitto ──MQTT──► Pasarela 
    ```
    Comprueba que responde en `http://localhost:3000/health`. La documentación interactiva (Swagger) está en `http://localhost:3000/api-docs` y el **campograma** (los 11 jugadores en el campo, con su semáforo y sus alertas en vivo) en `http://localhost:3000`.
 
-5. **Datos iniciales** (los 11 jugadores y la pauta de p5). Con `-- --limpiar` borra también lecturas, eventos, alertas y sesiones:
+5. **Datos iniciales** (los 11 jugadores, sin pautas: el equipo arranca con todos en verde). Con `-- --limpiar` borra también lecturas, eventos, alertas y sesiones:
    ```bash
    cd api && npm run seed
    ```
@@ -84,6 +84,7 @@ cd api && npm test
 ### Documentación de la API y Postman
 
 - **Swagger:** `http://localhost:3000/api-docs`. Pulsa *Authorize*, pon la clave del médico o de la pasarela (las del `.env`) y prueba cualquier endpoint desde ahí. La especificación está en `api/openapi.yaml`.
+- **Dashboard médico:** `http://localhost:3000/medico.html`. No pide nada: la API le pasa la clave del médico (`API_KEY_MEDICO`) y su nombre (`MEDICO_NOMBRE`) en `/medico-config.js`, así que se puede confirmar, intervenir y poner pautas directamente. Por eso, quien pueda abrir esa página actúa como médico: no expongas el puerto 3000 fuera de la red de confianza (en la defensa, el túnel solo se comparte para la botonera).
 - **Postman:** importa `docs/postman_collection.json`. En las variables de la colección, pon en *Current value* `claveMedico` y `clavePasarela`. Se puede lanzar entera con el *Collection Runner*: cada petición comprueba su código de respuesta y la carpeta «Errores» enseña los 400, 401, 403, 404 y 409. La colección se regenera con `node scripts/generar-postman.js` desde `api/`.
 - **Sesiones:** `POST /api/sesiones` con `{"tipo": "entrenamiento", "nombre": "…"}` para empezar una y `POST /api/sesiones/<id>/fin` para cerrarla y guardar el resumen de cada jugador.
 

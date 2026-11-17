@@ -37,7 +37,7 @@ Un vídeo vertical de \textbf{55--60 segundos} que cuenta una sola historia: \te
 \begin{itemize}[nosep]
   \item \textbf{Formato:} vertical 9:16 (1080×1920), 55--60 s, unas 140 palabras habladas.
   \item \textbf{Tono:} claro y con ritmo, como un vídeo de divulgación: frases cortas, datos concretos y la demo como protagonista. Sin bromas.
-  \item \textbf{Protagonista:} el jugador \textbf{p8}, dorsal 10, al que llamamos «el número 10».
+  \item \textbf{Protagonista:} el jugador \textbf{p8}, dorsal 8, al que llamamos «el número 8».
   \item \textbf{Reparto natural:} Manu cuenta los sensores y la simulación; Ale, la API, las alertas y el médico.
 \end{itemize}
 
@@ -54,7 +54,7 @@ Un vídeo vertical de \textbf{55--60 segundos} que cuenta una sola historia: \te
 \endhead
 
 \multicolumn{5}{l}{\textbf{1. Gancho}} \\
-0:00 & \MANU & «Este jugador está a punto de sufrir un golpe de calor. Y no lo sabe.» & Campograma; zoom rápido al dorsal 10 & \rot{¿Y si la camiseta avisara al médico?} \\
+0:00 & \MANU & «Este jugador está a punto de sufrir un golpe de calor. Y no lo sabe.» & Campograma; zoom rápido al dorsal 8 & \rot{¿Y si la camiseta avisara al médico?} \\
 0:04 & \ALE & «Pero su médico se va a enterar en el mismo segundo. Te enseñamos cómo.» & Dashboard médico con todo el equipo en verde & — \\
 \midrule
 
@@ -64,9 +64,9 @@ Un vídeo vertical de \textbf{55--60 segundos} que cuenta una sola historia: \te
 \midrule
 
 \multicolumn{5}{l}{\textbf{3. La demo: golpe de calor}} \\
-0:27 & \MANU & «Vamos a subirle la temperatura al número 10.» & En la botonera de simulación se elige P8 y se pulsa 40,5 °C; el termómetro del 10 empieza a subir & — \\
-0:30 & \MANU & «A 39 grados, aviso.» & El aro del 10 se pone ámbar & \rot{39 °C · AVISO} (ámbar) \\
-0:33 & \ALE & «A 40, alerta crítica: se guarda en la base de datos y le llega al médico al instante.» & El aro pasa a rojo; aviso «ALERTA CRÍTICA» en el dashboard médico (\texttt{localhost:3000/\allowbreak medico.html}) y tarjeta del 10 en rojo & \rot{40 °C · ALERTA CRÍTICA} (rojo) \\
+0:27 & \MANU & «Vamos a subirle la temperatura al número 8.» & En la botonera de simulación se elige P8 y se pulsa 40,5 °C; el termómetro del 8 empieza a subir & — \\
+0:30 & \MANU & «A 39 grados, aviso.» & El aro del 8 se pone ámbar & \rot{39 °C · AVISO} (ámbar) \\
+0:33 & \ALE & «A 40, alerta crítica: se guarda en la base de datos y le llega al médico al instante.» & El aro pasa a rojo; aviso «ALERTA CRÍTICA» en el dashboard médico (\texttt{localhost:3000/\allowbreak medico.html}) y tarjeta del 8 en rojo & \rot{40 °C · ALERTA CRÍTICA} (rojo) \\
 0:40 & \ALE & «El médico lo enfría y la temperatura baja: alerta resuelta. Después le pone un límite de veinte kilómetros por hora.» & Botón «Enfriar»; la gráfica de temperatura baja hasta 37,5 °C; formulario de pauta con 20 km/h & Enfriando… \\
 \midrule
 
@@ -91,7 +91,7 @@ Para que cada uno grabe las suyas sin tener que leer la tabla entera:
 \multicolumn{2}{l}{\textcolor{manu}{\textbf{Manuel}}} \\
 M1 & Este jugador está a punto de sufrir un golpe de calor. Y no lo sabe. \\
 M2 & Cada jugador lleva seis sensores: posición, velocidad, pulso, temperatura interna, aceleración y la presión de cada pie. Los once jugadores están simulados en Node-RED y juegan como un equipo de verdad. \\
-M3 & Vamos a subirle la temperatura al número 10. \\
+M3 & Vamos a subirle la temperatura al número 8. \\
 M4 & A 39 grados, aviso. \\
 M5 & MQTT, Node-RED, una API REST, base de datos y WebSockets, trabajando en tiempo real. \\
 \midrule
@@ -115,19 +115,19 @@ Con todo el sistema arrancado (\texttt{arrancar-todo.cmd}) y esperando un minuto
 \textbf{\#} & \textbf{Grabación de pantalla} & \textbf{Duración} & \textbf{Quién la graba} \\
 \midrule
 \endhead
-F1 & Campograma con los once moviéndose, sin alertas, y un plano centrado en el dorsal 10 & 20 s & Manuel \\
+F1 & Campograma con los once moviéndose, sin alertas, y un plano centrado en el dorsal 8 & 20 s & Manuel \\
 F2 & Flujo del simulador en Node-RED & 5 s & Manuel \\
 F3 & Consola con \texttt{mosquitto\_sub} y los mensajes de los sensores cayendo & 5 s & Manuel \\
 F4 & Swagger con la lista de operaciones & 5 s & Alejandro \\
-F5 & Golpe de calor completo desde la botonera: 39,4 °C y, a los pocos segundos, 40,5 °C a p8; el aro del 10 pasa a ámbar y a rojo & 30 s & Alejandro \\
-F6 & Dashboard médico durante el golpe de calor: aviso «ALERTA CRÍTICA» y tarjeta del 10 en rojo & 10 s & Alejandro \\
+F5 & Golpe de calor completo desde la botonera: 39,4 °C y, a los pocos segundos, 40,5 °C a p8; el aro del 8 pasa a ámbar y a rojo & 30 s & Alejandro \\
+F6 & Dashboard médico durante el golpe de calor: aviso «ALERTA CRÍTICA» y tarjeta del 8 en rojo & 10 s & Alejandro \\
 F7 & El médico pulsa «Enfriar»: línea verde en la gráfica de temperatura, bajada hasta 37,5 °C y la alerta se cierra sola & 40 s (×4 en el montaje) & Alejandro \\
 F7b & Crea la pauta de 20 km/h y salta \texttt{PAUTA\_EXCEDIDA} & 15 s & Alejandro \\
 F8 & Base de datos con sus colecciones & 3 s & Alejandro \\
 \bottomrule
 \end{longtable}
 
-Antes de cada toma de alertas: \texttt{POST /api/simulador/reiniciar} y confirmar las alertas que queden, para empezar con todos en verde. El nombre y la clave del médico se escriben en el dashboard antes de grabar (la clave queda como puntos): ninguna clave ni contraseña en pantalla.
+Antes de cada toma de alertas: \texttt{POST /api/simulador/reiniciar} y confirmar las alertas que queden, para empezar con todos en verde. El dashboard médico ya trae la clave y el nombre del médico (no hay recuadro de acceso) y el equipo arranca con todos en verde: el seed no carga ninguna pauta. Ninguna clave ni contraseña en pantalla.
 
 \subsection*{2. Grabarse cada uno en su croma}
 
@@ -149,7 +149,7 @@ Como cada uno se graba por su cuenta, lo importante es que \textbf{los dos plano
   \item En \textbf{CapCut} (gratis), lienzo 9:16. Las grabaciones de pantalla en la pista de fondo y la toma de cada uno encima, con \emph{Recortar → Croma} (o \emph{Eliminar fondo}). Ajustar hasta que no quede borde verde.
   \item Igualar el color y el brillo de los dos planos para que no se note que se grabaron en sitios distintos.
   \item Cortar cada frase justo al empezar y al terminar de hablar.
-  \item Acercar las pantallas a lo importante: el aro del 10, la notificación, el código de la alerta.
+  \item Acercar las pantallas a lo importante: el aro del 8, la notificación, el código de la alerta.
   \item Subtítulos automáticos revisados a mano, grandes y centrados. Rótulos en negrita: ámbar para el aviso y rojo para la alerta crítica.
   \item Sonidos discretos: un aviso cuando salta la alerta y música de la biblioteca comercial de TikTok a volumen bajo.
   \item \textbf{Zona segura:} nada importante en el 20~\% inferior ni en la franja derecha (botones de TikTok).

@@ -21,7 +21,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Web propia: el campograma (public/index.html, ver public/README.md)
+// Clave y nombre del médico ya puestos para el dashboard médico (ver servers/medico-config.js)
+app.get('/medico-config.js', require('./medico-config').medicoConfig);
+
+// Web propia: campograma, botonera y dashboard médico (public/, ver public/README.md)
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
 app.use('/health', healthRoutes);

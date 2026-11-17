@@ -453,39 +453,8 @@
     },
     {
       "name": "Pauta de readaptación",
-      "description": "Límites que fija el médico a un jugador que vuelve de una lesión (p5 tiene una en el seed).",
+      "description": "Límites que fija el médico a un jugador que vuelve de una lesión. El seed no carga ninguna (el equipo arranca en verde): primero se crea y luego se consulta.",
       "item": [
-        {
-          "name": "Ver la pauta activa de p5",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
-                ]
-              }
-            }
-          ],
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{baseUrl}}/api/jugadores/p5/pauta",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "jugadores",
-                "p5",
-                "pauta"
-              ]
-            },
-            "description": ""
-          }
-        },
         {
           "name": "Crear una pauta para p5",
           "event": [
@@ -533,7 +502,7 @@
                 "pauta"
               ]
             },
-            "description": "Sustituye a la anterior. `hasta` se pone a una semana vista antes de enviarla.",
+            "description": "Sustituye a la anterior si la hay. `hasta` se pone a una semana vista antes de enviarla. Con el simulador en marcha, p5 acabará superándola (`PAUTA_EXCEDIDA`).",
             "body": {
               "mode": "raw",
               "raw": "{\n  \"velMax\": 22,\n  \"cargaMax\": 600,\n  \"asimetriaMax\": 8,\n  \"hasta\": \"{{dentroDeUnaSemana}}\",\n  \"notas\": \"Vuelta progresiva tras sobrecarga en isquios\"\n}",
@@ -543,6 +512,37 @@
                 }
               }
             }
+          }
+        },
+        {
+          "name": "Ver la pauta activa de p5",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/jugadores/p5/pauta",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "jugadores",
+                "p5",
+                "pauta"
+              ]
+            },
+            "description": ""
           }
         }
       ]

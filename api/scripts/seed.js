@@ -1,4 +1,4 @@
-// Carga en MongoDB los 11 jugadores, la pauta de readaptación de p5 y 4 semanas de sesiones para el ACWR.
+// Carga en MongoDB los 11 jugadores (sin pautas: el equipo arranca en verde) y 4 semanas de sesiones para el ACWR.
 //
 //   npm run seed               -> reemplaza jugadores, pautas y las sesiones simuladas
 //   npm run seed -- --limpiar  -> además borra lecturas, eventos, alertas y todas las sesiones
@@ -50,7 +50,8 @@ async function main() {
             notas: p.notas
         });
     }
-    console.log('Pautas: %d (%s)', plantilla.PAUTAS.length, plantilla.PAUTAS.map(function (p) { return p.jugadorId; }).join(', '));
+    console.log('Pautas: %d%s', plantilla.PAUTAS.length,
+        plantilla.PAUTAS.length ? ' (' + plantilla.PAUTAS.map(function (p) { return p.jugadorId; }).join(', ') + ')' : ' (todo el equipo en verde)');
 
     if (opciones.limpiar) {
         const [l, e, a, s] = await Promise.all([

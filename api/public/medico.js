@@ -1,5 +1,5 @@
 // Dashboard médico: lee de la API (REST y WebSocket) y escribe con la clave del médico,
-// que el médico escribe en la página y solo se guarda en esta pestaña (sessionStorage).
+// que ya viene puesta: la API la sirve en /medico-config.js (window.SMART_HEALTH_MEDICO) desde el .env.
 (() => {
   'use strict';
   const $ = id => document.getElementById(id);
@@ -26,30 +26,21 @@
   const valor = (j, sensor, medida) => j?.sensors?.[sensor]?.[medida]?.value;
   const el = (tag, cls, texto) => { const e = document.createElement(tag); if (cls) e.className = cls; if (texto != null) e.textContent = texto; return e; };
 
-  // ---------------------------------------------------------------- acceso del médico
-  const guardado = k => { try { return sessionStorage.getItem(k) || ''; } catch { return ''; } };
-  const guardar = (k, v) => { try { v ? sessionStorage.setItem(k, v) : sessionStorage.removeItem(k); } catch {} };
-  const medico = () => guardado('sh-medico');
-  const clave = () => guardado('sh-clave');
+  // ---------------------------------------------------------------- médico (clave y nombre ya puestos)
+  const CONFIG = window.SMART_HEALTH_MEDICO || {};
+  const medico = () => CONFIG.nombre || 'Médico del equipo';
+  const clave = () => CONFIG.clave || '';
   function pintarAcceso() {
-    $('doctor').value = medico();
-    $('key').value = clave() ? '••••••••' : '';
+    const ok = !!clave();
+    $('doctorBadge').textContent = ok ? '● ' + medico() : 'Solo lectura: falta API_KEY_MEDICO';
+    $('doctorBadge').classList.toggle('online', ok);
     pintarBotones();
   }
-  // Solo los botones: se llama al repintar las alertas sin tocar lo que se esté escribiendo arriba
+  // Sin clave en el .env de la API los botones quedan desactivados (solo lectura)
   function pintarBotones() {
-    const ok = !!(medico() && clave());
-    $('accessState').textContent = ok ? 'Confirmará como ' + medico() + '. La clave está guardada solo en esta pestaña.' : 'Sin clave: solo lectura.';
-    $('accessState').classList.toggle('ok', ok);
+    const ok = !!clave();
     document.querySelectorAll('.alert button, #guidelineForm button').forEach(b => { b.disabled = !ok || enviando.has(b.dataset.id); });
   }
-  $('accessForm').onsubmit = e => {
-    e.preventDefault();
-    guardar('sh-medico', $('doctor').value.trim());
-    if ($('key').value && $('key').value !== '••••••••') guardar('sh-clave', $('key').value);
-    pintarAcceso();
-  };
-  $('logout').onclick = () => { guardar('sh-clave', ''); pintarAcceso(); };
 
   // Petición con la clave del médico; devuelve {ok, datos} o avisa del error
   async function escribir(metodo, ruta, cuerpo, accion) {

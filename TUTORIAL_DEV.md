@@ -54,7 +54,8 @@ Copia `.env.example` como `.env` en la raíz del repo y rellena:
 | `MQTT_USER` / `MQTT_PASS` | `api` y su contraseña de Mosquitto (la usa la API) |
 | `NODERED_MQTT_USER` / `NODERED_MQTT_PASS` | `nodered` y su contraseña de Mosquitto (la usan el simulador y la pasarela) |
 | `API_KEY_PASARELA` | cualquier texto: es la clave con la que la pasarela habla con la API |
-| `API_KEY_MEDICO` | otro texto distinto: es la clave para confirmar alertas, crear pautas… |
+| `API_KEY_MEDICO` | otro texto distinto: es la clave para confirmar alertas, crear pautas… (el dashboard médico la recibe ya puesta) |
+| `MEDICO_NOMBRE` | opcional: con qué nombre firma el dashboard médico (por defecto, «Médico del equipo») |
 
 Las contraseñas de Mosquitto os las pasáis por privado. `mosquitto/passwd` tiene que ser el que generó A. `.env` no se sube al repo.
 
@@ -95,7 +96,7 @@ node scripts/seed.js
 npm run dev
 ```
 
-- `seed` carga los 11 jugadores (`p1` … `p11`) y una pauta de readaptación para `p5`. Con `--limpiar` borra también las lecturas y las alertas.
+- `seed` carga los 11 jugadores (`p1` … `p11`, con el dorsal igual al número) sin ninguna pauta, para que el equipo arranque en verde. Con `--limpiar` borra también las lecturas y las alertas.
 - `dev` arranca la API en `http://localhost:3000`.
 
 Abre `http://localhost:3000/health`: tiene que decir `"mongo":"connected"` y `"mqtt":"connected"`.
@@ -117,7 +118,7 @@ node node_red/arrancar.js
 
 En la consola tiene que salir `Connected to broker` dos veces, una por el simulador y otra por la pasarela. El editor está en `http://localhost:1880`.
 
-**Dashboard médico** (`http://localhost:3000/medico.html`, con el mismo aspecto que la botonera): semáforo de los 11 jugadores en directo, alertas activas con el botón *Confirmar*, ficha del jugador seleccionado (% FCmáx, temperatura y FC de los últimos 5 min) y formulario de pauta de readaptación. Lee de la API (WebSocket y GET). Para confirmar y crear pautas, el médico escribe su nombre y la clave `API_KEY_MEDICO` en la página: se guarda solo en esa pestaña (`sessionStorage`) y solo se envía a la API.
+**Dashboard médico** (`http://localhost:3000/medico.html`, con el mismo aspecto que la botonera): semáforo de los 11 jugadores en directo, alertas activas con el botón *Confirmar*, ficha del jugador seleccionado (% FCmáx, temperatura y FC de los últimos 5 min) y formulario de pauta de readaptación. Lee de la API (WebSocket y GET). No hay que escribir ninguna clave: la página carga `/medico-config.js`, donde la API le da la clave `API_KEY_MEDICO` y el nombre `MEDICO_NOMBRE` del `.env`, y con ellos confirma, interviene y crea pautas. Arriba a la derecha se ve con qué nombre firma; si falta `API_KEY_MEDICO`, la página queda en solo lectura.
 
 Para ver a un jugador tal y como lo ve la API (consola 6, dentro de `api/`):
 
@@ -177,7 +178,7 @@ En la consola del Subscriber, con `-t "control/#"`, se ven llegar las órdenes. 
 | `{"pulse": 185, "durationSeconds": 90}` | `FC_ALTA` | ~60 s |
 | `{"pulse": 175, "durationSeconds": 60}` al portero (camina) | `FC_DESACOPLE` | ~30 s |
 
-Además, `PAUTA_EXCEDIDA` salta sola con p5 (está en readaptación) cuando corre más de lo que permite su pauta.
+`PAUTA_EXCEDIDA` salta cuando un jugador con pauta la supera: por ejemplo, pon desde el dashboard médico una pauta de 20 km/h a p8 y espera a que esprinte.
 
 ## 10. Tests
 

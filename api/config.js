@@ -15,5 +15,7 @@ module.exports = {
     apiKeys: {
         pasarela: process.env.API_KEY_PASARELA,
         medico: process.env.API_KEY_MEDICO
-    }
+    },
+    // Quién firma lo que se hace desde el dashboard médico (confirmar, intervenir, pautas)
+    medicoNombre: process.env.MEDICO_NOMBRE || 'Médico del equipo'
 };

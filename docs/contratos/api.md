@@ -15,7 +15,7 @@
 - **Identificadores de jugador:** seudónimos `p1` … `p11`, los mismos que el simulador usa en los topics (`p1/sensors/...`). Nunca se usan nombres.
 - **Autenticación:** cabecera `x-api-key`.
   - `API_KEY_PASARELA`: solo para `POST /api/telemetria` (la usa Node-RED).
-  - `API_KEY_MEDICO`: para todo lo que escribe datos clínicos (jugadores, umbrales, pautas, confirmar alertas, sesiones).
+  - `API_KEY_MEDICO`: para todo lo que escribe datos clínicos (jugadores, umbrales, pautas, confirmar alertas, sesiones). El dashboard médico (`/medico.html`) la recibe ya puesta en `GET /medico-config.js` (`window.SMART_HEALTH_MEDICO = { clave, nombre }`, con `MEDICO_NOMBRE` como firma), así que quien abre esa página actúa como médico.
   - Los `GET` no piden clave en esta versión. Es una limitación conocida y se explica en el informe.
   - `/api/simulador` tampoco: solo mueve el simulador, no toca datos clínicos.
 - **Errores:** `{"error": "mensaje"}` con el código HTTP correspondiente.
@@ -103,7 +103,7 @@ Lista de jugadores con su perfil.
 ### `GET /api/jugadores/:id`
 ```json
 {
-  "id": "p8", "dorsal": 10, "posicion": "MC",
+  "id": "p8", "dorsal": 8, "posicion": "MCO",
   "fcMax": 195, "tempBasal": 37.0, "asimetriaBase": 4,
   "umbrales": { "tempAmbar": 39, "tempRoja": 40, "fcAltaPct": 92 },
   "enReadaptacion": false

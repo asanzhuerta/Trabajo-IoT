@@ -163,12 +163,12 @@ const coleccion = {
                 descripcion: 'Los nombres de los umbrales están en `docs/contratos/alertas.md`. Aquí se dejan los valores por defecto.' })
         ]),
 
-        carpeta('Pauta de readaptación', 'Límites que fija el médico a un jugador que vuelve de una lesión (p5 tiene una en el seed).', [
-            peticion({ nombre: 'Ver la pauta activa de p5', metodo: 'GET', ruta: '/api/jugadores/p5/pauta' }),
+        carpeta('Pauta de readaptación', 'Límites que fija el médico a un jugador que vuelve de una lesión. El seed no carga ninguna (el equipo arranca en verde): primero se crea y luego se consulta.', [
             peticion({ nombre: 'Crear una pauta para p5', metodo: 'POST', ruta: '/api/jugadores/p5/pauta', clave: MEDICO, esperado: 201,
                 preRequest: ["const d = new Date(Date.now() + 7 * 24 * 3600 * 1000);", "pm.collectionVariables.set('dentroDeUnaSemana', d.toISOString().slice(0, 10));"],
                 cuerpo: { velMax: 22, cargaMax: 600, asimetriaMax: 8, hasta: '{{dentroDeUnaSemana}}', notas: 'Vuelta progresiva tras sobrecarga en isquios' },
-                descripcion: 'Sustituye a la anterior. `hasta` se pone a una semana vista antes de enviarla.' })
+                descripcion: 'Sustituye a la anterior si la hay. `hasta` se pone a una semana vista antes de enviarla. Con el simulador en marcha, p5 acabará superándola (`PAUTA_EXCEDIDA`).' }),
+            peticion({ nombre: 'Ver la pauta activa de p5', metodo: 'GET', ruta: '/api/jugadores/p5/pauta' })
         ]),
 
         carpeta('Alertas', 'Alertas del motor de reglas. Para que haya alguna activa, con el simulador en marcha fuerza un valor desde la carpeta Simulador (p. ej. «Golpe de calor»).', [

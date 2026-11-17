@@ -6,12 +6,6 @@ label { display: flex; flex-direction: column; gap: 6px; color: var(--muted); fo
 input { background: #091b2b; color: var(--text); border: 1px solid #436078; border-radius: 9px; padding: 11px; min-width: 0; }
 input:focus { border-color: var(--yellow); outline: none; }
 
-.access { display: grid; grid-template-columns: minmax(220px, 1fr) 2fr; gap: 10px 26px; align-items: end; }
-.access h2 { margin: 8px 0 6px; }
-.access-fields { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
-.access-fields label { flex: 1 1 170px; }
-.access-state { grid-column: 1 / -1; margin: 4px 0 0; }
-.access-state.ok { color: #62e2b6; }
 
 .team { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
 .player { text-align: left; padding: 12px 14px; border-left-width: 6px; display: flex; flex-direction: column; gap: 8px; font-weight: 400; }
@@ -88,7 +82,6 @@ input:focus { border-color: var(--yellow); outline: none; }
 .toast.medico { border-left-color: #62e2b6; }
 
 @media (max-width: 800px) {
-  .access { grid-template-columns: 1fr; }
   .meters { grid-template-columns: 1fr; }
   .guideline-fields { grid-template-columns: 1fr 1fr; }
   .guideline-fields .wide { grid-column: span 2; }

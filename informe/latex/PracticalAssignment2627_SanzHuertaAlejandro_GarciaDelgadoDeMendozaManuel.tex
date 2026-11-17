@@ -608,7 +608,7 @@ El sistema ofrece tres páginas web, servidas por la API en el puerto 3000 y enl
 Disponible en \url{http://localhost:3000/medico.html} (\ruta{api/public/medico.html}; Fig.~\ref{fig:dashboard}). Al abrirla carga los perfiles (\texttt{GET /api/jugadores}) y las alertas activas (\texttt{GET /api/alertas?estado=activa}), y a partir de ahí se actualiza sola con el WebSocket: la telemetría llega cada segundo y cada alerta nueva aparece en el momento con un aviso (``ALERTA CRÍTICA'' si es crítica). Tiene cinco bloques:
 
 \begin{itemize}
-  \item \textbf{Acceso del médico.} Nombre y clave del médico para poder confirmar y crear pautas; sin ellos la página es de solo lectura (ver Sección~\ref{sec:seguridad}).
+  \item \textbf{Médico ya identificado.} La página no pide nada: carga \ruta{/medico-config.js}, donde la API le da la clave y el nombre del médico del \texttt{.env} (\texttt{API\_KEY\_MEDICO} y \texttt{MEDICO\_NOMBRE}), y arriba a la derecha muestra con qué nombre firma. Así la demostración va seguida (ver Sección~\ref{sec:seguridad}).
   \item \textbf{Equipo.} Una tarjeta por jugador con su dorsal, posición, FC (y \% de la FCmáx), temperatura, velocidad y alertas activas, con el borde del color de su semáforo (gris si lleva más de 5~s sin señal). Al pulsar una tarjeta se selecciona el jugador.
   \item \textbf{Alertas activas.} Primero las críticas y, dentro de cada severidad, de la más reciente a la más antigua, con un botón \emph{Confirmar} y una nota opcional por alerta (\texttt{POST /api/alertas/:id/confirmar}) y, si la alerta tiene tratamiento, un botón \emph{Enfriar} o \emph{Reposo} (ver más abajo).
   \item \textbf{Jugador seleccionado.} Zona de FC, zona de velocidad, asimetría y alertas; dos medidores de \% de la FCmáx y temperatura interna con las bandas de los umbrales, y dos gráficas de los últimos 2 minutos, de FC y de temperatura, con las líneas de los umbrales; empiezan con los resúmenes de 10~s de la API (\texttt{GET /api/jugadores/:id/historico}) y siguen con la telemetría en vivo.
@@ -626,8 +626,8 @@ La API publica ocho pasos, uno cada 5~s, por el mismo canal que la botonera (\to
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.8\textwidth,trim=0 930 0 0,clip]{dashboard-medico.png}
-\caption{Dashboard médico con golpes de calor provocados en P3, P4 y P8 (dorsal 10): sus tarjetas están en rojo y las alertas \texttt{CALOR\_ROJA} esperan confirmación. Arriba a la derecha, el aviso de una alerta nueva: P5, en readaptación, ha superado la velocidad de su pauta (\texttt{PAUTA\_EXCEDIDA}).}
+\includegraphics[width=0.8\textwidth]{dashboard-medico.png}
+\caption{Dashboard médico durante un golpe de calor provocado en P8 (dorsal 8): su tarjeta está en rojo y el resto del equipo en verde. Sus dos alertas de calor esperan a que el médico pulse \emph{Enfriar} o \emph{Confirmar}; a la derecha, la ficha de P8 con la temperatura disparada. Arriba, el nombre con el que firma el médico.}
 \label{fig:dashboard}
 \end{figure}
 
@@ -646,7 +646,7 @@ La página solo lee: no guarda ninguna clave, y las alertas se confirman desde e
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=0.92\textwidth]{campograma-alerta.png}
-\caption{Campograma con una alerta crítica: el aro del dorsal 10 (p8) late en rojo, el panel indica ``Forzado: \#10 40,5~$^\circ$C'' y la ficha del jugador muestra sus dos alertas de calor.}
+\caption{Campograma con una alerta crítica: el aro del dorsal 8 (p8) late en rojo, el panel indica ``Forzado: \#8 40,5~$^\circ$C'' y la ficha del jugador muestra sus dos alertas de calor.}
 \label{fig:campograma}
 \end{figure}
 
@@ -681,11 +681,11 @@ La frecuencia cardiaca, la temperatura interna, las lesiones y las pautas son \t
   \item \textbf{Broker cerrado.} Mosquitto no admite conexiones anónimas; cada cliente tiene usuario y contraseña, y la ACL aplica mínimo privilegio: la API solo puede escribir alertas y órdenes al simulador, y no puede leer nada; Node-RED solo puede leer \topic{control/\#}.
   \item \textbf{Autenticación por API key con dos roles} (cabecera \texttt{x-api-key}, \ruta{middleware/clave.js}): la clave de la pasarela solo puede enviar telemetría; la del médico es la única que escribe datos clínicos. Una clave válida usada en una operación que no le corresponde recibe \texttt{403}. Las claves se comparan en tiempo constante (\texttt{crypto.timingSafeEqual} sobre su \emph{hash} SHA-256).
   \item \textbf{Secretos fuera del repositorio.} Claves de la API y contraseñas de Mosquitto en el \texttt{.env} (incluido en \texttt{.gitignore}); en los flujos de Node-RED solo aparecen variables de entorno.
-  \item \textbf{La clave del médico no está en el código de la web.} El médico la escribe en el \emph{dashboard}; se guarda solo en esa pestaña (\texttt{sessionStorage}, que se borra al cerrarla), solo se envía a la API en la cabecera \texttt{x-api-key} y el botón \emph{Olvidar} la quita. Sin ella la página solo puede leer.
+  \item \textbf{La clave del médico no está en el código de la web.} No aparece en ningún fichero de \ruta{api/public/}: la API la lee del \texttt{.env} y se la da al \emph{dashboard} médico en \ruta{/medico-config.js} (sin caché), que la envía en la cabecera \texttt{x-api-key}. Se precarga para que la demostración sea fluida; a cambio, quien pueda abrir \ruta{/medico.html} actúa como médico, por lo que esa página no se comparte fuera de la red de confianza (en la defensa, el túnel público solo se usa para la botonera). Sin \texttt{API\_KEY\_MEDICO} la página queda en solo lectura.
   \item \textbf{Validación estricta de la entrada} (tipos, unidades, rangos y tamaño del lote) y errores sin detalles internos.
 \end{itemize}
 
-\textbf{Limitaciones conocidas.} Es un entorno de desarrollo: los \texttt{GET} no piden clave, no hay HTTPS ni TLS en MQTT, las claves son por rol y no por usuario y no hay límite de peticiones. En producción harían falta HTTPS y MQTT sobre TLS, autenticación por usuario (por ejemplo OAuth~2.0 / OpenID Connect), clave también para leer, registro de accesos y cifrado de la base de datos.
+\textbf{Limitaciones conocidas.} Es un entorno de desarrollo: los \texttt{GET} no piden clave, no hay HTTPS ni TLS en MQTT, las claves son por rol y no por usuario, la del médico va precargada en su página y no hay límite de peticiones. En producción harían falta HTTPS y MQTT sobre TLS, autenticación por usuario (por ejemplo OAuth~2.0 / OpenID Connect), clave también para leer, registro de accesos y cifrado de la base de datos.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Pruebas y demostración}
@@ -694,7 +694,7 @@ La frecuencia cardiaca, la temperatura interna, las lesiones y las pautas son \t
 \subsection{Pruebas realizadas}
 
 \begin{itemize}
-  \item \textbf{Tests automáticos:} 64 tests con \texttt{node:test} (\texttt{npm test}) sobre las partes puras: validación del lote, estado en vivo y resúmenes de 10~s, métricas, las diez reglas y el antirrebote, ACWR, conversión a FHIR, estado táctico y validación de las órdenes al simulador. Todos pasan.
+  \item \textbf{Tests automáticos:} 69 tests con \texttt{node:test} (\texttt{npm test}) sobre las partes puras: validación del lote, estado en vivo y resúmenes de 10~s, métricas, las diez reglas y el antirrebote, ACWR, conversión a FHIR, estado táctico, validación de las órdenes al simulador y la configuración del \emph{dashboard} médico. Todos pasan.
   \item \textbf{Colección de Postman:} las 47 peticiones pasan con el \emph{Collection Runner}, incluidos los errores esperados (400, 401, 403, 404 y 409).
   \item \textbf{Broker:} una conexión sin usuario se rechaza (\texttt{not authorised}); el usuario \texttt{nodered} recibe cada orden de \ruta{/api/simulador} sin denegaciones de la ACL.
   \item \textbf{Integración con el simulador:} un partido de 90 minutos (356.400 mensajes, 5.400 lotes) pasó por la pasarela, la validación y el motor de alertas sin ningún lote rechazado. Esta prueba destapó los dos ajustes de calibración; después, tres partidos de dos horas sin alertas falsas.
@@ -822,7 +822,7 @@ net stop mosquitto
 mosquitto -c mosquitto/mosquitto.conf -v
 # 4. API (http://localhost:3000, Swagger en /api-docs)
 cd api && npm install && npm run dev
-# 5. Datos iniciales: los 11 jugadores y una pauta de ejemplo
+# 5. Datos iniciales: los 11 jugadores (sin pautas: todos en verde)
 cd api && npm run seed
 # 6. Node-RED con los flujos del proyecto (editor en http://localhost:1880)
 node node_red/arrancar.js
