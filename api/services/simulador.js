@@ -146,4 +146,4 @@ function estado() {
     };
 }
 
-module.exports = { FASES, RANGOS, validarFase, validarJugador, validarAjuste, cambiarFase, ajustarSensores, quitarAjuste, reiniciar, estado };
+module.exports = { FASES, validarFase, validarJugador, validarAjuste, cambiarFase, ajustarSensores, quitarAjuste, reiniciar, estado };
