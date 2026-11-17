@@ -78,12 +78,12 @@
 <text x="1487.5" y="457" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="15" font-weight="700" fill="#1F2937">Cliente FHIR</text>
 <text x="1487.5" y="473.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#1F2937" opacity="0.88">historia clínica (HL7)</text>
 <rect x="400" y="600" width="500" height="120" rx="12" fill="#F3F4F6" stroke="#6B7280" stroke-width="1.8"/>
-<text x="650" y="641" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="700" fill="#1F2937">Dashboard médico (B) · /medico.html</text>
+<text x="650" y="641" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="700" fill="#1F2937">Dashboard médico · /medico.html</text>
 <text x="650" y="657.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#1F2937" opacity="0.88">telemetría y alertas al momento por WebSocket</text>
 <text x="650" y="674" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#1F2937" opacity="0.88">confirma alertas y pone pautas con la clave del médico</text>
 <text x="650" y="690.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#1F2937" opacity="0.88">semáforo del equipo, ficha y FC de los últimos 5 min</text>
 <rect x="400" y="770" width="500" height="110" rx="12" fill="#F3F4F6" stroke="#6B7280" stroke-width="1.8"/>
-<text x="650" y="814" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="700" fill="#1F2937">Botonera de simulación (A) · /control.html</text>
+<text x="650" y="814" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="16" font-weight="700" fill="#1F2937">Botonera de simulación · /control.html</text>
 <text x="650" y="830.5" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#1F2937" opacity="0.88">cambia la fase de juego</text>
 <text x="650" y="847" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12" fill="#1F2937" opacity="0.88">fuerza el pulso o la temperatura de un jugador (golpe de calor…)</text>
 <path d="M275,200 L400,200" fill="none" stroke="#2E7D4F" stroke-width="2.2" marker-end="url(#m-2E7D4F)"/>

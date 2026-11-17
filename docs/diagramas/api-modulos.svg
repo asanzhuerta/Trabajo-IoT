@@ -213,7 +213,7 @@
 <text x="1589" y="304" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" font-style="italic" fill="#4B5563">Procesa cada lote de la pasarela</text>
 <path d="M1572,322 h8 l4,4 v11 h-12 z" fill="#FFFFFF" stroke="#7346B5" stroke-width="1.3"/>
 <text x="1589" y="333" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#111827">validacion.js</text>
-<text x="1589" y="347" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" font-style="italic" fill="#4B5563">Valida el lote (formato del simulador de A)</text>
+<text x="1589" y="347" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" font-style="italic" fill="#4B5563">Valida el lote (formato del simulador)</text>
 <path d="M1572,365 h8 l4,4 v11 h-12 z" fill="#FFFFFF" stroke="#7346B5" stroke-width="1.3"/>
 <text x="1589" y="376" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="600" fill="#111827">estado.js</text>
 <text x="1657.5" y="375" font-family="'Segoe UI', Arial, sans-serif" font-size="10" fill="#6B7280">↳ resumen</text>
@@ -507,7 +507,7 @@
 <text x="1508" y="346" text-anchor="end" font-family="'Segoe UI', Arial, sans-serif" font-size="10" font-weight="600" fill="#4B5563" paint-order="stroke" stroke="#FFFFFF" stroke-width="3">WebSocket</text>
 <circle cx="1420" cy="386" r="3" fill="#4B5563"/>
 <text x="1494" y="707" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="700" fill="#111827">Dashboard médico</text>
-<text x="1494" y="721" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" fill="#4B5563">de B (Dashboard 2.0)</text>
+<text x="1494" y="721" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" fill="#4B5563">/medico.html</text>
 <circle cx="1420" cy="618" r="3" fill="#4B5563"/>
 <circle cx="1420" cy="661" r="3" fill="#4B5563"/>
 <circle cx="1420" cy="733" r="3" fill="#4B5563"/>
@@ -515,8 +515,8 @@
 <text x="1494" y="860" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" fill="#4B5563">historia clínica</text>
 <circle cx="1420" cy="776" r="3" fill="#4B5563"/>
 <text x="1474" y="942" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="12.5" font-weight="700" fill="#111827">Dashboard de simulación</text>
-<text x="1474" y="956" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" fill="#4B5563">de A: fase y ajuste</text>
-<text x="1474" y="969" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" fill="#4B5563">de sensores</text>
+<text x="1474" y="956" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" fill="#4B5563">/control.html: fase y</text>
+<text x="1474" y="969" text-anchor="middle" font-family="'Segoe UI', Arial, sans-serif" font-size="10.5" fill="#4B5563">ajuste de sensores</text>
 <circle cx="1420" cy="862" r="3" fill="#4B5563"/>
 <rect x="1150" y="18" width="1230" height="112" rx="10" fill="#FAFAFA" stroke="#D1D5DB"/>
 <text x="1164" y="40" font-family="'Segoe UI', Arial, sans-serif" font-size="13" font-weight="700" fill="#374151">Leyenda</text>

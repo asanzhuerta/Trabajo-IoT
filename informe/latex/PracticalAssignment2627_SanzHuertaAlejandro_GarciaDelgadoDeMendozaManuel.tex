@@ -112,28 +112,6 @@ El objetivo del proyecto es llevar esos datos al cuerpo médico \textbf{en tiemp
 
 Los datos son simulados, porque no se dispone de \emph{wearables} reales, pero el modelo de simulación es coherente: los seis sensores de cada jugador salen de un único estado de movimiento y los once jugadores se mueven coordinados por un motor táctico.
 
-\subsection{Reparto del trabajo}
-
-El trabajo se ha hecho en pareja, con dos bloques que solo se comunican a través de unos \textbf{contratos} acordados al principio (topics y payloads MQTT, la API REST y las reglas de alerta). Mientras se respeten los contratos, cada uno avanza sin esperar al otro.
-
-\begin{table}[!htbp]
-\centering
-\caption{Reparto del trabajo entre los dos miembros del equipo.}\label{tab:reparto}
-\footnotesize
-\begin{tabularx}{\textwidth}{p{2.4cm}LL}
-\toprule
- & \textbf{Manuel García Delgado de Mendoza} (edge y simulación) & \textbf{Alejandro Sanz Huerta} (backend y datos) \\
-\midrule
-Responsable de & \ruta{mosquitto/}, \ruta{node\_red/flows.json}, \ruta{api/public/control.*} &\ruta{api/}, \ruta{docker-compose.yml}, \ruta{node\_red/flows\_pasarela.json}, \ruta{api/public/medico.*} \\
-Tareas & Mosquitto con usuarios y ACL, simulador táctico de los 11 jugadores, control del simulador por MQTT (\texttt{mqtt in}), botonera de simulación, diseño del campograma, balón y fase de juego en el campograma &API REST, MongoDB, motor de alertas, WebSocket, FHIR, Swagger y Postman, ACWR, pasarela MQTT$\rightarrow$API, dashboard médico, integración del campograma con la API \\
-\midrule
-En común & \multicolumn{2}{l}{Contratos, arquitectura, informe, vídeo y TikTok.} \\
-\bottomrule
-\end{tabularx}
-\end{table}
-
-El código se ha gestionado con Git y GitHub, con una rama por persona (\texttt{edge} y \texttt{backend}) y una rama de integración (\texttt{dev}).
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Arquitectura del sistema}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -350,7 +328,7 @@ En total los dos flujos usan los nodos \texttt{inject}, \texttt{function}, \text
 \section{API REST y cómo invocarla}\label{sec:api}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-La API está hecha con Node.js 24 y Express 5 (carpeta \ruta{api/}) y sigue la estructura de los ejemplos de clase: \ruta{server.js} arranca el servidor HTTP y le ata el servidor WebSocket; \ruta{servers/http-server.js} monta los \emph{routers}; la lógica está en \ruta{services/} y los modelos de MongoDB en \ruta{models/} (Figs.~\ref{fig:api-arq} y~\ref{fig:api-mod}).
+La API está hecha con Node.js 24 y Express 5 (carpeta \ruta{api/}) y sigue la estructura de los ejemplos de clase: \ruta{server.js} arranca el servidor HTTP y le ata el servidor WebSocket; \ruta{servers/http-server.js} monta los \emph{routers}; la lógica está en \ruta{services/} y los modelos de MongoDB en \ruta{models/} (Fig.~\ref{fig:api-mod}).
 
 \begin{itemize}
   \item \textbf{URL base:} \url{http://localhost:3000}. Peticiones y respuestas en JSON; fechas en ISO 8601 (UTC).
@@ -358,12 +336,6 @@ La API está hecha con Node.js 24 y Express 5 (carpeta \ruta{api/}) y sigue la e
   \item \textbf{Contrato completo:} \ruta{docs/contratos/api.md}.
 \end{itemize}
 
-\begin{figure}[!htbp]
-\centering
-\includegraphics[width=0.95\textwidth]{api-arquitectura.png}
-\caption{Arquitectura de la API por capas.}
-\label{fig:api-arq}
-\end{figure}
 
 \begin{figure}[!htbp]
 \centering
