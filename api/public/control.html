@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Control de sensores · Smart Health</title><link rel="stylesheet" href="control.css"><script src="control.js" defer></script></head>
+<body><div class="wrap">
+<header><a class="brand" href="/">↗ SMART<span>/HEALTH</span></a><nav><a href="/">Campograma ↗</a><span id="connection" class="badge">Conectando…</span></nav></header>
+<section class="intro"><span class="eyebrow">LABORATORIO DE SIMULACIÓN</span><h1>Control de <em>sensores.</em></h1><p>Fuerza los valores publicados de pulso y temperatura, o cambia la fase táctica de todo el equipo con sus controles específicos.</p></section>
+<section class="card selection"><div><span class="eyebrow">01 / SELECCIONA UN JUGADOR</span><div id="players" class="players" role="group" aria-label="Jugador destinatario"></div></div><div class="duration"><label for="duration">Duración del ajuste</label><div><input id="duration" type="number" min="1" max="3600" step="1" value="60" required> <span>segundos</span></div><label class="check"><input id="indefinite" type="checkbox"> Hasta que lo retire</label></div></section>
+<div class="section-title"><h2>Botonera <span id="selected">P1</span></h2><span>Cada botón envía una petición al pulsarlo</span></div>
+<main class="grid">
+<section class="card sensor heat"><div class="sensor-head"><div><span class="eyebrow">TEMPERATURA PUBLICADA</span><h2>Temperatura <span>°C</span></h2></div><span class="icon">♨</span></div><div class="presets"><button data-temperature="37">37 <small>°C · referencia</small></button><button data-temperature="39.2">39,2 <small>°C · elevada</small></button><button data-temperature="40.5">40,5 <small>°C · muy elevada</small></button></div><label for="temperature">Valor personalizado · 35–42 °C</label><form id="temperatureForm" class="custom"><input id="temperature" type="number" min="35" max="42" step="0.01" value="39.5" required><button type="submit">Forzar temperatura ↗</button></form><p class="hint">Los umbrales configurados en la API determinan qué alertas se generan.</p></section>
+<section class="card sensor pulse"><div class="sensor-head"><div><span class="eyebrow">PULSO PUBLICADO</span><h2>Frecuencia cardíaca <span>lpm</span></h2></div><span class="icon">♥</span></div><div class="presets"><button data-pulse="45">45 <small>lpm · bajo</small></button><button data-pulse="150">150 <small>lpm · esfuerzo</small></button><button data-pulse="195">195 <small>lpm · alto</small></button></div><label for="pulse">Valor personalizado · 30–220 lpm</label><form id="pulseForm" class="custom"><input id="pulse" type="number" min="30" max="220" step="1" value="190" required><button type="submit">Forzar pulso ↗</button></form><p class="hint">Las alertas pueden requerir tiempo sostenido y otras condiciones.</p></section>
+</main>
+<section class="card actions"><div><strong>Control conjunto</strong><p>Envía los dos valores personalizados con la duración seleccionada.</p></div><button id="both" class="primary">Forzar ambos valores</button><button id="clear" class="danger">Retirar ajustes de P1</button></section>
+<p class="hint">Un ajuste de temperatura conserva el pulso forzado anterior, y viceversa. Retirar ajustes devuelve ambos sensores del jugador a sus valores simulados.</p>
+<section class="card phase-control" aria-labelledby="phaseHeading">
+<span class="eyebrow">CONTROL TÁCTICO · TODO EL EQUIPO</span>
+<h2 id="phaseHeading">Fase de juego</h2>
+<p class="hint">Cada botón cambia la fase del motor táctico. Se aplica a todo el equipo, con independencia del jugador y la duración seleccionados arriba. Después, el motor continúa su evolución automática.</p>
+<div class="phase-buttons">
+<button type="button" data-phase="ataque_organizado">Ataque organizado</button>
+<button type="button" data-phase="transicion_defensiva">Transición defensiva</button>
+<button type="button" data-phase="presion_alta">Presión alta</button>
+<button type="button" data-phase="defensa_organizada">Defensa organizada</button>
+<button type="button" data-phase="transicion_ofensiva">Transición ofensiva</button>
+</div>
+<p id="phaseOrder" class="hint">Última fase solicitada: consultando…</p>
+</section>
+<div id="feedback" class="feedback" role="status" aria-live="polite">Selecciona un valor para enviar una orden.</div>
+<div class="grid lower"><section class="card"><span class="eyebrow">LECTURAS RECIBIDAS · <span id="livePlayer">P1</span></span><div class="readings"><div><small>Temperatura</small><strong id="liveTemp">—</strong></div><div><small>Pulso</small><strong id="livePulse">—</strong></div></div><p id="liveStatus" class="hint">Esperando telemetría de la API.</p><p class="hint">Una respuesta 202 confirma la publicación de la orden, no su aplicación en Node-RED. Comprueba aquí los valores recibidos.</p></section>
+<section class="card"><span class="eyebrow">ÚLTIMA ORDEN REGISTRADA POR LA API</span><p id="lastOrder">Consultando…</p><p class="hint">La API conserva la última orden por jugador; no confirma todos los ajustes que siguen activos en Node-RED.</p><button id="refresh" class="secondary">Actualizar estado</button></section></div>
+<section class="card history"><div class="section-title"><h2>Historial de peticiones</h2><span>Esta sesión · últimas 20</span></div><div id="history"><p class="hint">Todavía no has enviado peticiones.</p></div></section>
+<footer>SMART/HEALTH · Control de valores simulados <a href="/api-docs">Consultar API ↗</a></footer>
+</div></body></html>
