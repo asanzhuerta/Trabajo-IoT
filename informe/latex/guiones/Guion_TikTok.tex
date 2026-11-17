@@ -121,12 +121,13 @@ F3 & Consola con \texttt{mosquitto\_sub} y los mensajes de los sensores cayendo 
 F4 & Swagger con la lista de operaciones & 5 s & Alejandro \\
 F5 & Golpe de calor completo desde la botonera: 39,4 °C y, a los pocos segundos, 40,5 °C a p8; el aro del 10 pasa a ámbar y a rojo & 30 s & Alejandro \\
 F6 & Dashboard médico durante el golpe de calor: aviso «ALERTA CRÍTICA» y tarjeta del 10 en rojo & 10 s & Alejandro \\
-F7 & El médico confirma, crea la pauta de 20 km/h y salta \texttt{PAUTA\_EXCEDIDA} & 20 s & Alejandro \\
+F7 & El médico pulsa «Enfriar»: línea verde en la gráfica de temperatura, bajada hasta 37,5 °C y la alerta se cierra sola & 40 s (×4 en el montaje) & Alejandro \\
+F7b & Crea la pauta de 20 km/h y salta \texttt{PAUTA\_EXCEDIDA} & 15 s & Alejandro \\
 F8 & Base de datos con sus colecciones & 3 s & Alejandro \\
 \bottomrule
 \end{longtable}
 
-Antes de cada toma de alertas: \texttt{POST /api/simulador/reiniciar} y confirmar las alertas que queden, para empezar con todos en verde. Ninguna clave ni contraseña en pantalla.
+Antes de cada toma de alertas: \texttt{POST /api/simulador/reiniciar} y confirmar las alertas que queden, para empezar con todos en verde. El nombre y la clave del médico se escriben en el dashboard antes de grabar (la clave queda como puntos): ninguna clave ni contraseña en pantalla.
 
 \subsection*{2. Grabarse cada uno en su croma}
 
@@ -183,7 +184,7 @@ Miércoles 18 (noche) & \multicolumn{2}{P{12.8cm}}{Verlo los dos en el móvil, �
   \item[$\square$] El gancho se entiende en los tres primeros segundos, también sin sonido.
   \item[$\square$] Los dos planos tienen el mismo encuadre, color y volumen.
   \item[$\square$] No queda borde verde.
-  \item[$\square$] Se ven el golpe de calor, la alerta en el dashboard médico y la pauta.
+  \item[$\square$] Se ven el golpe de calor, la alerta en el dashboard médico, la temperatura bajando al enfriarlo (línea verde) y la pauta.
   \item[$\square$] No aparece ninguna clave, contraseña ni nombre real de jugador.
   \item[$\square$] Subtítulos revisados y nada importante tapado por los botones de TikTok.
 \end{itemize}
