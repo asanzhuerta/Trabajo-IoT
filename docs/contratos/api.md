@@ -378,3 +378,7 @@ un cliente. Al conectar también envía `{tipo: 'telemetria', ts, jugadores: [..
 con los jugadores disponibles en memoria, sin esperar al próximo lote.
 El campograma oculta balón y objetivos cuando la táctica lleva más de 6 s sin actualizarse.
 El flujo de sensores y las alertas conservan sus contratos actuales.
+
+## Intervenciones del médico
+
+`POST /api/alertas/:id/intervenir` (clave del médico, `{ por }`) responde 202 y empieza a tratar la alerta: `CALOR_*` → enfriar (temperatura hasta 37,5 °C), `FC_ALTA`, `FC_DESACOPLE`, `RECUPERACION_LENTA` e `INCIDENTE` → reposo (pulso hasta 85 lpm). La API publica 8 pasos, uno cada 5 s, en `control/jugadores/<id>/sensores` (el aviso `simulador` del WebSocket los lleva con `origen: "medico"`; los de la botonera, con `origen: "botonera"`), quita el ajuste al acabar y cierra sola las alertas de ese tipo del jugador con una nota. La alerta lleva `intervencion: { tipo, nombre, por, inicio, desde, objetivo, unidad, fin }`. WebSocket: `{ tipo: 'intervencion', alerta }` al empezar y `alerta_confirmada` al cerrarlas. Errores: 400 si la alerta no tiene intervención (`SOBRECARGA`, `ASIMETRIA`, `PAUTA_EXCEDIDA`, `SIN_SENAL`), 409 si ya está confirmada o hay otra en curso sobre el jugador, 503 sin broker.

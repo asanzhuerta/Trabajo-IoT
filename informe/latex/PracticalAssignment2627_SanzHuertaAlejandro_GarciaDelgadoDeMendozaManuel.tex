@@ -446,7 +446,7 @@ La validación (\ruta{services/validacion.js}) comprueba el tipo, la unidad y el
 \label{fig:swagger-sim}
 \end{figure}
 
-\textbf{Desde Postman.} El fichero \ruta{docs/postman\_collection.json} tiene 46 peticiones en 11 carpetas (una por recurso más una de errores). Las claves se ponen en el \emph{Current value} de las variables \texttt{claveMedico} y \texttt{clavePasarela}, así que no se guardan en el fichero. Las peticiones encadenan datos entre sí (al empezar una sesión se guarda su id para cerrarla después) y cada una comprueba su código de respuesta, de modo que la colección entera se puede lanzar con el \emph{Collection Runner}.
+\textbf{Desde Postman.} El fichero \ruta{docs/postman\_collection.json} tiene 47 peticiones en 11 carpetas (una por recurso más una de errores). Las claves se ponen en el \emph{Current value} de las variables \texttt{claveMedico} y \texttt{clavePasarela}, así que no se guardan en el fichero. Las peticiones encadenan datos entre sí (al empezar una sesión se guarda su id para cerrarla después) y cada una comprueba su código de respuesta, de modo que la colección entera se puede lanzar con el \emph{Collection Runner}.
 
 \textbf{Con curl} (en PowerShell, \texttt{curl.exe}):
 
@@ -638,10 +638,19 @@ Disponible en \url{http://localhost:3000/medico.html} (\ruta{api/public/medico.h
 \begin{itemize}
   \item \textbf{Acceso del médico.} Nombre y clave del médico para poder confirmar y crear pautas; sin ellos la página es de solo lectura (ver Sección~\ref{sec:seguridad}).
   \item \textbf{Equipo.} Una tarjeta por jugador con su dorsal, posición, FC (y \% de la FCmáx), temperatura, velocidad y alertas activas, con el borde del color de su semáforo (gris si lleva más de 5~s sin señal). Al pulsar una tarjeta se selecciona el jugador.
-  \item \textbf{Alertas activas.} Primero las críticas y, dentro de cada severidad, de la más reciente a la más antigua, con un botón \emph{Confirmar} y una nota opcional por alerta (\texttt{POST /api/alertas/:id/confirmar}).
-  \item \textbf{Jugador seleccionado.} Zona de FC, zona de velocidad, asimetría y alertas; dos medidores de \% de la FCmáx y temperatura interna con las bandas de los umbrales, y la gráfica de su FC en los últimos 5 minutos, que empieza con los resúmenes de 10~s de la API (\texttt{GET /api/jugadores/:id/historico}) y sigue con la telemetría en vivo.
+  \item \textbf{Alertas activas.} Primero las críticas y, dentro de cada severidad, de la más reciente a la más antigua, con un botón \emph{Confirmar} y una nota opcional por alerta (\texttt{POST /api/alertas/:id/confirmar}) y, si la alerta tiene tratamiento, un botón \emph{Enfriar} o \emph{Reposo} (ver más abajo).
+  \item \textbf{Jugador seleccionado.} Zona de FC, zona de velocidad, asimetría y alertas; dos medidores de \% de la FCmáx y temperatura interna con las bandas de los umbrales, y dos gráficas de los últimos 2 minutos, de FC y de temperatura, con las líneas de los umbrales; empiezan con los resúmenes de 10~s de la API (\texttt{GET /api/jugadores/:id/historico}) y siguen con la telemetría en vivo.
   \item \textbf{Pauta de readaptación.} La pauta activa del jugador y un formulario para crear una nueva (velocidad máxima, carga máxima, asimetría máxima, vigencia y notas), que hace \texttt{POST /api/jugadores/:id/pauta}.
 \end{itemize}
+
+\textbf{El médico actúa y se ve el cambio.} Confirmar una alerta solo deja constancia de que el médico la ha visto. Para las alertas que dependen de un sensor que el simulador puede cambiar, el médico tiene además una intervención (\texttt{POST /api/alertas/:id/intervenir}, \ruta{services/intervenciones.js}):
+
+\begin{itemize}
+  \item \textbf{Enfriar} (\texttt{CALOR\_AMBAR}, \texttt{CALOR\_ROJA}): la temperatura baja paso a paso hasta 37,5~$^\circ$C. Imita el tratamiento del golpe de calor por esfuerzo, que es enfriar en el sitio con agua fría antes de trasladar al jugador; en la realidad se enfría a unos 0,15--0,35~$^\circ$C por minuto y se para hacia los 38,9~$^\circ$C \cite{nata2015}, y en la demo se comprime a unos 40~s.
+  \item \textbf{Reposo} (\texttt{FC\_ALTA}, \texttt{FC\_DESACOPLE}, \texttt{RECUPERACION\_LENTA}, \texttt{INCIDENTE}): el pulso vuelve a 85~lpm.
+\end{itemize}
+
+La API publica ocho pasos, uno cada 5~s, por el mismo canal que la botonera (\topic{control/jugadores/<id>/sensores}), y al acabar quita el ajuste para que el simulador siga con sus valores normales. Mientras dura, la alerta aparece \emph{en tratamiento} con el valor de partida, el objetivo y el valor actual; al llegar, la API cierra sola las alertas de ese tipo del jugador con una nota que dice qué se hizo. En las gráficas, una línea azul discontinua marca cuándo se forzó el valor desde la botonera y una verde, cuándo intervino el médico, así que se ve la subida, la intervención y la bajada. \texttt{SOBRECARGA}, \texttt{ASIMETRIA}, \texttt{PAUTA\_EXCEDIDA} y \texttt{SIN\_SENAL} no dependen de un valor que el simulador pueda forzar: se confirman con una nota (y, para la carga, con una pauta).
 
 \begin{figure}[!htbp]
 \centering
@@ -714,7 +723,7 @@ La frecuencia cardiaca, la temperatura interna, las lesiones y las pautas son \t
 
 \begin{itemize}
   \item \textbf{Tests automáticos:} 64 tests con \texttt{node:test} (\texttt{npm test}) sobre las partes puras: validación del lote, estado en vivo y resúmenes de 10~s, métricas, las diez reglas y el antirrebote, ACWR, conversión a FHIR, estado táctico y validación de las órdenes al simulador. Todos pasan.
-  \item \textbf{Colección de Postman:} las 46 peticiones pasan con el \emph{Collection Runner}, incluidos los errores esperados (400, 401, 403, 404 y 409).
+  \item \textbf{Colección de Postman:} las 47 peticiones pasan con el \emph{Collection Runner}, incluidos los errores esperados (400, 401, 403, 404 y 409).
   \item \textbf{Broker:} una conexión sin usuario se rechaza (\texttt{not authorised}); el usuario \texttt{nodered} recibe cada orden de \ruta{/api/simulador} sin denegaciones de la ACL.
   \item \textbf{Integración con el simulador:} un partido de 90 minutos (356.400 mensajes, 5.400 lotes) pasó por la pasarela, la validación y el motor de alertas sin ningún lote rechazado. Esta prueba destapó los dos ajustes de calibración; después, tres partidos de dos horas sin alertas falsas.
   \item \textbf{De extremo a extremo:} Mosquitto con usuarios y ACL $\rightarrow$ simulador y pasarela en Node-RED $\rightarrow$ API $\rightarrow$ MongoDB $\rightarrow$ \emph{dashboard} y campograma, con \texttt{/health} indicando MongoDB y MQTT conectados.
@@ -729,7 +738,7 @@ El vídeo sigue el escenario que motiva el proyecto:
   \item Partido normal: los once jugadores en verde en el campograma y en el \emph{dashboard}.
   \item Se provoca un golpe de calor a p8 desde la botonera de simulación (botón 40,5~$^\circ$C), que hace \texttt{PUT /api/simulador/jugadores/p8/sensores}.
   \item En unos segundos saltan \texttt{CALOR\_AMBAR} y \texttt{CALOR\_ROJA}: notificación en el \emph{dashboard}, tarjeta en rojo y aro rojo en el campograma (Figs.~\ref{fig:dashboard} y~\ref{fig:campograma}).
-  \item El médico confirma la alerta y pone una pauta de readaptación; cuando el jugador la supera, salta \texttt{PAUTA\_EXCEDIDA}.
+  \item El médico pulsa \emph{Enfriar}: la temperatura de p8 baja en las gráficas y la alerta se cierra sola. Después le pone una pauta de readaptación; cuando el jugador la supera, salta \texttt{PAUTA\_EXCEDIDA}.
   \item Swagger, Postman y la respuesta FHIR.
 \end{enumerate}
 
@@ -771,6 +780,9 @@ HL7 International: FHIR R4, recurso Observation. \url{https://hl7.org/fhir/R4/ob
 
 \bibitem{plantillas}
 Plantillas instrumentadas y asimetría de carga. \url{https://pmc.ncbi.nlm.nih.gov/articles/PMC9208063}
+
+\bibitem{nata2015}
+Casa, D.J., DeMartini, J.K., Bergeron, M.F., et al.: National Athletic Trainers' Association position statement: exertional heat illnesses. Journal of Athletic Training \textbf{50}(9), 986--1000 (2015)
 
 \bibitem{rgpd}
 Reglamento (UE) 2016/679 del Parlamento Europeo y del Consejo (Reglamento General de Protección de Datos), artículo 9: tratamiento de categorías especiales de datos personales.

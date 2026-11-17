@@ -41,6 +41,10 @@ input:focus { border-color: var(--yellow); outline: none; }
 .alert input { padding: 7px 9px; font-size: 12px; }
 .alert button { padding: 10px 14px; }
 .alert.critica button { color: #ffc1b9; border-color: #915e60; background: #4a2f3a; }
+.alert .acts { display: flex; flex-direction: column; gap: 8px; }
+.alert .treat-btn, .alert.critica .treat-btn { color: #0d2a22; background: #62e2b6; border-color: #62e2b6; }
+.alert.tratando { border-color: #2c7669; border-left-color: #62e2b6; background: #16332e; }
+.alert .treat { font-size: 12px; color: #62e2b6; font-weight: 600; }
 
 .player-title { font-size: 24px; margin: 6px 0 4px; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 4px; min-height: 22px; }
@@ -59,6 +63,17 @@ input:focus { border-color: var(--yellow); outline: none; }
 .chart .grid-line { stroke: #284159; stroke-width: 1; vector-effect: non-scaling-stroke; }
 .chart .axis { fill: var(--muted); font-size: 11px; }
 .chart .line { fill: none; stroke: var(--yellow); stroke-width: 2; vector-effect: non-scaling-stroke; }
+.chart .line.temp { stroke: #ffb08e; }
+.chart .umbral { stroke-width: 1; stroke-dasharray: 4 4; vector-effect: non-scaling-stroke; }
+.chart .umbral.aviso { stroke: #f5b54b; } .chart .umbral.alerta { stroke: #ff7b6b; }
+.chart .marca { stroke-width: 2; vector-effect: non-scaling-stroke; }
+.chart .marca.forzado { stroke: #8fb8ff; stroke-dasharray: 6 4; } .chart .marca.medico { stroke: #62e2b6; }
+.chart .marca-txt { font-size: 11px; font-weight: 700; } .chart .marca-txt.forzado { fill: #8fb8ff; } .chart .marca-txt.medico { fill: #62e2b6; }
+.chart + .chart-head { margin-top: 14px; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; font-size: 11px; color: var(--muted); margin: 10px 0 0; }
+.legend .k { display: inline-block; width: 18px; height: 0; border-top: 2px solid; margin-right: -8px; vertical-align: middle; }
+.legend .k.forzado { border-color: #8fb8ff; border-top-style: dashed; } .legend .k.medico { border-color: #62e2b6; }
+.legend .k.aviso { border-color: #f5b54b; border-top-style: dashed; } .legend .k.alerta { border-color: #ff7b6b; border-top-style: dashed; }
 
 .guideline { margin-top: 18px; }
 .guideline .section-title { margin: 0 0 10px; }
@@ -70,6 +85,7 @@ input:focus { border-color: var(--yellow); outline: none; }
 .toast { background: #162d40; border: 1px solid var(--line); border-left: 3px solid var(--yellow); border-radius: 10px; padding: 12px 16px; box-shadow: 0 8px 24px #0008; font-size: 14px; }
 .toast.critica { border-left-color: #ff7b6b; }
 .toast.error { border-left-color: #ff9386; color: #ffc1b9; }
+.toast.medico { border-left-color: #62e2b6; }
 
 @media (max-width: 800px) {
   .access { grid-template-columns: 1fr; }

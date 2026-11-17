@@ -67,7 +67,7 @@ Un vídeo vertical de \textbf{55--60 segundos} que cuenta una sola historia: \te
 0:27 & \MANU & «Vamos a subirle la temperatura al número 10.» & En la botonera de simulación se elige P8 y se pulsa 40,5 °C; el termómetro del 10 empieza a subir & — \\
 0:30 & \MANU & «A 39 grados, aviso.» & El aro del 10 se pone ámbar & \rot{39 °C · AVISO} (ámbar) \\
 0:33 & \ALE & «A 40, alerta crítica: se guarda en la base de datos y le llega al médico al instante.» & El aro pasa a rojo; aviso «ALERTA CRÍTICA» en el dashboard médico (\texttt{localhost:3000/\allowbreak medico.html}) y tarjeta del 10 en rojo & \rot{40 °C · ALERTA CRÍTICA} (rojo) \\
-0:40 & \ALE & «El médico la confirma y le pone un límite: como máximo veinte kilómetros por hora. Si lo supera, el sistema vuelve a avisar.» & Botón «Confirmar»; formulario de pauta con 20 km/h; aparece \texttt{PAUTA\_EXCEDIDA} & Máx. 20 km/h \\
+0:40 & \ALE & «El médico lo enfría y la temperatura baja: alerta resuelta. Después le pone un límite de veinte kilómetros por hora.» & Botón «Enfriar»; la gráfica de temperatura baja hasta 37,5 °C; formulario de pauta con 20 km/h & Enfriando… \\
 \midrule
 
 \multicolumn{5}{l}{\textbf{4. Cierre}} \\
@@ -99,7 +99,7 @@ M5 & MQTT, Node-RED, una API REST, base de datos y WebSockets, trabajando en tie
 A1 & Pero su médico se va a enterar en el mismo segundo. Te enseñamos cómo. \\
 A2 & Cada segundo envían sus datos por MQTT a nuestra API, que comprueba diez reglas de salud para cada jugador. \\
 A3 & A 40, alerta crítica: se guarda en la base de datos y le llega al médico al instante. \\
-A4 & El médico la confirma y le pone un límite: como máximo veinte kilómetros por hora. Si lo supera, el sistema vuelve a avisar. \\
+A4 & El médico lo enfría y la temperatura baja: alerta resuelta. Después le pone un límite de veinte kilómetros por hora. \\
 A5 & Esto es Smart Health, nuestro proyecto de Internet de las Cosas en la Universidad de Cádiz. \\
 \bottomrule
 \end{longtable}

@@ -107,13 +107,14 @@ async function cambiarFase(fase) {
     return { mensaje: 'Orden publicada', topic: 'control/fase', fase: fase };
 }
 
-async function ajustarSensores(id, datos) {
+// origen: "botonera" (por defecto) o "medico" (services/intervenciones.js); va en el aviso "simulador"
+async function ajustarSensores(id, datos, origen) {
     validarJugador(id);
     const ajuste = validarAjuste(datos);
     const ts = new Date();
     await enviar(topicSensores(id), { ...ajuste, ts: ts.toISOString() });
     const hasta = ajuste.durationSeconds > 0 ? new Date(ts.getTime() + ajuste.durationSeconds * 1000).toISOString() : null;
-    ultimo.ajustes[id] = { ...ajuste, hasta: hasta };
+    ultimo.ajustes[id] = { ...ajuste, hasta: hasta, origen: origen === 'medico' ? 'medico' : 'botonera' };
     avisar();
     return { mensaje: 'Orden publicada', topic: topicSensores(id), jugadorId: id, ajuste: ajuste, hasta: hasta };
 }

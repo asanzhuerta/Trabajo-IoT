@@ -3,7 +3,7 @@
 (() => {
   'use strict';
   const $ = id => document.getElementById(id);
-  const HISTORIA_MS = 5 * 60 * 1000;   // la gráfica enseña los últimos 5 minutos
+  const HISTORIA_MS = 2 * 60 * 1000;   // las gráficas enseñan los últimos 2 minutos: se ve bien el antes y el después
   const SIN_SENAL_MS = 5000;
 
   let perfiles = [];                   // GET /api/jugadores
@@ -12,6 +12,13 @@
   const historia = new Map();          // jugadorId → [{t, fc}] de los últimos 5 min
   let seleccionado = 'p1', pauta = null, ultimoTs = 0, socket, reconexion;
   const enviando = new Set();
+  // Qué intervención tiene cada alerta (lo mismo que services/intervenciones.js de la API)
+  const INTERVENCION = {
+    CALOR_AMBAR: 'Enfriar', CALOR_ROJA: 'Enfriar',
+    FC_ALTA: 'Reposo', FC_DESACOPLE: 'Reposo', RECUPERACION_LENTA: 'Reposo', INCIDENTE: 'Reposo'
+  };
+  const marcas = new Map();            // jugadorId → [{t, tipo: 'forzado' | 'medico', texto}] para las gráficas
+  let ajustes = {};                    // lo que está forzando la botonera (mensaje 'simulador' del WebSocket)
   const notas = new Map();             // alertaId → nota a medio escribir (sobrevive a los repintados)
 
   const fmt = (n, d = 1) => typeof n === 'number' && Number.isFinite(n) ? n.toLocaleString('es-ES', { maximumFractionDigits: d }) : '—';
@@ -110,17 +117,34 @@
     if (!alertas.length) { $('alerts').replaceChildren(el('p', 'hint', 'No hay alertas activas.')); return; }
     const frag = document.createDocumentFragment();
     for (const a of alertas) {
-      const fila = el('div', 'alert ' + a.severidad);
+      const enTratamiento = a.intervencion && !a.intervencion.fin;
+      const fila = el('div', 'alert ' + a.severidad + (enTratamiento ? ' tratando' : ''));
       const txt = el('div', 'txt');
       txt.append(el('strong', '', a.jugadorId.toUpperCase() + ' · ' + a.codigo), el('span', 'time', hora(a.ts)), el('span', 'msg', a.mensaje));
-      const nota = el('input'); nota.placeholder = 'Nota (opcional)'; nota.maxLength = 300;
-      nota.value = notas.get(a.id) || '';
-      nota.oninput = () => notas.set(a.id, nota.value);
-      txt.append(nota);
-      const b = el('button', '', enviando.has(a.id) ? 'Enviando…' : 'Confirmar');
-      b.type = 'button'; b.dataset.id = a.id;
-      b.onclick = () => confirmar(a, nota.value.trim());
-      fila.append(txt, b);
+      const acciones = el('div', 'acts');
+      if (enTratamiento) {
+        const iv = a.intervencion, j = vivos.get(a.jugadorId);
+        const ahora = iv.unidad === '°C' ? valor(j, 'thermometer', 'temperature') : valor(j, 'pulsemeter', 'pulse');
+        txt.append(el('span', 'treat', 'En tratamiento · ' + iv.nombre + ': ' + fmt(iv.desde) + ' → ' + fmt(iv.objetivo) + ' ' + iv.unidad +
+          (ahora != null ? ' · ahora ' + fmt(ahora) + ' ' + iv.unidad : '') + '. La alerta se cerrará sola al llegar.'));
+      } else {
+        const nota = el('input'); nota.placeholder = 'Nota (opcional)'; nota.maxLength = 300;
+        nota.value = notas.get(a.id) || '';
+        nota.oninput = () => notas.set(a.id, nota.value);
+        txt.append(nota);
+        if (INTERVENCION[a.codigo]) {
+          const iv = el('button', 'treat-btn', enviando.has(a.id) ? 'Enviando…' : INTERVENCION[a.codigo]);
+          iv.type = 'button'; iv.dataset.id = a.id;
+          iv.title = INTERVENCION[a.codigo] === 'Enfriar' ? 'Baja la temperatura poco a poco hasta 37,5 °C y cierra la alerta' : 'Baja el pulso poco a poco hasta 85 lpm y cierra la alerta';
+          iv.onclick = () => intervenir(a);
+          acciones.append(iv);
+        }
+        const b = el('button', '', enviando.has(a.id) ? 'Enviando…' : 'Confirmar');
+        b.type = 'button'; b.dataset.id = a.id;
+        b.onclick = () => confirmar(a, nota.value.trim());
+        acciones.append(b);
+      }
+      fila.append(txt, acciones);
       frag.append(fila);
     }
     $('alerts').replaceChildren(frag);
@@ -145,6 +169,20 @@
     await cargarAlertas();
   }
 
+  async function intervenir(a) {
+    enviando.add(a.id); pintarAlertas();
+    const r = await escribir('POST', '/api/alertas/' + encodeURIComponent(a.id) + '/intervenir', { por: medico() },
+      INTERVENCION[a.codigo] + ' a ' + a.jugadorId.toUpperCase() + ': el valor irá bajando y la alerta se cerrará sola');
+    enviando.delete(a.id);
+    if (r.ok && seleccionado !== a.jugadorId) seleccionar(a.jugadorId);
+    await cargarAlertas();
+  }
+  function marcar(jugadorId, tipo, texto, t = Date.now()) {
+    const m = marcas.get(jugadorId) || [];
+    m.push({ t, tipo, texto });
+    marcas.set(jugadorId, m.filter(x => Date.now() - x.t <= HISTORIA_MS));
+  }
+
   // ---------------------------------------------------------------- jugador seleccionado
   function seleccionar(id) {
     seleccionado = id; pauta = null;
@@ -159,9 +197,9 @@
       const vivosJ = historia.get(id) || [];
       const primero = vivosJ.length ? vivosJ[0].t : Infinity;
       const previos = (await r.json()).filter(l => typeof l.fcMedia === 'number')
-        .map(l => ({ t: Date.parse(l.ts) + 5000, fc: l.fcMedia })).filter(p => p.t < primero);
+        .map(l => ({ t: Date.parse(l.ts) + 5000, fc: l.fcMedia, temp: l.temp })).filter(p => p.t < primero);
       historia.set(id, previos.concat(vivosJ));
-      if (id === seleccionado) pintarGrafica();
+      if (id === seleccionado) pintarGraficas();
     } catch {}
   }
   function medidor(barra, v, min, max) {
@@ -182,36 +220,33 @@
     medidor('pctBar', pct, 50, 100);
     medidor('tempBar', temp, 36, 41);
     $('guidelinePlayer').textContent = p.id.toUpperCase();
-    pintarGrafica();
+    pintarGraficas();
   }
-  function pintarGrafica() {
-    const svg = $('hrChart'), W = 600, H = 200, MIN = 40, MAX = 210, ahora = Date.now();
-    const y = v => H - (v - MIN) / (MAX - MIN) * H;
+  function pintarGraficas() {
+    const p = perfiles.find(x => x.id === seleccionado);
+    const fcMax = p?.fcMax || 190;
+    grafica('hrChart', 'hrNow', 'fc', 40, 210, [60, 90, 120, 150, 180], [[Math.round(fcMax * .85), 'aviso'], [Math.round(fcMax * .92), 'alerta']], 'lpm', 0);
+    grafica('tempChart', 'tempNow', 'temp', 36, 41.5, [37, 38, 39, 40, 41], [[39, 'aviso'], [40, 'alerta']], '°C', 1);
+  }
+  function grafica(svgId, etiquetaId, campo, MIN, MAX, rejilla, umbrales, unidad, dec) {
+    const svg = $(svgId), W = 600, H = 200, ahora = Date.now();
+    const y = v => H - (Math.max(MIN, Math.min(MAX, v)) - MIN) / (MAX - MIN) * H;
+    const x = tt => (tt - (ahora - HISTORIA_MS)) / HISTORIA_MS * W;
     const ns = 'http://www.w3.org/2000/svg', partes = [];
-    for (const v of [60, 90, 120, 150, 180]) {
-      const l = document.createElementNS(ns, 'line');
-      Object.entries({ x1: 0, x2: W, y1: y(v), y2: y(v), class: 'grid-line' }).forEach(([k, val]) => l.setAttribute(k, val));
-      const t = document.createElementNS(ns, 'text');
-      Object.entries({ x: 6, y: y(v) - 4, class: 'axis' }).forEach(([k, val]) => t.setAttribute(k, val));
-      t.textContent = v;
-      partes.push(l, t);
+    const nodo = (tag, attrs, texto) => { const n = document.createElementNS(ns, tag); Object.entries(attrs).forEach(([k, v]) => n.setAttribute(k, v)); if (texto != null) n.textContent = texto; partes.push(n); };
+    for (const v of rejilla) { nodo('line', { x1: 0, x2: W, y1: y(v), y2: y(v), class: 'grid-line' }); nodo('text', { x: 6, y: y(v) - 4, class: 'axis' }, String(v)); }
+    for (const [v, tipo] of umbrales) nodo('line', { x1: 0, x2: W, y1: y(v), y2: y(v), class: 'umbral ' + tipo });
+    for (const [xx, texto, ancla] of [[6, '−2 min', 'start'], [W / 2, '−1 min', 'middle'], [W - 6, 'ahora', 'end']]) nodo('text', { x: xx, y: H - 6, class: 'axis', 'text-anchor': ancla }, texto);
+    for (const m of marcas.get(seleccionado) || []) {
+      if (ahora - m.t > HISTORIA_MS) continue;
+      nodo('line', { x1: x(m.t), x2: x(m.t), y1: 0, y2: H, class: 'marca ' + m.tipo });
+      nodo('text', { x: x(m.t) + 4, y: m.tipo === 'medico' ? 30 : 14, class: 'marca-txt ' + m.tipo }, m.texto);
     }
-    for (const [x, texto, ancla] of [[6, '−5 min', 'start'], [W / 2, '−2,5 min', 'middle'], [W - 6, 'ahora', 'end']]) {
-      const t = document.createElementNS(ns, 'text');
-      Object.entries({ x, y: H - 6, class: 'axis', 'text-anchor': ancla }).forEach(([k, val]) => t.setAttribute(k, val));
-      t.textContent = texto;
-      partes.push(t);
-    }
-    const puntos = (historia.get(seleccionado) || []).filter(p => ahora - p.t <= HISTORIA_MS);
-    if (puntos.length > 1) {
-      const linea = document.createElementNS(ns, 'polyline');
-      linea.setAttribute('class', 'line');
-      linea.setAttribute('points', puntos.map(p => ((p.t - (ahora - HISTORIA_MS)) / HISTORIA_MS * W).toFixed(1) + ',' + y(Math.max(MIN, Math.min(MAX, p.fc))).toFixed(1)).join(' '));
-      partes.push(linea);
-    }
+    const puntos = (historia.get(seleccionado) || []).filter(q => ahora - q.t <= HISTORIA_MS && typeof q[campo] === 'number');
+    if (puntos.length > 1) nodo('polyline', { class: 'line ' + campo, points: puntos.map(q => x(q.t).toFixed(1) + ',' + y(q[campo]).toFixed(1)).join(' ') });
     svg.replaceChildren(...partes);
     const ultimo = puntos[puntos.length - 1];
-    $('hrNow').textContent = ultimo ? ultimo.fc + ' lpm · ' + hora(ultimo.t) : 'Sin datos todavía';
+    $(etiquetaId).textContent = ultimo ? fmt(ultimo[campo], dec) + ' ' + unidad + ' · ' + hora(ultimo.t) : 'Sin datos todavía';
   }
 
   // ---------------------------------------------------------------- pauta de readaptación
@@ -260,21 +295,40 @@
         ultimoTs = Date.now();
         for (const j of m.jugadores) {
           vivos.set(j.jugadorId, j);
-          const fc = valor(j, 'pulsemeter', 'pulse');
+          const fc = valor(j, 'pulsemeter', 'pulse'), temp = valor(j, 'thermometer', 'temperature');
           if (j.estado === 'ok' && typeof fc === 'number') {
             const h = historia.get(j.jugadorId) || [];
             const t = Date.parse(j.ts);
-            if (!h.length || h[h.length - 1].t < t) h.push({ t, fc });
+            if (!h.length || h[h.length - 1].t < t) h.push({ t, fc, temp });
             while (h.length && Date.now() - h[0].t > HISTORIA_MS) h.shift();
             historia.set(j.jugadorId, h);
           }
         }
-        pintarEquipo(); pintarFicha();
+        pintarEquipo(); pintarFicha(); if (alertas.some(a => a.intervencion && !a.intervencion.fin)) pintarAlertas();
       } else if (m.tipo === 'alerta' && m.alerta) {
         const a = m.alerta;
         aviso((a.severidad === 'critica' ? 'ALERTA CRÍTICA · ' : 'Nueva alerta · ') + a.jugadorId.toUpperCase() + ' · ' + a.codigo + ': ' + a.mensaje, a.severidad);
         cargarAlertas();
-      } else if (m.tipo === 'alerta_confirmada') cargarAlertas();
+      } else if (m.tipo === 'intervencion' && m.alerta) {
+        const a = m.alerta;
+        marcar(a.jugadorId, 'medico', 'médico: ' + (a.intervencion.tipo === 'enfriar' ? 'enfriar' : 'reposo'), Date.parse(a.intervencion.inicio));
+        aviso('Intervención en curso · ' + a.jugadorId.toUpperCase() + ' · ' + a.intervencion.nombre, 'medico');
+        cargarAlertas();
+      } else if (m.tipo === 'alerta_confirmada') {
+        const a = alertas.find(x => x.id === m.alertaId);
+        if (a && a.intervencion) aviso(a.jugadorId.toUpperCase() + ' · ' + a.codigo + ' tratada: ' + (a.intervencion.unidad === '°C' ? 'temperatura' : 'pulso') + ' normalizado, alerta cerrada', 'medico');
+        cargarAlertas();
+      } else if (m.tipo === 'simulador') {
+        // Lo que se fuerza desde la botonera queda marcado en las gráficas, para distinguirlo de lo que hace el médico
+        const nuevos = m.ajustes || {};
+        for (const [id, aj] of Object.entries(nuevos)) {
+          const antes = ajustes[id];
+          if (aj.origen !== 'medico' && (!antes || antes.temperature !== aj.temperature || antes.pulse !== aj.pulse)) {
+            marcar(id, 'forzado', 'forzado: ' + [aj.temperature != null ? fmt(aj.temperature) + ' °C' : null, aj.pulse != null ? aj.pulse + ' lpm' : null].filter(Boolean).join(' · '));
+          }
+        }
+        ajustes = nuevos;
+      }
     };
     socket.onclose = () => { reconexion = setTimeout(conectar, 3000); };
     socket.onerror = () => socket.close();
@@ -291,5 +345,5 @@
   cargarAlertas();
   conectar();
   setInterval(cargarAlertas, 30000);          // por si se confirma una alerta desde otro sitio (Swagger, Postman)
-  setInterval(() => { pintarConexion(); pintarGrafica(); }, 1000);
+  setInterval(() => { pintarConexion(); pintarGraficas(); }, 1000);
 })();

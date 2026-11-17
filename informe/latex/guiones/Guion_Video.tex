@@ -80,8 +80,8 @@ El enunciado pide un vídeo de unos 5 minutos que explique las funcionalidades m
 \voz{La temperatura del jugador 8 ha pasado de 39 grados. La API recibe un lote por segundo con los once jugadores y les aplica diez reglas a cada uno. Salta el aviso de calor.} \\
 2:30 & El aro pasa a rojo y late; en el dashboard médico aparece la notificación y su tarjeta se pone en rojo &
 \voz{Al llegar a 40 grados ya es una alerta crítica. Se guarda en la base de datos y llega al dashboard del médico y al campograma por WebSocket, todo en el mismo segundo.} \\
-2:50 & Dashboard médico (el nombre y la clave del médico ya están puestos): se pulsa «Confirmar» en la alerta de p8 &
-\voz{El médico la confirma. Queda registrado quién y cuándo, y durante un minuto no se repite, para no saturarle de avisos.} \\
+2:50 & Dashboard médico (el nombre y la clave del médico ya están puestos): se pulsa «Enfriar» en la alerta de p8; en la gráfica de temperatura aparece la línea verde y la temperatura baja hasta 37,5 °C &
+\voz{El médico no se limita a darse por enterado: pulsa «Enfriar», como cuando se mete al jugador en agua fría. La temperatura baja poco a poco y, al volver a la normalidad, la alerta se cierra sola, con quién la trató y qué hizo.} \\
 3:05 & Se pulsa la tarjeta de p8 y, en «Pauta de readaptación», velocidad máxima 20 km/h &
 \voz{Y le pone una pauta: como máximo 20 kilómetros por hora en lo que queda de sesión.} \\
 3:20 & Salta \texttt{PAUTA\_EXCEDIDA} cuando p8 pasa de 20 km/h &
@@ -89,7 +89,7 @@ El enunciado pide un vídeo de unos 5 minutos que explique las funcionalidades m
 \midrule
 \multicolumn{3}{l}{\textbf{6. API abierta y estándar} — B} \\
 3:35 & Swagger con la lista de rutas y \emph{Try it out} en el estado de p8; Postman \emph{Collection Runner} en verde &
-\voz{Todo lo que hemos visto se puede hacer desde fuera: la API está documentada en Swagger y tiene una colección de Postman con 46 peticiones que se comprueban solas.} \\
+\voz{Todo lo que hemos visto se puede hacer desde fuera: la API está documentada en Swagger y tiene una colección de Postman con 47 peticiones que se comprueban solas.} \\
 3:50 & Respuesta de \texttt{/fhir/\allowbreak Observation?\allowbreak patient=p8} &
 \voz{Y para llevarlo a la historia clínica, las constantes vitales salen en FHIR, el estándar que usan los hospitales.} \\
 \midrule
@@ -125,7 +125,7 @@ B: \voz{En la API, solo la clave del médico puede tocar datos clínicos. No est
 2 & Consola con los topics MQTT pasando & 10 s & Vídeo \\
 3 & Cambio de fase desde la botonera y el equipo adelantándose en el campograma & 20 s & Vídeo \\
 4 & Golpe de calor completo: 39,4 °C (aro ámbar) → 40,5 °C (aro rojo) y aviso en el dashboard médico & 40 s & Vídeo y TikTok \\
-5 & El médico confirma y pone la pauta; salta \texttt{PAUTA\_EXCEDIDA} & 40 s & Vídeo y TikTok \\
+5 & El médico pulsa «Enfriar» (la temperatura baja en la gráfica y la alerta se cierra sola), pone la pauta y salta \texttt{PAUTA\_EXCEDIDA} & 60 s & Vídeo y TikTok \\
 6 & Swagger, Postman \emph{Collection Runner} en verde y FHIR & 30 s & Vídeo \\
 7 & La toma 4 con la ventana estrecha (como un móvil), centrada en p8 & 30 s & TikTok \\
 \bottomrule

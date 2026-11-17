@@ -19,7 +19,9 @@ const alertaSchema = new mongoose.Schema({
     estado: { type: String, enum: ['activa', 'confirmada'], default: 'activa' },
     confirmadaPor: { type: String, default: null },
     confirmadaEn: { type: Date, default: null },
-    nota: { type: String, default: null }
+    nota: { type: String, default: null },
+    // Lo que hizo el médico para tratarla (services/intervenciones.js): { tipo, nombre, por, inicio, desde, objetivo, unidad, fin }
+    intervencion: { type: Object, default: null }
 }, { ...opcionesJSON, collection: 'alertas' });
 
 alertaSchema.index({ estado: 1, jugadorId: 1, ts: -1 });

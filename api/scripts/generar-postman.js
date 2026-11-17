@@ -179,6 +179,9 @@ const coleccion = {
                     "console.log(activas.length ? 'alertaId = ' + activas[0].id + ' (' + activas[0].codigo + ' de ' + activas[0].jugadorId + ')' : 'No hay alertas activas');"
                 ] }),
             peticion({ nombre: 'Alertas de un jugador', metodo: 'GET', ruta: '/api/alertas', query: [{ key: 'jugadorId', value: '{{jugadorId}}' }] }),
+            peticion({ nombre: 'Intervenir: enfriar o reposo', metodo: 'POST', ruta: '/api/alertas/{{alertaId}}/intervenir', clave: MEDICO, esperado: 202,
+                cuerpo: { por: 'Dra. Pérez' },
+                descripcion: 'Para una alerta de calor (enfriar) o de FC (reposo): el valor baja poco a poco durante unos 40 s y la alerta se cierra sola. Usa una alerta distinta de la de «Confirmar la alerta».' }),
             peticion({ nombre: 'Confirmar la alerta', metodo: 'POST', ruta: '/api/alertas/{{alertaId}}/confirmar', clave: MEDICO,
                 cuerpo: { por: 'Dra. Pérez', nota: 'Retirado a la banda, hidratación' },
                 descripcion: 'Confirma la alerta guardada en `alertaId` por «Alertas activas». Si ya estaba confirmada responde 409.' })

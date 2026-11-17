@@ -1,7 +1,7 @@
 // Motor de alertas. Después de cada lectura evalúa las reglas (reglas.js) y, por cada alerta nueva:
 //   1. la guarda en Mongo (colección alertas);
-//   2. la publica por MQTT en sensors/<equipo>/alertas con QoS 1 (la recibe el Dashboard 2.0 de A);
-//   3. la envía por WebSocket a la web: { tipo: 'alerta', alerta }.
+//   2. la publica por MQTT en sensors/<equipo>/alertas con QoS 1;
+//   3. la envía por WebSocket a las páginas (dashboard médico y campograma): { tipo: 'alerta', alerta }.
 //
 // Antirrebote (docs/contratos/alertas.md):
 //   - no se repite el mismo código para el mismo jugador mientras haya una igual activa;

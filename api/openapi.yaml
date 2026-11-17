@@ -474,6 +474,48 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/Error' }
 
+  /api/alertas/{id}/intervenir:
+    post:
+      tags: [Alertas]
+      summary: Intervenir sobre una alerta (enfriar o reposo)
+      description: |
+        En vez de solo confirmarla, el médico actúa y el valor vuelve a la normalidad poco a poco:
+        `CALOR_AMBAR` y `CALOR_ROJA` → **enfriar** (la temperatura baja hasta 37,5 °C);
+        `FC_ALTA`, `FC_DESACOPLE`, `RECUPERACION_LENTA` e `INCIDENTE` → **reposo** (el pulso va a 85 lpm).
+        La API publica 8 pasos, uno cada 5 s, en `control/jugadores/<id>/sensores`, quita el ajuste al acabar
+        y cierra sola las alertas de ese tipo del jugador, con una nota. Avisa por WebSocket al empezar
+        (`intervencion`) y al cerrarlas (`alerta_confirmada`). El resto de alertas no cambian ningún sensor:
+        se confirman con una nota.
+      security: [{ claveMedico: [] }]
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: string }, example: 6733f0c2a1b2c3d4e5f60718 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [por]
+              properties:
+                por: { type: string, description: Quién interviene }
+            example: { por: Dra. Pérez }
+      responses:
+        '202':
+          description: Intervención en marcha; la alerta lleva el campo intervencion
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Alerta' }
+        '400': { $ref: '#/components/responses/Invalido' }
+        '401': { $ref: '#/components/responses/SinClave' }
+        '403': { $ref: '#/components/responses/SinPermiso' }
+        '404': { $ref: '#/components/responses/NoExiste' }
+        '409':
+          description: La alerta ya estaba confirmada o hay otra intervención en curso sobre ese jugador
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+        '503': { description: La API no está conectada a Mosquitto }
+
   # ------------------------------------------------------------------ sesiones
   /api/sesiones:
     get:

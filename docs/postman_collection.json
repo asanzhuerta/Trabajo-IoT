@@ -625,6 +625,55 @@
           }
         },
         {
+          "name": "Intervenir: enfriar o reposo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 202', function () { pm.response.to.have.status(202); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{claveMedico}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/alertas/{{alertaId}}/intervenir",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "alertas",
+                "{{alertaId}}",
+                "intervenir"
+              ]
+            },
+            "description": "Para una alerta de calor (enfriar) o de FC (reposo): el valor baja poco a poco durante unos 40 s y la alerta se cierra sola. Usa una alerta distinta de la de «Confirmar la alerta».",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"por\": \"Dra. Pérez\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
           "name": "Confirmar la alerta",
           "event": [
             {
