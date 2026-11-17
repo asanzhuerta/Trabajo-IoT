@@ -64,9 +64,9 @@ Un vídeo vertical de \textbf{55--60 segundos} que cuenta una sola historia: \te
 \midrule
 
 \multicolumn{5}{l}{\textbf{3. La demo: golpe de calor}} \\
-0:27 & \MANU & «Vamos a subirle la temperatura al número 10.» & Se lanza la orden al simulador; el termómetro del 10 empieza a subir & — \\
+0:27 & \MANU & «Vamos a subirle la temperatura al número 10.» & En la botonera de simulación se elige P8 y se pulsa 40,5 °C; el termómetro del 10 empieza a subir & — \\
 0:30 & \MANU & «A 39 grados, aviso.» & El aro del 10 se pone ámbar & \rot{39 °C · AVISO} (ámbar) \\
-0:33 & \ALE & «A 40, alerta crítica: se guarda en la base de datos y le llega al médico al instante.» & El aro pasa a rojo; notificación en el dashboard médico y tarjeta del 10 en rojo & \rot{40 °C · ALERTA CRÍTICA} (rojo) \\
+0:33 & \ALE & «A 40, alerta crítica: se guarda en la base de datos y le llega al médico al instante.» & El aro pasa a rojo; aviso «ALERTA CRÍTICA» en el dashboard médico (\texttt{localhost:3000/\allowbreak medico.html}) y tarjeta del 10 en rojo & \rot{40 °C · ALERTA CRÍTICA} (rojo) \\
 0:40 & \ALE & «El médico la confirma y le pone un límite: como máximo veinte kilómetros por hora. Si lo supera, el sistema vuelve a avisar.» & Botón «Confirmar»; formulario de pauta con 20 km/h; aparece \texttt{PAUTA\_EXCEDIDA} & Máx. 20 km/h \\
 \midrule
 
@@ -119,8 +119,8 @@ F1 & Campograma con los once moviéndose, sin alertas, y un plano centrado en el
 F2 & Flujo del simulador en Node-RED & 5 s & Manuel \\
 F3 & Consola con \texttt{mosquitto\_sub} y los mensajes de los sensores cayendo & 5 s & Manuel \\
 F4 & Swagger con la lista de operaciones & 5 s & Alejandro \\
-F5 & Golpe de calor completo: orden de 39,4 °C y, a los pocos segundos, de 40,5 °C a p8; el aro del 10 pasa a ámbar y a rojo & 30 s & Alejandro \\
-F6 & Dashboard médico durante el golpe de calor: notificación y tarjeta del 10 en rojo & 10 s & Alejandro \\
+F5 & Golpe de calor completo desde la botonera: 39,4 °C y, a los pocos segundos, 40,5 °C a p8; el aro del 10 pasa a ámbar y a rojo & 30 s & Alejandro \\
+F6 & Dashboard médico durante el golpe de calor: aviso «ALERTA CRÍTICA» y tarjeta del 10 en rojo & 10 s & Alejandro \\
 F7 & El médico confirma, crea la pauta de 20 km/h y salta \texttt{PAUTA\_EXCEDIDA} & 20 s & Alejandro \\
 F8 & Base de datos con sus colecciones & 3 s & Alejandro \\
 \bottomrule
