@@ -177,7 +177,9 @@ switch ($Pieza) {
     'mirar' {
         Titulo "Estado de $Jugador visto por la API"
         Set-Location (Join-Path $Repo 'api')
-        # Espera a la API y a Node-RED (Docker y MongoDB pueden tardar en arrancar) y abre las páginas en el navegador
+        # Espera a la API y a Node-RED (Docker y MongoDB pueden tardar en arrancar) y abre las páginas en el navegador.
+        # Se comprueba con 127.0.0.1: Node-RED solo escucha en IPv4 y Windows PowerShell prueba antes ::1 con localhost,
+        # así que cada intento agotaba los 2 s y nunca se daba por arrancado.
         function Esperar($nombre, $url) {
             Write-Host "Esperando a $nombre..." -ForegroundColor DarkGray
             for ($i = 0; $i -lt 90; $i++) {
@@ -186,8 +188,8 @@ switch ($Pieza) {
             Write-Warning "$nombre no responde en $url"
             return $false
         }
-        $api = Esperar 'la API' 'http://localhost:3000/health'
-        $nodered = Esperar 'Node-RED' 'http://localhost:1880/dashboard/medico'
+        $api = Esperar 'la API' 'http://127.0.0.1:3000/health'
+        $nodered = Esperar 'Node-RED' 'http://127.0.0.1:1880/dashboard/medico'
         if (-not $SinNavegador) {
             $paginas = @()
             if ($api)     { $paginas += 'http://localhost:3000', 'http://localhost:3000/control.html' }
