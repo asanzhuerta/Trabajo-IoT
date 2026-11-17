@@ -239,6 +239,18 @@ const coleccion = {
                 descripcion: 'Formación inicial y sin ajustes en ningún jugador.' })
         ]),
 
+        carpeta('Estado táctico', 'Balón, fase y posesión que publica el motor táctico en `equipo/estado`; la pasarela los reenvía a la API y esta los difunde por WebSocket (`tipo: tactica`) para el campograma. Vive en memoria: no usa MongoDB.', [
+            peticion({ nombre: 'Último estado táctico', metodo: 'GET', ruta: '/api/equipo/estado',
+                descripcion: 'El último estado recibido, o `null` si todavía no ha llegado ninguno.' }),
+            peticion({ nombre: 'Enviar un estado táctico (como la pasarela)', metodo: 'POST', ruta: '/api/equipo/estado', clave: PASARELA, esperado: 202,
+                preRequest: ["pm.variables.set('ahora', new Date().toISOString());"],
+                cuerpo: '{\n  "timestamp": "{{ahora}}",\n  "segundo": 120,\n  "fase": "ataque_organizado",\n  "descripcionFase": "Ataque organizado",\n  "posesion": "propia",\n  "evento": "Pase de P6 a P8 (Postman)",\n  "balon": { "X": 60, "Y": 30, "poseedor": "p6", "paseHacia": null },\n  "objetivos": { "p8": { "X": 70, "Y": 34 } }\n}',
+                descripcion: 'Con el simulador en marcha, el balón salta a (60, 30) en el campograma hasta el siguiente mensaje del motor (1 s).' }),
+            peticion({ nombre: '409: estado más antiguo que el último', metodo: 'POST', ruta: '/api/equipo/estado', clave: PASARELA, esperado: 409,
+                cuerpo: { timestamp: '2000-01-01T00:00:00Z', segundo: 1, fase: 'defensa_organizada', posesion: 'rival', balon: { X: 30, Y: 34 } },
+                descripcion: 'La API descarta los mensajes que llegan desordenados.' })
+        ]),
+
         carpeta('Errores (para enseñarlos)', 'Cómo responde la API cuando algo está mal. Cada petición espera su código de error.', [
             peticion({ nombre: '400: fase que no existe (trae la lista de las válidas)', metodo: 'POST', ruta: '/api/simulador/fase', esperado: 400,
                 cuerpo: { fase: 'contraataque' } }),

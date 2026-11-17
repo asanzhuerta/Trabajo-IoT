@@ -361,8 +361,8 @@
         "type": "function",
         "z": "b0d1ca0000000001",
         "name": "Repartir mensajes de la API",
-        "func": "// Salidas: 1 equipo · 2 refrescar alertas · 3 jugador seleccionado\nlet m;\ntry { m = typeof msg.payload === 'string' ? JSON.parse(msg.payload) : msg.payload; } catch (e) { return null; }\nif (!m || !m.tipo) return null;\nif (m.tipo === 'telemetria') {\n    flow.set('vista', m.jugadores);\n    node.status({fill:'green',shape:'dot',text:'telemetría ' + new Date(m.ts).toLocaleTimeString('es-ES')});\n    const sel = flow.get('seleccionado');\n    const j = m.jugadores.find(x => x.jugadorId === sel);\n    return [{ topic: 'equipo' }, null, j ? { topic: 'jugador', jugador: j } : null];\n}\nif (m.tipo === 'alerta' || m.tipo === 'alerta_confirmada') return [null, { topic: m.tipo }, null];\nreturn null;",
-        "outputs": 3,
+        "func": "// Salidas: 1 equipo · 2 refrescar alertas · 3 jugador seleccionado · 4 aviso de alerta nueva\nlet m;\ntry { m = typeof msg.payload === 'string' ? JSON.parse(msg.payload) : msg.payload; } catch (e) { return null; }\nif (!m || !m.tipo) return null;\nif (m.tipo === 'telemetria') {\n    flow.set('vista', m.jugadores);\n    node.status({fill:'green',shape:'dot',text:'telemetría ' + new Date(m.ts).toLocaleTimeString('es-ES')});\n    const sel = flow.get('seleccionado');\n    const j = m.jugadores.find(x => x.jugadorId === sel);\n    return [{ topic: 'equipo' }, null, j ? { topic: 'jugador', jugador: j } : null, null];\n}\nif (m.tipo === 'alerta') {\n    const a = m.alerta || {};\n    const aviso = (a.severidad === 'critica' ? 'ALERTA CRÍTICA' : 'Nueva alerta') + ' · ' + String(a.jugadorId || '').toUpperCase() + ' · ' + a.codigo + (a.mensaje ? ': ' + a.mensaje : '');\n    return [null, { topic: m.tipo }, null, { payload: aviso }];\n}\nif (m.tipo === 'alerta_confirmada') return [null, { topic: m.tipo }, null, null];\nreturn null;",
+        "outputs": 4,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
@@ -379,6 +379,9 @@
             ],
             [
                 "b0d1ca0000000019"
+            ],
+            [
+                "b0d1ca000000000b"
             ]
         ]
     },

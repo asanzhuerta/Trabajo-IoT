@@ -124,8 +124,8 @@ El trabajo se ha hecho en pareja, con dos bloques que solo se comunican a travé
 \toprule
  & \textbf{Manuel García Delgado de Mendoza} (edge y simulación) & \textbf{Alejandro Sanz Huerta} (backend y datos) \\
 \midrule
-Responsable de & \ruta{mosquitto/}, \ruta{node\_red/flows.json} & \ruta{api/}, \ruta{docker-compose.yml}, \ruta{node\_red/flows\_pasarela.json}, \ruta{node\_red/flows\_medico.json} \\
-Tareas & Mosquitto con usuarios y ACL, simulador táctico de los 11 jugadores, control del simulador por MQTT (\texttt{mqtt in}), diseño del campograma & API REST, MongoDB, motor de alertas, WebSocket, FHIR, Swagger y Postman, ACWR, pasarela MQTT$\rightarrow$API, dashboard médico, integración del campograma con la API \\
+Responsable de & \ruta{mosquitto/}, \ruta{node\_red/flows.json}, \ruta{api/public/control.*} &\ruta{api/}, \ruta{docker-compose.yml}, \ruta{node\_red/flows\_pasarela.json}, \ruta{node\_red/flows\_medico.json} \\
+Tareas & Mosquitto con usuarios y ACL, simulador táctico de los 11 jugadores, control del simulador por MQTT (\texttt{mqtt in}), botonera de simulación, diseño del campograma, balón y fase de juego en el campograma &API REST, MongoDB, motor de alertas, WebSocket, FHIR, Swagger y Postman, ACWR, pasarela MQTT$\rightarrow$API, dashboard médico, integración del campograma con la API \\
 \midrule
 En común & \multicolumn{2}{l}{Contratos, arquitectura, informe, vídeo y TikTok.} \\
 \bottomrule
@@ -291,7 +291,7 @@ El fichero \texttt{passwd} guarda las contraseñas con \emph{hash} (\texttt{mosq
 Para la demostración hay que poder provocar un golpe de calor o una FC disparada cuando se quiera, sin tocar Node-RED. El camino es el inverso al de la telemetría: \textbf{la API publica y el simulador se suscribe}.
 
 \begin{enumerate}
-  \item Un cliente (Swagger, Postman o cualquier \emph{frontend}) llama a \texttt{PUT /api/simulador/jugadores/p8/sensores} con \texttt{\{"temperature": 40.5, "durationSeconds": 60\}}.
+  \item La botonera de simulación (Sección~\ref{sec:botonera}), Swagger o Postman llaman a \texttt{PUT /api/simulador/jugadores/p8/sensores} con \texttt{\{"temperature": 40.5, "durationSeconds": 60\}}.
   \item La API valida la orden y la publica con QoS 1 en \topic{control/jugadores/p8/sensores}.
   \item En el simulador, un \texttt{mqtt in} recibe la orden y el nodo \emph{Guardar ajustes de sensores} la guarda en el contexto del flujo.
   \item El nodo \emph{Aplicar ajustes de sensores} intercepta lo que publica cada jugador y sustituye solo el valor ajustado: durante 60~s p8 publica 40,5~$^\circ$C; el resto de sus sensores y los otros diez jugadores siguen igual.
@@ -352,7 +352,7 @@ El tercer flujo (Fig.~\ref{fig:nr-medico}) sirve el \emph{dashboard} médico, de
   \item al arrancar y cada 30~s, \texttt{GET /api/jugadores} y \texttt{GET /api/alertas?estado=activa};
   \item un \texttt{websocket in} conectado a la API recibe la telemetría (1~Hz) y las alertas al momento, y \emph{Repartir mensajes de la API} los envía a las tarjetas, la ficha, los indicadores y la gráfica;
   \item los botones \emph{Confirmar} y el formulario \emph{Nueva pauta} hacen \texttt{POST /api/alertas/:id/confirmar} y \texttt{POST /api/jugadores/:id/pauta} con la clave del médico, que se lee del \texttt{.env} en Node-RED y \textbf{nunca llega al navegador};
-  \item un \texttt{ui-notification} avisa al médico de cada alerta nueva.
+  \item un \texttt{ui-notification} avisa al médico de cada alerta nueva (las críticas, como ``ALERTA CRÍTICA'') y del resultado de cada confirmación o pauta.
 \end{itemize}
 
 \begin{figure}[!htbp]
@@ -464,7 +464,7 @@ La validación (\ruta{services/validacion.js}) comprueba el tipo, la unidad y el
 \label{fig:swagger-sim}
 \end{figure}
 
-\textbf{Desde Postman.} El fichero \ruta{docs/postman\_collection.json} tiene 43 peticiones en 10 carpetas (una por recurso más una de errores). Las claves se ponen en el \emph{Current value} de las variables \texttt{claveMedico} y \texttt{clavePasarela}, así que no se guardan en el fichero. Las peticiones encadenan datos entre sí (al empezar una sesión se guarda su id para cerrarla después) y cada una comprueba su código de respuesta, de modo que la colección entera se puede lanzar con el \emph{Collection Runner}.
+\textbf{Desde Postman.} El fichero \ruta{docs/postman\_collection.json} tiene 46 peticiones en 11 carpetas (una por recurso más una de errores). Las claves se ponen en el \emph{Current value} de las variables \texttt{claveMedico} y \texttt{clavePasarela}, así que no se guardan en el fichero. Las peticiones encadenan datos entre sí (al empezar una sesión se guarda su id para cerrarla después) y cada una comprueba su código de respuesta, de modo que la colección entera se puede lanzar con el \emph{Collection Runner}.
 
 \textbf{Con curl} (en PowerShell, \texttt{curl.exe}):
 
@@ -647,7 +647,7 @@ El paciente es el seudónimo (\texttt{Patient/p8}), cada \texttt{Observation} ti
 \section{Dashboards}\label{sec:dashboards}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-El sistema ofrece dos interfaces para el cuerpo médico: un \emph{dashboard} hecho con Node-RED Dashboard 2.0 desde el que se actúa, y un campograma web que muestra al equipo sobre el campo.
+El sistema ofrece tres interfaces: para el cuerpo médico, un \emph{dashboard} hecho con Node-RED Dashboard 2.0 desde el que se actúa y un campograma web que muestra al equipo sobre el campo; y, para preparar la demostración, una botonera de simulación que fuerza valores en el simulador.
 
 \subsection{Dashboard médico (Node-RED Dashboard 2.0)}
 
@@ -655,7 +655,7 @@ Disponible en \url{http://localhost:1880/dashboard/medico} (Fig.~\ref{fig:dashbo
 
 \begin{itemize}
   \item \textbf{Equipo · semáforo de salud.} Una tarjeta por jugador con su dorsal, posición, FC (y \% de la FCmáx), temperatura, velocidad y alertas activas, con el borde del color de su semáforo. Al pulsar una tarjeta se selecciona el jugador.
-  \item \textbf{Alertas activas.} De la más reciente a la más antigua, con un botón \emph{Confirmar} y una nota opcional por alerta, y el nombre del médico que confirma.
+  \item \textbf{Alertas activas.} Primero las críticas y, dentro de cada severidad, de la más reciente a la más antigua, con un botón \emph{Confirmar} y una nota opcional por alerta, y el nombre del médico que confirma.
   \item \textbf{Jugador seleccionado.} Ficha con zona de FC, zona de velocidad, asimetría y alertas, y dos indicadores (\texttt{ui-gauge}) de \% de la FCmáx y temperatura interna con las bandas de los umbrales.
   \item \textbf{Pauta de readaptación.} Muestra la pauta activa y un formulario para crear una nueva (velocidad máxima, carga máxima, asimetría máxima, vigencia y notas).
   \item \textbf{Frecuencia cardiaca} del jugador seleccionado en los últimos 5 minutos (\texttt{ui-chart}).
@@ -687,6 +687,26 @@ La página solo lee: no guarda ninguna clave, y las alertas se confirman desde e
 \label{fig:campograma}
 \end{figure}
 
+\subsection{Botonera de simulación}\label{sec:botonera}
+
+Para provocar los escenarios de la demostración sin escribir peticiones a mano, la API sirve una segunda página en \url{http://localhost:3000/control.html} (\ruta{api/public/control.html}, enlazada desde el campograma; Fig.~\ref{fig:botonera}). Es el \emph{dashboard} de simulación y solo usa las rutas de \ruta{/api/simulador}:
+
+\begin{itemize}
+  \item se elige el jugador (P1--P11) y la duración del ajuste (1--3600~s, o ``hasta que lo retire'', que envía \texttt{durationSeconds: 0});
+  \item botones rápidos de temperatura (37; 39,2 y 40,5~$^\circ$C) y de pulso (45, 150 y 195~lpm), un valor a medida para cada uno (35--42~$^\circ$C y 30--220~lpm, los rangos de la API) y ``Forzar ambos'', que hacen \texttt{PUT /api/simulador/jugadores/:id/sensores};
+  \item ``Retirar ajustes'', que hace \texttt{DELETE} sobre esa ruta, y cinco botones de fase de juego (\texttt{POST /api/simulador/fase});
+  \item las lecturas de temperatura y pulso que llegan del jugador por el WebSocket, la última orden que recuerda la API y un historial de las peticiones de la sesión.
+\end{itemize}
+
+Una respuesta \texttt{202} solo indica que la orden se publicó en el broker; por eso la página enseña al lado la lectura que vuelve del simulador, que es la confirmación real. Como las rutas del simulador, no pide clave ni toca datos clínicos.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.68\textwidth]{botonera.png}
+\caption{Botonera de simulación: se ha forzado 40,5~$^\circ$C a P8 y la tarjeta de lecturas confirma que el simulador ya publica ese valor.}
+\label{fig:botonera}
+\end{figure}
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Privacidad y seguridad}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -711,7 +731,7 @@ La frecuencia cardiaca, la temperatura interna, las lesiones y las pautas son \t
 
 \begin{itemize}
   \item \textbf{Tests automáticos:} 64 tests con \texttt{node:test} (\texttt{npm test}) sobre las partes puras: validación del lote, estado en vivo y resúmenes de 10~s, métricas, las diez reglas y el antirrebote, ACWR, conversión a FHIR, estado táctico y validación de las órdenes al simulador. Todos pasan.
-  \item \textbf{Colección de Postman:} las 43 peticiones pasan con el \emph{Collection Runner}, incluidos los errores esperados (400, 401, 403, 404 y 409).
+  \item \textbf{Colección de Postman:} las 46 peticiones pasan con el \emph{Collection Runner}, incluidos los errores esperados (400, 401, 403, 404 y 409).
   \item \textbf{Broker:} una conexión sin usuario se rechaza (\texttt{not authorised}); el usuario \texttt{nodered} recibe cada orden de \ruta{/api/simulador} sin denegaciones de la ACL.
   \item \textbf{Integración con el simulador:} un partido de 90 minutos (356.400 mensajes, 5.400 lotes) pasó por la pasarela, la validación y el motor de alertas sin ningún lote rechazado. Esta prueba destapó los dos ajustes de calibración; después, tres partidos de dos horas sin alertas falsas.
   \item \textbf{De extremo a extremo:} Mosquitto con usuarios y ACL $\rightarrow$ simulador y pasarela en Node-RED $\rightarrow$ API $\rightarrow$ MongoDB $\rightarrow$ \emph{dashboard} y campograma, con \texttt{/health} indicando MongoDB y MQTT conectados.
@@ -724,7 +744,7 @@ El vídeo sigue el escenario que motiva el proyecto:
 
 \begin{enumerate}
   \item Partido normal: los once jugadores en verde en el campograma y en el \emph{dashboard}.
-  \item Se provoca un golpe de calor a p8 con \texttt{PUT /api/simulador/jugadores/p8/sensores}.
+  \item Se provoca un golpe de calor a p8 desde la botonera de simulación (botón 40,5~$^\circ$C), que hace \texttt{PUT /api/simulador/jugadores/p8/sensores}.
   \item En unos segundos saltan \texttt{CALOR\_AMBAR} y \texttt{CALOR\_ROJA}: notificación en el \emph{dashboard}, tarjeta en rojo y aro rojo en el campograma (Figs.~\ref{fig:dashboard} y~\ref{fig:campograma}).
   \item El médico confirma la alerta y pone una pauta de readaptación; cuando el jugador la supera, salta \texttt{PAUTA\_EXCEDIDA}.
   \item Swagger, Postman y la respuesta FHIR.
@@ -807,7 +827,7 @@ Core body temperature responses during competitive sporting events: a narrative 
 \textbf{Carpeta} & \textbf{Contenido} \\
 \midrule
 \ruta{api/} & API REST en Express, WebSocket, modelos de Mongoose, motor de alertas y tests \\
-\ruta{api/public/} & Campograma servido en \url{http://localhost:3000} \\
+\ruta{api/public/} & Campograma (\url{http://localhost:3000}) y botonera de simulación (\texttt{/control.html}) \\
 \ruta{node\_red/} & Flujos: simulador (\texttt{flows.json}), pasarela (\texttt{flows\_pasarela.json}) y dashboard médico (\texttt{flows\_medico.json}); lanzador \texttt{arrancar.js} \\
 \ruta{mosquitto/} & Configuración del broker y ACL \\
 \ruta{docs/} & Contratos, diagramas y colección de Postman \\
@@ -822,7 +842,7 @@ Core body temperature responses during competitive sporting events: a narrative 
 
 \textbf{Requisitos:} Node.js 24, Docker Desktop (solo para MongoDB), Mosquitto 2.1 y Node-RED 5.
 
-\textbf{Arranque rápido.} En Windows, un doble clic en \texttt{arrancar-todo.cmd} abre Windows Terminal con una pestaña por pieza y, cuando la API está lista, abre el campograma en el navegador.
+\textbf{Arranque rápido.} En Windows, un doble clic en \texttt{arrancar-todo.cmd} abre Windows Terminal con una pestaña por pieza (Docker Desktop se abre antes a mano) y, cuando la API y Node-RED están listos, abre en el navegador el campograma, la botonera de simulación, el editor de Node-RED y el \emph{dashboard} médico. Cada arranque vacía la base de datos y carga los datos iniciales; con \texttt{-Conservar} no.
 
 \textbf{Arranque paso a paso}, desde la raíz del repositorio:
 
@@ -843,6 +863,6 @@ node node_red/arrancar.js
 cd api && npm test
 \end{lstlisting}
 
-\textbf{Direcciones:} campograma en \url{http://localhost:3000}, Swagger en \url{http://localhost:3000/api-docs}, estado en \url{http://localhost:3000/health}, editor de Node-RED en \url{http://localhost:1880} y \emph{dashboard} médico en \url{http://localhost:1880/dashboard/medico}.
+\textbf{Direcciones:} campograma en \url{http://localhost:3000}, botonera de simulación en \url{http://localhost:3000/control.html}, Swagger en \url{http://localhost:3000/api-docs}, estado en \url{http://localhost:3000/health}, editor de Node-RED en \url{http://localhost:1880} y \emph{dashboard} médico en \url{http://localhost:1880/dashboard/medico}.
 
 \end{document}

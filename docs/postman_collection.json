@@ -1361,6 +1361,147 @@
       ]
     },
     {
+      "name": "Estado táctico",
+      "description": "Balón, fase y posesión que publica el motor táctico en `equipo/estado`; la pasarela los reenvía a la API y esta los difunde por WebSocket (`tipo: tactica`) para el campograma. Vive en memoria: no usa MongoDB.",
+      "item": [
+        {
+          "name": "Último estado táctico",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/equipo/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "equipo",
+                "estado"
+              ]
+            },
+            "description": "El último estado recibido, o `null` si todavía no ha llegado ninguno."
+          }
+        },
+        {
+          "name": "Enviar un estado táctico (como la pasarela)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.variables.set('ahora', new Date().toISOString());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 202', function () { pm.response.to.have.status(202); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{clavePasarela}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/equipo/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "equipo",
+                "estado"
+              ]
+            },
+            "description": "Con el simulador en marcha, el balón salta a (60, 30) en el campograma hasta el siguiente mensaje del motor (1 s).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"timestamp\": \"{{ahora}}\",\n  \"segundo\": 120,\n  \"fase\": \"ataque_organizado\",\n  \"descripcionFase\": \"Ataque organizado\",\n  \"posesion\": \"propia\",\n  \"evento\": \"Pase de P6 a P8 (Postman)\",\n  \"balon\": { \"X\": 60, \"Y\": 30, \"poseedor\": \"p6\", \"paseHacia\": null },\n  \"objetivos\": { \"p8\": { \"X\": 70, \"Y\": 34 } }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "409: estado más antiguo que el último",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 409', function () { pm.response.to.have.status(409); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-api-key",
+                "value": "{{clavePasarela}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/equipo/estado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "equipo",
+                "estado"
+              ]
+            },
+            "description": "La API descarta los mensajes que llegan desordenados.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"timestamp\": \"2000-01-01T00:00:00Z\",\n  \"segundo\": 1,\n  \"fase\": \"defensa_organizada\",\n  \"posesion\": \"rival\",\n  \"balon\": {\n    \"X\": 30,\n    \"Y\": 34\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "Errores (para enseñarlos)",
       "description": "Cómo responde la API cuando algo está mal. Cada petición espera su código de error.",
       "item": [
