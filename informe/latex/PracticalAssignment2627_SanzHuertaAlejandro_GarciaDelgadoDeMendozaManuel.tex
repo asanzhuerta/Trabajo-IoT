@@ -143,7 +143,7 @@ La Fig.~\ref{fig:arquitectura} muestra el sistema completo y el camino que sigue
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=\textwidth]{sistema-arquitectura.png}
-\caption{Arquitectura del sistema completo. Los números indican el camino de un dato: (1) cada jugador publica sus sensores por MQTT; (2) la pasarela se suscribe a todos y (3) envía un lote por segundo a la API; (4) la API evalúa las reglas y guarda en MongoDB; (5) publica las alertas por MQTT y (6) las envía por WebSocket al campograma; (7) el médico confirma alertas o pone pautas por REST; (8) las órdenes al simulador van de la API al broker y de ahí al simulador.}
+\caption{Arquitectura del sistema completo. Los números indican el camino de un dato: (1) cada jugador publica sus sensores por MQTT; (2) la pasarela se suscribe a todos y (3) envía un lote por segundo a la API; (4) la API evalúa las reglas y guarda en MongoDB; (5) publica las alertas por MQTT y (6) las envía por WebSocket al dashboard médico y al campograma; (7) el médico confirma alertas o pone pautas por REST desde su dashboard; (8) la botonera de simulación manda órdenes a la API, que las publica en el broker y de ahí llegan al simulador. El dashboard médico, la botonera y el campograma son páginas web que sirve la propia API.}
 \label{fig:arquitectura}
 \end{figure}
 
