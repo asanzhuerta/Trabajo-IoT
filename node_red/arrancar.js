@@ -4,8 +4,8 @@
 //   node node_red/arrancar.js --reiniciar   vuelve a cargar los flujos del repo aunque haya cambios hechos en el editor
 //
 // - Usa su propia carpeta de usuario: ~/.node-red-smarthealth
-// - La prepara con el simulador de A (flows.json) y la pasarela (flows_pasarela.json) la primera vez, con --reiniciar
-//   y cuando los flujos del repo son más nuevos que los de esa carpeta (por ejemplo, al traer cambios de A).
+// - La prepara con el simulador (flows.json) y la pasarela (flows_pasarela.json) la primera vez, con --reiniciar
+//   y cuando los flujos del repo son más nuevos que los de esa carpeta (por ejemplo, al traer cambios del repositorio).
 //   Si lo último fue un Deploy en el editor, se respeta. Antes de sustituirlos, guarda los anteriores en respaldo-<fecha>/.
 // - Lee el .env de la raíz del repo: el usuario de Mosquitto de Node-RED (NODERED_MQTT_USER y NODERED_MQTT_PASS)
 //   y la clave de la API (API_KEY_PASARELA). En los nodos del broker solo se guardan ${NODERED_MQTT_USER}

@@ -1,4 +1,4 @@
-// Alerta generada por el motor de reglas (forma en docs/contratos/alertas.md).
+// Alerta generada por el motor de reglas.
 
 const mongoose = require('mongoose');
 const { opcionesJSON } = require('./comun');

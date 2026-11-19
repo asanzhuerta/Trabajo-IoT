@@ -1,7 +1,7 @@
 // GET /medico-config.js: el dashboard médico (public/medico.html) lo carga antes que medico.js.
 // Le da la clave y el nombre del médico ya puestos, para que el médico no tenga que escribirlos
 // y la demostración vaya seguida. Salen del .env (API_KEY_MEDICO y MEDICO_NOMBRE).
-// Consecuencia: quien pueda abrir /medico.html actúa como médico (ver la sección de seguridad del README).
+// Consecuencia: quien pueda abrir /medico.html actúa como médico (ver la sección de privacidad y seguridad de la memoria).
 
 const config = require('../config');
 

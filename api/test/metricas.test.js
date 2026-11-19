@@ -44,7 +44,7 @@ test('girar casi parado no es un cambio de dirección', function () {
 test('acciones de alta intensidad: más de 3 m/s²', function () {
     assert.deepEqual(metricas.accionesAltas(sensores({ acel: 3.1, decel: 2.9 })), { acel: 1, decel: 0 });
     assert.deepEqual(metricas.accionesAltas(sensores({ acel: 0, decel: 4 })), { acel: 0, decel: 1 });
-    // la frenada máxima del simulador de A (3,0 justos) no cuenta
+    // la frenada máxima del simulador (3,0 justos) no cuenta
     assert.deepEqual(metricas.accionesAltas(sensores({ acel: 3, decel: 3 })), { acel: 0, decel: 0 });
 });
 

@@ -3,7 +3,7 @@
 //   2. la publica por MQTT en sensors/<equipo>/alertas con QoS 1;
 //   3. la envía por WebSocket a las páginas (dashboard médico y campograma): { tipo: 'alerta', alerta }.
 //
-// Antirrebote (docs/contratos/alertas.md):
+// Antirrebote:
 //   - no se repite el mismo código para el mismo jugador mientras haya una igual activa;
 //   - después de confirmarla hay 60 s de espera antes de poder lanzarla otra vez.
 

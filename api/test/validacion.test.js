@@ -26,7 +26,7 @@ function lote(lecturas) {
     return { ts: TS, lecturas: lecturas };
 }
 
-test('guarda los sensores de A tal cual, sin traducirlos', function () {
+test('guarda los sensores del simulador tal cual, sin traducirlos', function () {
     const entrada = sensores({
         thermometer: { temperature: m('C', 38.1) },
         pressuresensor: { pressureleftfoot: m('%', 42), pressurerightfoot: m('%', 58) }

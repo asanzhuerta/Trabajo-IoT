@@ -10,13 +10,11 @@ info:
     - **Autenticación:** cabecera `x-api-key`. Pulsa **Authorize** y pon la clave del médico o la de la pasarela
       (están en el `.env`). Los `GET` no piden clave.
     - **Tiempo real:** además de esta API hay un WebSocket en el mismo puerto (`ws://localhost:3000`) que manda
-      la telemetría a 1 Hz, las alertas y los cambios de sesión. No se puede describir en OpenAPI; está en
-      `docs/contratos/api.md`.
+      la telemetría a 1 Hz, las alertas y los cambios de sesión. No se puede describir en OpenAPI; sus mensajes
+      están en la memoria (sección del WebSocket).
     - **Simulador:** las rutas de `/api/simulador` publican órdenes por MQTT (`control/#`) para el simulador de Node-RED:
       cambiar la fase de juego o forzar el pulso o la temperatura de un jugador. No piden clave: no tocan datos clínicos.
     - **Ids de jugador:** seudónimos `p1`…`p11`, los mismos de los topics del simulador. Nunca nombres.
-
-    Contratos completos en `docs/contratos/api.md` y `docs/contratos/alertas.md`.
 servers:
   - url: /
     description: Esta misma API (la que sirve esta página)
@@ -670,7 +668,7 @@ paths:
       tags: [Simulador]
       summary: Cambiar la fase de juego
       description: |
-        Publica el código de la fase, como texto, en `control/fase` (QoS 1). Lo entiende el motor táctico de A,
+        Publica el código de la fase, como texto, en `control/fase` (QoS 1). Lo entiende el motor táctico,
         que cambia la fase de todo el equipo. Responde `202`: la orden está en el broker, no se espera al simulador.
       requestBody:
         required: true
@@ -918,7 +916,7 @@ components:
       properties:
         error: { type: string }
 
-    # --- sensores, en el formato del simulador de A
+    # --- sensores, en el formato del simulador
     Medida:
       type: object
       description: Un valor con su unidad. `unit` puede omitirse; si viene, tiene que ser la esperada.
@@ -1010,7 +1008,7 @@ components:
             umbrales: { $ref: '#/components/schemas/Umbrales' }
     Umbrales:
       type: object
-      description: Umbrales de las reglas de alerta (ver docs/contratos/alertas.md). Entre paréntesis, el valor por defecto.
+      description: Umbrales de las reglas de alerta. Entre paréntesis, el valor por defecto.
       properties:
         tempAmbar: { type: number, description: '°C (39)' }
         tempRoja: { type: number, description: '°C (40)' }

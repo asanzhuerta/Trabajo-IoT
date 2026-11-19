@@ -4,7 +4,7 @@
 #   docker compose down      -> lo para (los datos se conservan en el volumen)
 #
 # Mosquitto, Node-RED y la API van instalados en local, no en Docker. Mosquitto usa la
-# configuración de mosquitto/ (ver TUTORIAL_DEV.md).
+# configuración de mosquitto/.
 
 services:
   mongo:

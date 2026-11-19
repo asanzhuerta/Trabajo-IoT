@@ -149,7 +149,7 @@ router.get('/:id/estado', async function (req, res) {
         ts: e ? e.ts : null,
         estado: e ? e.estado : null,
         semaforo: semaforo(alertas.map(function (a) { return a.severidad; })),
-        sensors: e ? e.sensors : null,       // últimos valores, en el formato del simulador de A
+        sensors: e ? e.sensors : null,       // últimos valores, en el formato del simulador
         derivados: e ? e.derivados : null,   // { pctFcMax, asimetria, zonaVelocidad, zonaFc }
         alertasActivas: alertas.map(function (a) {
             return { id: a.id, codigo: a.codigo, severidad: a.severidad };

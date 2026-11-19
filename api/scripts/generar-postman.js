@@ -61,7 +61,7 @@ function carpeta(nombre, descripcion, items) {
     return { name: nombre, description: descripcion, item: items };
 }
 
-// Una lectura de ejemplo en el formato del simulador de A
+// Una lectura de ejemplo en el formato del simulador
 function lecturaEjemplo(jugadorId, v) {
     return {
         jugadorId: jugadorId,
@@ -114,7 +114,7 @@ const coleccion = {
             '**Variables que se rellenan solas:** `sesionId` (al empezar una sesión), `alertaId` (al listar alertas activas), `observacionId` (al buscar la FC en FHIR) y `ahora` (fecha actual para la telemetría).',
             '',
             'Cada petición comprueba el código de respuesta, así que se puede lanzar entera con el *Collection Runner*.',
-            'La documentación interactiva está en `{{baseUrl}}/api-docs` y los contratos en `docs/contratos/`.'
+            'La documentación interactiva está en `{{baseUrl}}/api-docs`.'
         ].join('\n'),
         schema: 'https://schema.getpostman.com/json/collection/v2.1.0/collection.json'
     },
@@ -138,7 +138,7 @@ const coleccion = {
             peticion({
                 nombre: 'Enviar un lote', metodo: 'POST', ruta: '/api/telemetria', clave: PASARELA,
                 cuerpo: loteEjemplo, esperado: 202, preRequest: PONER_AHORA,
-                descripcion: 'Lote con p1 y p8 en el formato del simulador de A, y p10 sin señal. `{{ahora}}` se rellena antes de enviarlo.',
+                descripcion: 'Lote con p1 y p8 en el formato del simulador, y p10 sin señal. `{{ahora}}` se rellena antes de enviarlo.',
                 guardar: ["pm.test('Recibe las 3 lecturas', function () { pm.expect(pm.response.json().recibidas).to.eql(3); });"]
             })
         ]),
@@ -160,7 +160,7 @@ const coleccion = {
                 descripcion: 'Solo cambia los campos que vengan. 3 es el valor que tiene p1 en el seed.' }),
             peticion({ nombre: 'Ajustar umbrales', metodo: 'PUT', ruta: '/api/jugadores/{{jugadorId}}/umbrales', clave: MEDICO,
                 cuerpo: { fcAltaPct: 92, tempAmbar: 39 },
-                descripcion: 'Los nombres de los umbrales están en `docs/contratos/alertas.md`. Aquí se dejan los valores por defecto.' })
+                descripcion: 'Los nombres de los umbrales están en Swagger (esquema de umbrales). Aquí se dejan los valores por defecto.' })
         ]),
 
         carpeta('Pauta de readaptación', 'Límites que fija el médico a un jugador que vuelve de una lesión. El seed no carga ninguna (el equipo arranca en verde): primero se crea y luego se consulta.', [

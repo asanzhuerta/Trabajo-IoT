@@ -1,7 +1,7 @@
-// Las reglas de alerta de docs/contratos/alertas.md, como funciones puras (test/reglas.test.js).
+// Las diez reglas de alerta, como funciones puras (test/reglas.test.js).
 //
 // Cada regla recibe un contexto { e, perfil, pauta, ahora }:
-//   e       estado en vivo del jugador (services/estado.js): sensors (formato de A), derivados,
+//   e       estado en vivo del jugador (services/estado.js): sensors (formato del simulador), derivados,
 //           historial de 180 s, sesion…
 //   perfil  jugador con sus umbrales
 //   pauta   pauta de readaptación activa, o null
@@ -18,7 +18,7 @@ const VENTANA_RECUPERACION = 60;   // s
 const VEL_INMOVIL = 1;       // km/h
 const VENTANA_IMPACTO = 60;  // s en los que se busca el impacto previo a un incidente
 
-// Velocidad y pulso de un punto del historial (sus sensores van en el formato de A)
+// Velocidad y pulso de un punto del historial (sus sensores van en el formato del simulador)
 function vel(h) {
     return sensores.velocidad(h.sensors);
 }

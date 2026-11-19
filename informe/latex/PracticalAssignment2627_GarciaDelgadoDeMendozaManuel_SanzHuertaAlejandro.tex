@@ -369,7 +369,6 @@ La API (carpeta api/) sigue la estructura de los ejemplos de clase: server.js ar
 \begin{itemize}
   \item \textbf{URL base:} \url{http://localhost:3000}. Peticiones y respuestas en JSON; fechas en ISO 8601 (UTC).
   \item \textbf{Documentación interactiva:} Swagger UI en \url{http://localhost:3000/api-docs}, generada desde api/openapi.yaml (21 rutas).
-  \item \textbf{Contrato completo:} docs/contratos/api.md.
 \end{itemize}
 
 
@@ -757,7 +756,7 @@ La frecuencia cardiaca, la temperatura interna, las lesiones y las pautas son \t
   \item \textbf{Broker:} una conexión sin usuario se rechaza (not authorised); el usuario nodered recibe cada orden de /api/simulador sin denegaciones de la ACL.
   \item \textbf{Integración con el simulador:} un partido de 90 minutos (5.400 lotes) pasó por la pasarela, la validación y el motor de alertas sin ningún lote rechazado. De esta prueba salieron los dos ajustes de calibración del motor de alertas.
   \item \textbf{De extremo a extremo:} Mosquitto con usuarios y ACL $\rightarrow$ simulador y pasarela en Node-RED $\rightarrow$ API $\rightarrow$ MongoDB $\rightarrow$ dashboard y campograma, con /health indicando MongoDB y MQTT conectados.
-  \item \textbf{Prueba en limpio:} el repositorio se clonó desde GitHub en otro equipo y arrancó siguiendo solo el README.
+  \item \textbf{Prueba en limpio:} el repositorio se clonó desde GitHub en otro equipo y arrancó siguiendo solo las instrucciones de LEEME.md.
 \end{itemize}
 
 \subsection{Guion de la demostración}
@@ -840,7 +839,7 @@ Core body temperature responses during competitive sporting events: a narrative 
   \item \textbf{Código fuente} (incluidos los flujos de Node-RED): PracticalAssignment2627\_GarciaDelgadoDeMendozaManuel\_SanzHuertaAlejandro.zip.
   \item \textbf{Vídeo de demostración} (5 minutos): \url{https://youtu.be/d1qUYeS0Dag}.
   \item \textbf{Vídeo de TikTok:} \url{https://vm.tiktok.com/ZN8aCVd5r/}.
-  \item \textbf{Documentación de la API:} Sección~\ref{sec:api} de este informe, Swagger UI en /api-docs (api/openapi.yaml), colección de Postman (docs/postman\_collection.json) y contratos en docs/contratos/.
+  \item \textbf{Documentación de la API:} Sección~\ref{sec:api} de este informe, Swagger UI en /api-docs (api/openapi.yaml), y colección de Postman (docs/postman\_collection.json).
 \end{itemize}
 
 \begin{table}[!htbp]
@@ -855,8 +854,9 @@ api/ & API REST en Express, WebSocket, modelos de Mongoose, motor de alertas y t
 api/public/ & Campograma (/), dashboard médico (/medico.html) y botonera de simulación (/control.html) \\
 node\_red/ & Flujos: simulador (flows.json) y pasarela (flows\_pasarela.json); lanzador arrancar.js \\
 mosquitto/ & Configuración del broker y ACL \\
-docs/ & Contratos, diagramas y colección de Postman \\
+docs/ & Colección de Postman \\
 arrancar-todo.cmd & Lanzador de todo el sistema en Windows Terminal \\
+LEEME.md & Cómo arrancar el proyecto \\
 \bottomrule
 \end{tabularx}
 \end{table}

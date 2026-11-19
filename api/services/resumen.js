@@ -1,6 +1,6 @@
 // Resúmenes de 10 s. Las lecturas de cada jugador se acumulan en una "ventana" y,
 // al cerrarse, se convierten en un documento de la colección lecturas.
-// Leen los sensores en el formato de A (sensores.js). Los resúmenes son datos que calcula la API
+// Leen los sensores en el formato del simulador (sensores.js). Los resúmenes son datos que calcula la API
 // (medias, máximos, metros…), no lecturas de un sensor, así que tienen sus propios campos.
 // Son funciones puras: no tocan Mongo ni el estado global (se prueban en test/estado.test.js).
 
@@ -28,7 +28,7 @@ function nuevaVentana(inicio) {
     };
 }
 
-// s: sensores de la lectura (formato de A).
+// s: sensores de la lectura (formato del simulador).
 // extra: { delta (m recorridos desde la lectura anterior), altaInt (m de esos a alta intensidad),
 //          sprint (true si empieza uno), acelAltas y decelAltas (0 o 1) }
 function acumular(v, s, extra) {

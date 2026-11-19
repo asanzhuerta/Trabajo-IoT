@@ -11,7 +11,7 @@ const AHORA = Date.parse('2026-11-12T18:30:00.000Z');
 const PERFIL = { _id: 'p8', fcMax: 200, asimetriaBase: 4, umbrales: { ...UMBRALES_DEFECTO } };
 
 // Historial de `seg` segundos a 1 Hz que termina en AHORA. punto(i) da los datos del segundo i (0 = el más antiguo):
-// vel, fc, impacto (van a los sensores, en el formato de A), pctFcMax y estado.
+// vel, fc, impacto (van a los sensores, en el formato del simulador), pctFcMax y estado.
 function historial(seg, punto) {
     const h = [];
     for (let i = 0; i < seg; i++) {
@@ -43,7 +43,7 @@ function ctx(cambios = {}) {
     const conDatos = h.filter(function (p) { return p.estado === 'ok'; });
     const ultimoPunto = conDatos[conDatos.length - 1];
     const u = cambios.ultimo || {};
-    // Últimos sensores (formato de A) y derivados, como los deja services/estado.js
+    // Últimos sensores (formato del simulador) y derivados, como los deja services/estado.js
     const s = JSON.parse(JSON.stringify(ultimoPunto.sensors));
     if (u.temp !== undefined) s.thermometer.temperature.value = u.temp;
     const e = {

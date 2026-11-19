@@ -1,6 +1,6 @@
-// /api/simulador: el dashboard de simulación de A cambia el comportamiento del simulador de Node-RED.
+// /api/simulador: la botonera de simulación cambia el comportamiento del simulador de Node-RED.
 // La API publica la orden por MQTT (control/#) y el simulador la recibe con un mqtt in.
-// No piden clave: solo mueven el simulador, no tocan datos clínicos (ver docs/contratos/api.md).
+// No piden clave: solo mueven el simulador, no tocan datos clínicos.
 
 const express = require('express');
 const simulador = require('../services/simulador');

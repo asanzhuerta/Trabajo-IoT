@@ -9,7 +9,7 @@ function codigoDe(fn) {
     return null;
 }
 
-test('fase: solo las cinco del motor táctico de A', function () {
+test('fase: solo las cinco del motor táctico', function () {
     assert.equal(simulador.validarFase('presion_alta'), 'presion_alta');
     assert.deepEqual(Object.keys(simulador.FASES), ['ataque_organizado', 'transicion_defensiva', 'presion_alta', 'defensa_organizada', 'transicion_ofensiva']);
     assert.equal(codigoDe(function () { simulador.validarFase('contraataque'); }), 400);

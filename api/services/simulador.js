@@ -1,7 +1,7 @@
-// Control del simulador de Node-RED desde la API (lo usa el dashboard de simulación de A).
+// Control del simulador de Node-RED desde la API (lo usa la botonera de simulación).
 // La API publica la orden por MQTT (QoS 1, sin retain) y el simulador la recibe con un mqtt in:
-//   control/fase                    la fase de juego, como texto: "presion_alta"     (motor táctico de A)
-//   control/reset                   "true": vuelve a la formación inicial             (motor táctico de A)
+//   control/fase                    la fase de juego, como texto: "presion_alta"     (motor táctico)
+//   control/reset                   "true": vuelve a la formación inicial             (motor táctico)
 //   control/jugadores/<id>/sensores {"pulse": 155, "temperature": 38.2, "durationSeconds": 30, "ts": "…"}
 //                                   fuerza el pulso o la temperatura que publica ese jugador; {"reset": true} lo quita
 // La API recuerda lo último que mandó para enseñarlo en los dashboards; si se reinicia Node-RED, el simulador

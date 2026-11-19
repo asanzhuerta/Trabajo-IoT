@@ -1,4 +1,4 @@
-// Ayuda para los tests: construye los sensores de un jugador en el formato del simulador de A
+// Ayuda para los tests: construye los sensores de un jugador en el formato del simulador
 // a partir de valores sueltos. Lo que no se indique no se incluye.
 
 const m = function (unit, value) { return { unit: unit, value: value }; };

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#081421">
   <title>Campograma · Smart Health</title>
-  <!-- Campograma de la Persona A (diseño) adaptado por B para leer de la API REST + WebSocket en vez de MQTT. -->
+  <!-- Campograma: lee los datos de la API REST y del WebSocket. -->
   <style>
     :root{--bg:#081421;--panel:#101f31;--panel2:#13263a;--border:#263c53;--white:#f5f7fb;--muted:#9bb0c6;--dim:#658099;--yellow:#f6d34d;--cyan:#5fded2;--blue:#6da8ff;--orange:#ff9274;--green:#35ce92;--red:#fb807a;--radius:17px}
     *{box-sizing:border-box}html{min-width:320px;scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse at 24% -10%,#163653 0%,transparent 39%),var(--bg);font:14px/1.5 Inter,'Segoe UI',Arial,sans-serif;color:var(--white);min-height:100vh}button{font:inherit;cursor:pointer}button:focus-visible,a:focus-visible{outline:2px solid var(--yellow);outline-offset:3px}button:disabled{opacity:.5;cursor:not-allowed}button,.action{transition:background .18s ease,border-color .18s ease,transform .18s ease}button:active{transform:scale(.98)}.wrap{max-width:1660px;margin:auto;padding:27px 30px 40px}
@@ -129,12 +129,12 @@
       <div class="card stream"><h3>Alertas activas <span style="color:var(--muted);font-size:11px;font-weight:400">/ las confirma el médico desde el dashboard o la API</span></h3><div id="alertLines" class="stream-lines"><div class="stream-line">Sin alertas activas.</div></div></div>
       <div class="card summary"><h3>Conexión de datos</h3><p>API REST: <span class="mono" id="apiAddress">—</span></p><p>WebSocket: <span class="mono" id="wsAddress">—</span></p><p>MongoDB: <span class="mono" id="mongoState">—</span> · MQTT: <span class="mono" id="mqttState">—</span></p><p id="infoText">Las posiciones iniciales del 4-2-3-1 se muestran hasta que llegan datos.</p></div>
     </div>
-    <footer><span>SMART/HEALTH · Campograma (diseño: Persona A · datos de la API: Persona B)</span><span>11 jugadores · 6 sensores por jugador · actualización cada segundo</span></footer>
+    <footer><span>SMART/HEALTH · Campograma</span><span>11 jugadores · 6 sensores por jugador · actualización cada segundo</span></footer>
   </div>
   <script>
   (() => {
     'use strict';
-    // Nombres y posiciones iniciales del 4-2-3-1 del simulador de A (los datos reales los sobrescriben)
+    // Nombres y posiciones iniciales del 4-2-3-1 del simulador (los datos reales los sobrescriben)
     const SEED = [
       [1,'Portero','Portería','gk',4,34],
       [2,'Lateral derecho','Defensa','df',26,9],
@@ -267,7 +267,7 @@
       } catch (e) { /* idem */ }
     }
 
-    // Pulso y temperatura forzados en el simulador (los pone el dashboard de simulación de A a través de la API)
+    // Pulso y temperatura forzados en el simulador (los pone la botonera de simulación a través de la API)
     let ajustesSim = {};
     function pintarSimulacion() {
       const ids = porId(), ahora = Date.now();

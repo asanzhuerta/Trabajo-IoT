@@ -1,7 +1,7 @@
-// Validación del lote de POST /api/telemetria (formato en docs/contratos/api.md).
+// Validación del lote de POST /api/telemetria.
 //
-// Cada lectura trae los sensores tal y como los publica el simulador de A por MQTT
-// (mismo formato que valores.json: { unit, value } con nombres en inglés). La API los guarda y los usa
+// Cada lectura trae los sensores tal y como los publica el simulador por MQTT
+// ({ unit, value } con nombres en inglés). La API los guarda y los usa
 // en ese mismo formato: aquí solo se comprueba que estén bien y se descarta lo que no esté en el contrato.
 //
 // Devuelve { ok: true, lote } (con ts como Date) o { ok: false, error } con el campo que falla.

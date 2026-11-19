@@ -1,4 +1,4 @@
-// Umbrales por defecto de las reglas de alerta (ver docs/contratos/alertas.md).
+// Umbrales por defecto de las reglas de alerta.
 // Cada jugador guarda su propia copia y el médico la ajusta con PUT /api/jugadores/:id/umbrales.
 
 const UMBRALES_DEFECTO = Object.freeze({
@@ -13,7 +13,7 @@ const UMBRALES_DEFECTO = Object.freeze({
     impactoG: 4,              // g
     inmovilSeg: 10,           // s
     sobrecargaAcciones: 120,  // aceleraciones + desaceleraciones altas por sesión
-    asimetriaUmbral: 15       // puntos sobre la asimetría base (con 10 saltaba en falso con el simulador de A)
+    asimetriaUmbral: 15       // puntos sobre la asimetría base (con 10 saltaba en falso con el simulador)
 });
 
 module.exports = { UMBRALES_DEFECTO };

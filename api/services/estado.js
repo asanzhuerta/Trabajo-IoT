@@ -1,5 +1,5 @@
 // Estado en vivo de cada jugador, en memoria:
-//   - los últimos sensores, en el formato del simulador de A (sensors.gps.speed.value…), para GET /estado,
+//   - los últimos sensores, en el formato del simulador (sensors.gps.speed.value…), para GET /estado,
 //     el WebSocket y las reglas. La temperatura y las plantillas no llegan en todas las lecturas, así que
 //     se conserva el último valor de cada sensor;
 //   - los valores derivados (%FCmáx, asimetría, zonas);
@@ -14,12 +14,12 @@ const sensores = require('./sensores');
 const { semaforo } = require('./semaforo');
 
 const HISTORIAL_SEG = 180;
-// La asimetría es la media de las plantillas del último minuto. Con el simulador de A, 10 s no bastan:
+// La asimetría es la media de las plantillas del último minuto. Con el simulador, 10 s no bastan:
 // al moverse de lado carga un pie varios segundos seguidos (medido: 10 s pasa del umbral el 23 % del
 // tiempo, 60 s nunca). Un desequilibrio por lesión, en cambio, se mantiene durante minutos.
 const VENTANA_ASIMETRIA_MS = 60000;
 // Y hace falta casi un minuto entero de plantillas: con pocos segundos, la "media" es una pisada o un
-// desplazamiento lateral (al arrancar el simulador de A saltaba ASIMETRIA en 10 de 11 jugadores en el
+// desplazamiento lateral (al arrancar el simulador saltaba ASIMETRIA en 10 de 11 jugadores en el
 // segundo 0, y con 20 s todavía en alguno). Se pide tiempo cubierto y no un número de lecturas porque
 // las plantillas pueden no llegar cada segundo (si se pierde alguna, la ventana sigue valiendo).
 const MIN_TIEMPO_ASIMETRIA_MS = 45000;
@@ -38,7 +38,7 @@ function nuevo(jugadorId) {
         jugadorId: jugadorId,
         ts: null,
         estado: null,          // 'ok' | 'sin_senal'
-        sensors: null,         // últimos sensores, formato de A
+        sensors: null,         // últimos sensores, formato del simulador
         derivados: null,       // { pctFcMax, asimetria, zonaVelocidad, zonaFc }
         historial: [],
         ventana: null,
@@ -180,7 +180,7 @@ function semaforoDe(e) {
     return semaforo(e.alertas.values());
 }
 
-// Lo que se manda por WebSocket una vez por segundo: los sensores de cada jugador en el formato de A
+// Lo que se manda por WebSocket una vez por segundo: los sensores de cada jugador en el formato del simulador
 function vista() {
     const lista = [];
     for (const e of jugadores.values()) {

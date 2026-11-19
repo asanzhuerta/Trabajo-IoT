@@ -1,4 +1,4 @@
-// Los 11 jugadores del equipo, en el 4-2-3-1 del simulador de A (node_red/Informe_simulacion_IoT_jugadores_P1_P11.pdf):
+// Los 11 jugadores del equipo, en el 4-2-3-1 del simulador:
 // mismo id (el del topic, p1/sensors/...) y misma posición. Lo usan el seed y el histórico del ACWR.
 
 module.exports = [

@@ -169,7 +169,7 @@ switch ($Pieza) {
         return
     }
     'nodered' {
-        Titulo 'Node-RED: simulador de A + pasarela (http://localhost:1880)'
+        Titulo 'Node-RED: simulador + pasarela (http://localhost:1880)'
         Set-Location $Repo
         node node_red/arrancar.js
         return

@@ -1,4 +1,4 @@
-// Lectura de los sensores en el formato del simulador de A (ver valores.json):
+// Lectura de los sensores en el formato del simulador:
 //   sensors.gps.speed = { unit: "km/h", value: 28.7 }, sensors.pulsemeter.pulse = { unit: "bpm", value: 181 }…
 //
 // La API guarda y usa los sensores tal cual llegan, sin traducirlos. Estas funciones solo

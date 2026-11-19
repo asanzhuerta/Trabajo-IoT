@@ -55,7 +55,7 @@ test('el resumen calcula medias, máximos, alta intensidad y asimetría', functi
     assert.deepEqual([r.x, r.y], [3, 4]);
 });
 
-test('el estado guarda los sensores en el formato de A y conserva temperatura y plantillas', function () {
+test('el estado guarda los sensores en el formato del simulador y conserva temperatura y plantillas', function () {
     estado.procesar(lectura(0, { temp: 38.2, izq: 44 }), PERFIL);
     estado.procesar(lectura(1, { fc: 184 }), PERFIL);
     const e = estado.obtener('p8');
@@ -70,7 +70,7 @@ test('el estado guarda los sensores en el formato de A y conserva temperatura y 
 });
 
 test('asimetría: las pisadas que alternan de pie se compensan', function () {
-    // Como el simulador de A: la carga pasa de un pie al otro (35/65, 65/35…) aunque el jugador esté bien
+    // Como el simulador: la carga pasa de un pie al otro (35/65, 65/35…) aunque el jugador esté bien
     for (let s = 0; s < 50; s++) {
         estado.procesar(lectura(s, { izq: s % 2 === 0 ? 35 : 65 }), PERFIL);
     }

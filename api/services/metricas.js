@@ -1,4 +1,4 @@
-// Métricas de rendimiento a partir de cada lectura, leyendo los sensores en el formato de A.
+// Métricas de rendimiento a partir de cada lectura, leyendo los sensores en el formato del simulador.
 // Son funciones puras (test/metricas.test.js).
 //
 // Zonas de velocidad (km/h), las habituales en fútbol (STATSports, SciSports):
@@ -35,7 +35,7 @@ function zonaFc(pctFcMax) {
 
 // Acciones de alta intensidad de una lectura. A 1 Hz, una aceleración de más de 3 m/s² es un cambio
 // de velocidad mantenido durante todo el segundo, así que cumple el criterio de ±3 m/s² durante 0,5 s.
-// Es "más de 3" y no "3 o más": el simulador de A limita la frenada a 3,0 m/s² justos y frena siempre a tope,
+// Es "más de 3" y no "3 o más": el simulador limita la frenada a 3,0 m/s² justos y frena siempre a tope,
 // así que con ">=" cada parada contaba como alta intensidad (más de 300 por partido y SOBRECARGA en todos).
 function accionesAltas(s) {
     return {
